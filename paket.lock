@@ -1,0 +1,70 @@
+NUGET
+  remote: http://www.nuget.org/api/v2
+  specs:
+    Aether (8.1.1)
+    Anat (1.0.0-b001)
+    Arachne.Core (3.0.0-b104)
+      FParsec (>= 1.0.0 < 2.0.0)
+    Arachne.Http (3.0.0-b104)
+      Arachne.Core (>= 3.0.0-b104)
+      Arachne.Language (>= 3.0.0-b104)
+      Arachne.Uri (>= 3.0.0-b104)
+      FParsec (>= 1.0.0 < 2.0.0)
+    Arachne.Language (3.0.0-b104)
+      Arachne.Core (>= 3.0.0-b104)
+      FParsec (>= 1.0.0 < 2.0.0)
+    Arachne.Uri (3.0.0-b104)
+      Arachne.Core (>= 3.0.0-b104)
+      FParsec (>= 1.0.0 < 2.0.0)
+    Arachne.Uri.Template (3.0.0-b104)
+      Arachne.Core (>= 3.0.0-b104)
+      Arachne.Uri (>= 3.0.0-b104)
+      FParsec (>= 1.0.0 < 2.0.0)
+    FParsec (1.0.2)
+    Hekate (3.2.0)
+      Aether (>= 8.0.2 < 9.0.0)
+    Hephaestus (1.0.0-b002)
+      Aether (>= 8.0.0 < 9.0.0)
+      Anat (>= 1.0.0-b < 1.1.0)
+      Hekate (>= 3.2.0 < 4.0.0)
+  remote: https://www.myget.org/F/freya/api/v2
+  specs:
+    Freya.Core (4.0.0-b001)
+      Aether (>= 8.1.0 < 9.0.0)
+    Freya.Optics (4.0.0-b001)
+      Aether (>= 8.1.0 < 9.0.0)
+    Freya.Optics.Http (4.0.0-b001)
+      Aether (>= 8.1.0 < 9.0.0)
+      Arachne.Http (>= 3.0.0-b < 3.1.0)
+      Arachne.Uri (>= 3.0.0-b < 3.1.0)
+      Freya.Core (>= 4.0.0-b < 4.1.0)
+      Freya.Optics (>= 4.0.0-b001)
+
+GROUP Build
+NUGET
+  remote: http://www.nuget.org/api/v2
+  specs:
+    FAKE (4.17.1)
+GITHUB
+  remote: xyncro/build
+  specs:
+    build.fsx (1407924c1087499b7e553ee1270de91844c98c2a)
+GROUP Test
+FRAMEWORK: >= NET45
+NUGET
+  remote: http://www.nuget.org/api/v2
+  specs:
+    Unquote (3.1.1)
+    xunit (2.1.0)
+      xunit.assert (2.1.0)
+      xunit.core (2.1.0)
+    xunit.abstractions (2.0.0)
+    xunit.assert (2.1.0)
+    xunit.core (2.1.0)
+      xunit.extensibility.core (2.1.0)
+      xunit.extensibility.execution (2.1.0)
+    xunit.extensibility.core (2.1.0)
+      xunit.abstractions (2.0.0)
+    xunit.extensibility.execution (2.1.0)
+      xunit.extensibility.core (2.1.0)
+    xunit.runner.console (2.1.0)
