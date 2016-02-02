@@ -1,7 +1,7 @@
 NUGET
   remote: http://www.nuget.org/api/v2
   specs:
-    Aether (8.1.1)
+    Aether (8.1.2)
     Anat (1.0.0-b001)
     Arachne.Core (3.0.0-b104)
       FParsec (>= 1.0.0 < 2.0.0)
@@ -23,13 +23,13 @@ NUGET
     FParsec (1.0.2)
     Hekate (3.2.0)
       Aether (>= 8.0.2 < 9.0.0)
-    Hephaestus (1.0.0-b002)
+    Hephaestus (1.0.0-b004)
       Aether (>= 8.0.0 < 9.0.0)
       Anat (>= 1.0.0-b < 1.1.0)
       Hekate (>= 3.2.0 < 4.0.0)
   remote: https://www.myget.org/F/freya/api/v2
   specs:
-    Freya.Core (4.0.0-b001)
+    Freya.Core (4.0.0-b002)
       Aether (>= 8.1.0 < 9.0.0)
     Freya.Optics (4.0.0-b001)
       Aether (>= 8.1.0 < 9.0.0)

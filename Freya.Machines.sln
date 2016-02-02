@@ -28,6 +28,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{066722EB-3C59-4D61-89F1-60D427770391}"
 	ProjectSection(SolutionItems) = preProject
 		src\Freya.Machines\Freya.Machines.fsproj.paket.references = src\Freya.Machines\Freya.Machines.fsproj.paket.references
+		src\Freya.Machines.Http\Freya.Machines.Http.fsproj.paket.references = src\Freya.Machines.Http\Freya.Machines.Http.fsproj.paket.references
 	EndProjectSection
 EndProject
 Global
