@@ -23,14 +23,14 @@ type HttpMachine =
     | HttpMachine of (HttpMachineSettings -> unit * HttpMachineSettings)
 
  and HttpMachineSettings =
-    | HttpMachineSettings of string list
+    | HttpMachineSettings of Settings
 
     static member settings_ =
         (fun (HttpMachineSettings x) -> x), (HttpMachineSettings)
 
 (* Functions
 
-   Functions implementing common monadic operations on the Router type,
+   Functions implementing common monadic operations on the Machine type,
    which will be used to implement the computation expression builder.
 
    Additionally some extensions to the basic requirements for a computation
