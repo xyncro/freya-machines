@@ -1,5 +1,7 @@
 ﻿module Freya.Machines
 
+open Aether
+open Aether.Operators
 open Freya.Core
 open Freya.Core.Operators
 open Hephaestus
@@ -33,11 +35,11 @@ type Decision =
         (function | Literal l -> Some l
                   | _ -> None), (Literal)
 
-type Settings =
-    | Settings of Map<string,obj>
+type Configuration =
+    | Configuration of Map<string,obj>
 
-    static member settings_ =
-        (fun (Settings x) -> x), (Settings)
+    static member configuration_ =
+        (fun (Configuration x) -> x), (Configuration)
 
 (* Decisions
 
@@ -67,6 +69,16 @@ module Decision =
 
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
-module Settings =
+module Configuration =
 
-    let f = ()
+    (* Optics *)
+
+    let private default_ def =
+        (function | Some a -> a
+                  | _ -> def), (Some)
+
+    let element_<'a> element def =
+            Lens.ofIsomorphism Configuration.configuration_
+        >-> Map.value_ element
+        >-> Option.mapIsomorphism box_<'a>
+        >-> default_ def
