@@ -4,14 +4,6 @@ open Aether
 open Aether.Operators
 open Freya.Core
 
-(* Configuration
-
-   Types and functions for user configuration of an HTTP Machine, based
-   on configuration through a computation expression with various custom
-   operations, and taking advantage of static type inference to allow a concise
-   and flexible API (for example, accepting a Method or list of Methods
-   transparently). *)
-
 (* Types
 
    The basic types of configuration, the HttpMachine (configuration) function,
@@ -72,6 +64,9 @@ module HttpMachine =
 type HttpMachineBuilder () =
     inherit Configuration.Builder<HttpMachine> (HttpMachine.operations)
 
+    member __.Zero () =
+        HttpMachine.init ()
+
 (* Expressions
 
    Computation expressions, instances of the HTTP Machine builder. The fully
@@ -117,6 +112,26 @@ module Infer =
     let inline decision v =
         Decision.infer v
 
+(* Specification
+
+   Helpful "opinionated" wrappers around the creation of decisions and
+   terminals in the Hephaestus sense.
+
+   Decisions are assumed to take a three part path, generally representing the
+   element, the section within that element, and the name of the decision
+   itself. *)
+
+[<RequireQualifiedAccess>]
+module internal Specification =
+
+    open Hephaestus
+
+    let decision a b c configurator (left, right) =
+        Specification.Decision.create (Key [ a; b; c ]) configurator (left, right)
+
+    let terminal name =
+        Specification.Terminal.create (Key [ name ]) (fun _ -> Freya.init name)
+
 (* Machine
 
    The definition and implementation of a general HTTP Machine, used by the
@@ -131,28 +146,45 @@ module Infer =
 [<RequireQualifiedAccess>]
 module Core =
 
-    type Core =
-        { Server: Server }
+    open Hephaestus
 
-        static member server_ =
-            (fun x -> x.Server), (fun s x -> { x with Server = s })
+    (* Decisions *)
 
-        static member empty =
-            { Server = Server.empty }
+    let private decision =
+        Specification.decision "core"
 
-     and Server =
-        { ServiceAvailable: Decision }
+    (* Terminals *)
 
-        static member serviceAvailable_ =
-            (fun x -> x.ServiceAvailable), (fun s x -> { x with ServiceAvailable = s })
+    let private terminal =
+        Specification.terminal
 
-        static member empty =
-            { ServiceAvailable = Literal true }
+    (* Configuration *)
 
-    (* Optics *)
+    [<RequireQualifiedAccess>]
+    module internal Configuration =
 
-    let core_ =
-        Configuration.element_ "core" Core.empty
+        type Core =
+            { Server: Server }
+
+            static member server_ =
+                (fun x -> x.Server), (fun s x -> { x with Server = s })
+
+            static member empty =
+                { Server = Server.empty }
+
+         and Server =
+            { ServiceAvailable: Decision }
+
+            static member serviceAvailable_ =
+                (fun x -> x.ServiceAvailable), (fun s x -> { x with ServiceAvailable = s })
+
+            static member empty =
+                { ServiceAvailable = Freya.Machines.Literal true }
+
+        (* Optics *)
+
+        let core_ =
+            Configuration.element_ "core" Core.empty
 
     (* Server
 
@@ -162,20 +194,53 @@ module Core =
     [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
     module Server =
 
+        (* Decisions *)
+
+        let private decision =
+            decision "server"
+
         (* Optics *)
 
         let serviceAvailable_ =
-                core_
-            >-> Core.server_
-            >-> Server.serviceAvailable_
+                Configuration.core_
+            >-> Configuration.Core.server_
+            >-> Configuration.Server.serviceAvailable_
 
-        (* Syntax
+        (* Components *)
 
-           Extensions to the operations available as part of the freyaHttp
-           computation expression. *)
+        let serviceAvailable s =
+            decision "serviceAvailable"
+                (function | Get serviceAvailable_ x -> Decision.map x)
+                (terminal "503", s)
 
-        type HttpMachineBuilder with
+    (* Component *)
 
-            [<CustomOperation ("serviceAvailable", MaintainsVariableSpaceUsingBind = true)>]
-            member inline __.ServiceAvailable (m, a) =
-                HttpMachine.map (m, Optic.set serviceAvailable_ (Infer.decision a))
+    let export =
+        { Metadata =
+            { Name = "core"
+              Description = None }
+          Requirements =
+            { Required = Set.empty
+              Preconditions = List.empty }
+          Operations =
+            [ Prepend (fun _ -> Server.serviceAvailable (terminal "ok")) ] }
+
+(* Syntax
+
+    Extensions to the operations available as part of the defined Http Machine
+    computation expression. *)
+
+type HttpMachineBuilder with
+
+    (* Core
+
+       Syntax elements for the various configuration values used by parts
+       making up the Core component. *)
+
+    (* Server *)
+
+    /// Defines a value or function to be called to determined if the
+    /// service is currently available.
+    [<CustomOperation ("serviceAvailable", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.ServiceAvailable (m, a) =
+        HttpMachine.map (m, Optic.set Core.Server.serviceAvailable_ (Infer.decision a))

@@ -82,3 +82,15 @@ module Configuration =
         >-> Map.value_ element
         >-> Option.mapIsomorphism box_<'a>
         >-> default_ def
+
+(* Patterns
+
+   Commonly useful active recognizers for working with lens based access to
+   data structures, particularly useful here for making access to configuration
+   more concise. *)
+
+let inline (|Get|) lens =
+    Optic.get lens
+
+let inline (|TryGet|_|) lens =
+    Optic.get lens
