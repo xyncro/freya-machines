@@ -1,5 +1,4 @@
-﻿open Freya.Machines
-open Freya.Machines.Http
+﻿open Freya.Machines.Http
 
 [<EntryPoint>]
 let main _ =

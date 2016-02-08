@@ -4,6 +4,12 @@ open Aether
 open Aether.Operators
 open Freya.Core
 
+// TODO: Review comments, etc.
+// TODO: Defaults
+// TODO: Operations
+// TODO: Genuine Responses for Server
+// TODO: Rest of Machine!
+
 (* Types
 
    The basic types of configuration, the HttpMachine (configuration) function,
