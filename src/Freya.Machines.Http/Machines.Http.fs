@@ -143,17 +143,15 @@ module internal Specification =
    of configuration, also provided along with utility tooling by the
    Freya.Machines library. *)
 
+(* Core *)
+
 [<RequireQualifiedAccess>]
 module Core =
 
-    open Hephaestus
-
-    (* Decisions *)
+    (* Specifications *)
 
     let private decision =
         Specification.decision "core"
-
-    (* Terminals *)
 
     let private terminal =
         Specification.terminal
@@ -161,7 +159,7 @@ module Core =
     (* Configuration *)
 
     [<RequireQualifiedAccess>]
-    module internal Configuration =
+    module private Configuration =
 
         type Core =
             { Server: Server }
@@ -173,13 +171,18 @@ module Core =
                 { Server = Server.empty }
 
          and Server =
-            { ServiceAvailable: Decision }
+            { ServiceAvailable: Decision
+              HttpVersionSupported: Decision option }
 
             static member serviceAvailable_ =
                 (fun x -> x.ServiceAvailable), (fun s x -> { x with ServiceAvailable = s })
 
+            static member httpVersionSupported_ =
+                (fun x -> x.HttpVersionSupported), (fun h x -> { x with HttpVersionSupported = h })
+
             static member empty =
-                { ServiceAvailable = Freya.Machines.Literal true }
+                { ServiceAvailable = Literal true
+                  HttpVersionSupported = None }
 
         (* Optics *)
 
@@ -194,28 +197,43 @@ module Core =
     [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
     module Server =
 
-        (* Decisions *)
+        (* Optics *)
+
+        let private server_ =
+                Configuration.core_
+            >-> Configuration.Core.server_
+
+        let serviceAvailable_ =
+                server_
+            >-> Configuration.Server.serviceAvailable_
+
+        let httpVersionSupported_ =
+                server_
+            >-> Configuration.Server.httpVersionSupported_
+
+        (* Specifications *)
 
         let private decision =
             decision "server"
 
-        (* Optics *)
+        (* Decisions *)
 
-        let serviceAvailable_ =
-                Configuration.core_
-            >-> Configuration.Core.server_
-            >-> Configuration.Server.serviceAvailable_
-
-        (* Components *)
-
-        let serviceAvailable s =
+        let rec internal serviceAvailable s =
             decision "serviceAvailable"
                 (function | Get serviceAvailable_ x -> Decision.map x)
-                (terminal "503", s)
+                (terminal "503", httpVersionSupported s)
+
+        and internal httpVersionSupported s =
+            decision "httpVersionSupported"
+                (function | TryGet httpVersionSupported_ x -> Decision.map x
+                          | _ -> Decision.map (Literal true))
+                (terminal "505", s)
 
     (* Component *)
 
-    let export =
+    open Hephaestus
+
+    let internal export =
         { Metadata =
             { Name = "core"
               Description = None }
@@ -239,8 +257,10 @@ type HttpMachineBuilder with
 
     (* Server *)
 
-    /// Defines a value or function to be called to determined if the
-    /// service is currently available.
     [<CustomOperation ("serviceAvailable", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.ServiceAvailable (m, a) =
         HttpMachine.map (m, Optic.set Core.Server.serviceAvailable_ (Infer.decision a))
+
+    [<CustomOperation ("httpVersionSupported", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HttpVersionSupported (m, a) =
+        HttpMachine.map (m, Optic.set Core.Server.httpVersionSupported_ (Some (Infer.decision a)))

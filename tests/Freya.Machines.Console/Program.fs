@@ -6,6 +6,7 @@ let main _ =
 
     let machine =
         freyaMachine {
-            serviceAvailable true }
+            serviceAvailable true
+            httpVersionSupported true }
 
     0
