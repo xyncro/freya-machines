@@ -9,17 +9,19 @@ open Freya.Core.Operators
 open Freya.Optics.Http
 open Hephaestus
 
-// TODO: Review comments, etc.
-// TODO: Defaults
+// TODO: Defaults (???)
 // TODO: Rest of Machine!
-// TODO: Clean up decision/terminal functions somehow
 // TODO: Introduce a mechanism for logs, etc.
 
 (* Operations
 
    Common operations for standard HTTP responses, setting various header values
    according to the appropriate logic for the response. These are commonly used
-   by various terminals within the HTTP Machine. *)
+   by various terminals within the HTTP Machine.
+
+   Operations are made available at the top level as they are generally useful
+   when implementing lower level abstractions but using the Freya stack - thus
+   they are made available "as a service"! *)
 
 [<RequireQualifiedAccess>]
 module Operations =
@@ -54,42 +56,38 @@ module Operations =
 
 (* Model
 
-   The definition and implementation of a general HTTP Model, used by the
-   Hephaestus library to construct and optimize a parameterized execution graph
-   for an arbitrary binary decision machine.
+   A Hephaestus Model defining the semantics of HTTP execution, defining the
+   HTTP request/response process as a series of decisions.
 
-   The Model assumes Freya<bool> functions for decisions (for which a mapping
-   is provided in the common Freya.Machines library) and Settings for the type
-   of configuration, also provided along with utility tooling by the
-   Freya.Machines library. *)
+   Unlike other implementations of this model (initially adopted by WebMachine,
+   et al.), the Freya implementation does not optimize the graph for lack of
+   repetition and reuse, but for straight-line paths, in the knowledge that the
+   overall graph will be optimized by the underlying Hephaestus engine. *)
 
 [<RequireQualifiedAccess>]
 module Model =
 
-    (* Specification
+    (* Keys
 
-       Helpful "opinionated" wrappers around the creation of decisions and
-       terminals in the Hephaestus sense.
+       Functions for working with Hephaestus Keys, making defining and using
+       keys slightly more pleasant. The default empty key is included here
+       for consistency at the various levels. *)
 
-       Decisions are assumed to take a three part path, generally representing the
-       element, the section within that element, and the name of the decision
-       itself. *)
+    let private keyWith x =
+        Optic.map (Lens.ofIsomorphism Key.key_) ((flip List.append) [ x ])
 
-    let private decision a b c configurator (left, right) =
-        Specification.Decision.create (Key [ a; b; c ]) configurator (left, right)
-
-    let private terminal a b c f =
-        Specification.Terminal.create (Key [ a; b; c ]) f
+    let private key =
+        Key.empty
 
     (* Common *)
 
     [<RequireQualifiedAccess>]
     module Common =
 
-        (* Specifications *)
+        (* Key *)
 
-        let private terminal =
-            terminal "common"
+        let private key =
+            keyWith "common" key
 
         (* Configuration *)
 
@@ -124,9 +122,6 @@ module Model =
         [<RequireQualifiedAccess>]
         module Terminals =
 
-            let private terminal =
-                terminal ""
-
             let private terminals_ =
                     Configuration.common_
                 >-> Configuration.Common.terminals_
@@ -136,7 +131,7 @@ module Model =
                 >-> Configuration.Terminals.ok_
 
             let internal ok =
-                terminal "ok"
+                Specification.Terminal.create (keyWith "ok" key)
                     (function | TryGet ok_ x -> Operations.ok *> x
                               | _ -> Operations.ok)
 
@@ -145,13 +140,10 @@ module Model =
     [<RequireQualifiedAccess>]
     module Core =
 
-        (* Specifications *)
+        (* Key *)
 
-        let private decision =
-            decision "core"
-
-        let private terminal =
-            terminal "core"
+        let private key =
+            keyWith "core" key
 
         (* Configuration *)
 
@@ -224,6 +216,11 @@ module Model =
         [<RequireQualifiedAccess>]
         module Server =
 
+            (* Key *)
+
+            let private key =
+                keyWith "server" key
+
             (* Optics *)
 
             let private server_ =
@@ -234,9 +231,6 @@ module Model =
 
             [<RequireQualifiedAccess>]
             module Terminals =
-
-                let private terminal =
-                    terminal "server"
 
                 let private terminals_ =
                         server_
@@ -251,12 +245,12 @@ module Model =
                     >-> Configuration.Terminals.httpVersionNotSupported_
 
                 let internal serviceUnavailable =
-                    terminal "serviceUnavailable"
+                    Specification.Terminal.create (keyWith "serviceUnavailable" key)
                         (function | TryGet serviceUnavailable_ x -> Operations.serviceUnavailable *> x
                                   | _ -> Operations.serviceUnavailable)
 
                 let internal httpVersionNotSupported =
-                    terminal "httpVersionNotSupported"
+                    Specification.Terminal.create (keyWith "httpVersionNotSupported" key)
                         (function | TryGet httpVersionNotSupported_ x -> Operations.httpVersionNotSupported *> x
                                   | _ -> Operations.httpVersionNotSupported)
 
@@ -277,16 +271,13 @@ module Model =
                         decisions_
                     >-> Configuration.Decisions.httpVersionSupported_
 
-                let private decision =
-                    decision "server"
-
                 let rec internal serviceAvailable s =
-                    decision "serviceAvailable"
+                    Specification.Decision.create (keyWith "serviceAvailable" key)
                         (function | Get serviceAvailable_ x -> Decision.map x)
                         (Terminals.serviceUnavailable, httpVersionSupported s)
 
                 and internal httpVersionSupported s =
-                    decision "httpVersionSupported"
+                    Specification.Decision.create (keyWith "httpVersionSupported" key)
                         (function | TryGet httpVersionSupported_ x -> Decision.map x
                                   | _ -> Decision.map (Freya.Machines.Literal true))
                         (Terminals.httpVersionNotSupported, s)
@@ -303,17 +294,24 @@ module Model =
               Operations =
                 [ Prepend (fun _ -> Server.Decisions.serviceAvailable Common.Terminals.ok) ] }
 
-(* Machine *)
+    (* Model *)
+
+    let model =
+        Model.create (set [ Core.core ])
+
+(* Machine
+
+   Mechanics and implementation of the Hephaestus Machine constructed from the
+   Model defined previously. The module wraps the base functions for creating
+   Prototypes and Machines from Models present within Hephaestus. *)
 
 [<RequireQualifiedAccess>]
-module Machine =
+module internal Machine =
 
     (* Evaluation *)
 
     [<RequireQualifiedAccess>]
     module Evaluation =
-
-        open Hephaestus
 
         let evaluate machine =
             Machine.execute machine
@@ -323,23 +321,21 @@ module Machine =
     [<RequireQualifiedAccess>]
     module Reification =
 
-        open Hephaestus
-
-        let private model =
-            Model.create (set [ Model.Core.core ])
-
         let private prototype =
-            Prototype.create model
+            Prototype.create Model.model
 
         let reify configuration =
             Evaluation.evaluate (Machine.create prototype configuration)
 
 (* Inference
 
-   Static type inference functions for automatic conversion of common function
-   and literal values to their Decision<'a> form, allowing for a more
-   expressive API within the computation expression (or other areas where
-   configuration values may be supplied). *)
+   Type inference functions for conversion of various forms to a single form,
+   for example the conversion of functions and literal values to be
+   automatically inferred at compile time to be Literal or Function types of
+   Decision.
+
+   This gives a more flexible API where it is used, although at the cost of
+   greater documentation/lesser discoverability initially. *)
 
 [<RequireQualifiedAccess>]
 module Infer =
@@ -366,12 +362,13 @@ module Infer =
 
 (* Types
 
-   The basic types of configuration, the HttpMachine (configuration) function,
-   and the actual configuration data threaded through configuration functions.
+   The base type of an HTTP Machine, representing the user facing type defined
+   through the use of the following computation expression.
 
    The function itself is defined as a single case discriminated union so that
    it can have static members, allowing it to take part in the static inference
-   approaches of the basic Freya function, and Pipelines. *)
+   approaches of the basic Freya function, and Pipelines (allowing the pseudo
+   typeclass approach which Freya uses in various places for concise APIs). *)
 
 type HttpMachine =
     | HttpMachine of (Configuration -> unit * Configuration)
@@ -410,7 +407,11 @@ type HttpMachine =
 
    Computation expression builder for configuring the HTTP Machine, providing a
    simple type-safe syntax and static inference based overloads of single
-   functions. *)
+   functions.
+   
+   The builder uses the basic configuration builder defined in Freya.Core, which
+   only requires the supply of init and bind functions of the appropriate types
+   to implement a type suitable for declarative configuration. *)
 
 type HttpMachineBuilder () =
 
@@ -420,8 +421,9 @@ type HttpMachineBuilder () =
 
 (* Syntax
 
-   Extensions to the operations available as part of the defined Http Machine
-   computation expression. *)
+   Custom syntax expressions for the HTTP Machine computation expression
+   builder, giving strongly typed syntax for the configuration elements that
+   can be set as part of an HTTP Machine. *)
 
 type HttpMachineBuilder with
 
@@ -449,9 +451,10 @@ type HttpMachineBuilder with
 
 (* Expressions
 
-   Computation expressions, instances of the HTTP Machine builder. The fully
-   named instance, freyaHttpMachine is aliased to freyaMachine to provide the
-   possibility of more concise code when only one kind of machine is in scope.
+   Computation expressions, instances of the HTTP Machine computation
+   expression builder. The fully named instance, freyaHttpMachine is aliased to
+   freyaMachine to provide the possibility of more concise code when only one
+   kind of machine is in scope.
 
    This naming also matches the original single form approach to machines, and
    provides backwards compatibility. *)
