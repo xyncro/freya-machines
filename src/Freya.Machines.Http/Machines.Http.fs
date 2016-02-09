@@ -1,8 +1,12 @@
 ﻿module Freya.Machines.Http
 
+open System
 open Aether
 open Aether.Operators
+open Arachne.Http
 open Freya.Core
+open Freya.Core.Operators
+open Freya.Optics.Http
 
 // TODO: Review comments, etc.
 // TODO: Defaults
@@ -22,25 +26,13 @@ open Freya.Core
 type HttpMachine =
     | HttpMachine of (Configuration -> unit * Configuration)
 
-(* Functions
-
-   Functions implementing common monadic operations on the Machine type,
-   which will be used to implement the computation expression builder.
-
-   Additionally some extensions to the basic requirements for a computation
-   expression are included, including mapping over the inner settings. *)
-
-[<RequireQualifiedAccess>]
-[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
-module HttpMachine =
-
     (* Common *)
 
-    let init _ : HttpMachine =
+    static member Init _ : HttpMachine =
         HttpMachine (fun c ->
             (), c)
 
-    let bind (m: HttpMachine, f: unit -> HttpMachine) : HttpMachine =
+    static member Bind (m: HttpMachine, f: unit -> HttpMachine) : HttpMachine =
         HttpMachine (fun c ->
             let (HttpMachine m) = m
             let (HttpMachine f) = f ()
@@ -49,17 +41,11 @@ module HttpMachine =
 
     (* Custom *)
 
-    let inline map (m: HttpMachine, f: Configuration -> Configuration) : HttpMachine =
+    static member Map (m: HttpMachine, f: Configuration -> Configuration) : HttpMachine =
         HttpMachine (fun c ->
             let (HttpMachine m) = m
 
             (), f (snd (m c)))
-
-    (* Operations *)
-
-    let operations =
-        { Configuration.Operations.Init = init
-          Configuration.Operations.Bind = bind }
 
 (* Builder
 
@@ -67,11 +53,15 @@ module HttpMachine =
    simple type-safe syntax and static inference based overloads of single
    functions. *)
 
+let private operations =
+    { Configuration.Operations.Init = HttpMachine.Init
+      Configuration.Operations.Bind = HttpMachine.Bind }
+
 type HttpMachineBuilder () =
-    inherit Configuration.Builder<HttpMachine> (HttpMachine.operations)
+    inherit Configuration.Builder<HttpMachine> (operations)
 
     member __.Zero () =
-        HttpMachine.init ()
+        HttpMachine.Init ()
 
 (* Expressions
 
@@ -87,6 +77,54 @@ let freyaHttpMachine =
 
 let freyaMachine =
     freyaHttpMachine
+
+(* Machine
+
+   The definition and implementation of a general HTTP Machine, used by the
+   Hephaestus library to construct and optimize a parameterized execution graph
+   for an arbitrary binary decision machine.
+
+   The Machine assumes Freya<bool> functions for decisions (for which a mapping
+   is provided in the common Freya.Machines library) and Settings for the type
+   of configuration, also provided along with utility tooling by the
+   Freya.Machines library. *)
+
+(* Operations
+
+   Common operations for standard HTTP responses, setting various header values
+   according to the appropriate logic for the response. These are commonly used
+   by various terminals within the HTTP Machine. *)
+
+[<RequireQualifiedAccess>]
+module Operations =
+
+    let private date =
+        Date.Date >> Some >> (.=) Response.Headers.date_ <| DateTime.UtcNow
+
+    let private phrase =
+        Some >> (.=) Response.reasonPhrase_
+
+    let private status =
+        Some >> (.=) Response.statusCode_
+
+    (* 2xx *)
+
+    let ok =
+            status 200
+         *> phrase "OK"
+         *> date
+
+    (* 5xx *)
+
+    let serviceUnavailable =
+            status 503
+         *> phrase "Service Unavailable"
+         *> date
+
+    let httpVersionNotSupported =
+            status 505
+         *> phrase "HTTP Version Not Supported"
+         *> date
 
 (* Inference
 
@@ -135,19 +173,67 @@ module internal Specification =
     let decision a b c configurator (left, right) =
         Specification.Decision.create (Key [ a; b; c ]) configurator (left, right)
 
-    let terminal name =
-        Specification.Terminal.create (Key [ name ]) (fun _ -> Freya.init name)
+    let terminal a b c f =
+        Specification.Terminal.create (Key [ a; b; c ]) f
 
-(* Machine
+(* Common *)
 
-   The definition and implementation of a general HTTP Machine, used by the
-   Hephaestus library to construct and optimize a parameterized execution graph
-   for an arbitrary binary decision machine.
+[<RequireQualifiedAccess>]
+module Common =
 
-   The Machine assumes Freya<bool> functions for decisions (for which a mapping
-   is provided in the common Freya.Machines library) and Settings for the type
-   of configuration, also provided along with utility tooling by the
-   Freya.Machines library. *)
+    (* Specifications *)
+
+    let private terminal =
+        Specification.terminal "common"
+
+    (* Configuration *)
+
+    [<RequireQualifiedAccess>]
+    module private Configuration =
+
+        (* Types *)
+
+        type Common =
+            { Terminals: Terminals }
+
+            static member terminals_ =
+                (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
+
+            static member empty =
+                { Terminals = Terminals.empty }
+
+         and Terminals =
+            { Ok: Freya<unit> option }
+
+            static member ok_ =
+                (fun x -> x.Ok), (fun o x -> { x with Ok = o })
+
+            static member empty =
+                { Ok = None }
+
+        (* Optics *)
+
+        let common_ =
+            Configuration.element_ "common" Common.empty
+
+    [<RequireQualifiedAccess>]
+    module Terminals =
+
+        let private terminal =
+            terminal ""
+
+        let private terminals_ =
+                Configuration.common_
+            >-> Configuration.Common.terminals_
+
+        let ok_ =
+                terminals_
+            >-> Configuration.Terminals.ok_
+
+        let internal ok =
+            terminal "ok"
+                (function | TryGet ok_ x -> Operations.ok *> x
+                          | _ -> Operations.ok)
 
 (* Core *)
 
@@ -160,12 +246,14 @@ module Core =
         Specification.decision "core"
 
     let private terminal =
-        Specification.terminal
+        Specification.terminal "core"
 
     (* Configuration *)
 
     [<RequireQualifiedAccess>]
     module private Configuration =
+
+        (* Types *)
 
         type Core =
             { Server: Server }
@@ -177,6 +265,20 @@ module Core =
                 { Server = Server.empty }
 
          and Server =
+            { Decisions: Decisions
+              Terminals: Terminals }
+
+            static member decisions_ =
+                (fun x -> x.Decisions), (fun d x -> { x with Decisions = d })
+
+            static member terminals_ =
+                (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
+
+            static member empty =
+                { Decisions = Decisions.empty
+                  Terminals = Terminals.empty }
+
+         and Decisions =
             { ServiceAvailable: Decision
               HttpVersionSupported: Decision option }
 
@@ -190,6 +292,20 @@ module Core =
                 { ServiceAvailable = Literal true
                   HttpVersionSupported = None }
 
+         and Terminals =
+            { ServiceUnavailable: Freya<unit> option
+              HttpVersionNotSupported: Freya<unit> option }
+
+            static member serviceUnavailable_ =
+                (fun x -> x.ServiceUnavailable), (fun s x -> { x with ServiceUnavailable = s })
+
+            static member httpVersionNotSupported_ =
+                (fun x -> x.HttpVersionNotSupported), (fun h x -> { x with HttpVersionNotSupported = h })
+
+            static member empty =
+                { ServiceUnavailable = None
+                  HttpVersionNotSupported = None }
+
         (* Optics *)
 
         let core_ =
@@ -197,10 +313,10 @@ module Core =
 
     (* Server
 
-       Core decisions and responses for the Core.Server section of the HTTP
+       Core decisions and terminals for the Core.Server section of the HTTP
        machine. *)
 
-    [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
+    [<RequireQualifiedAccess>]
     module Server =
 
         (* Optics *)
@@ -209,37 +325,72 @@ module Core =
                 Configuration.core_
             >-> Configuration.Core.server_
 
-        let serviceAvailable_ =
-                server_
-            >-> Configuration.Server.serviceAvailable_
+        (* Terminals *)
 
-        let httpVersionSupported_ =
-                server_
-            >-> Configuration.Server.httpVersionSupported_
+        [<RequireQualifiedAccess>]
+        module Terminals =
 
-        (* Specifications *)
+            let private terminal =
+                terminal "server"
 
-        let private decision =
-            decision "server"
+            let private terminals_ =
+                    server_
+                >-> Configuration.Server.terminals_
+
+            let serviceUnavailable_ =
+                    terminals_
+                >-> Configuration.Terminals.serviceUnavailable_
+
+            let httpVersionNotSupported_ =
+                    terminals_
+                >-> Configuration.Terminals.httpVersionNotSupported_
+
+            let internal serviceUnavailable =
+                terminal "serviceUnavailable"
+                    (function | TryGet serviceUnavailable_ x -> Operations.serviceUnavailable *> x
+                              | _ -> Operations.serviceUnavailable)
+
+            let internal httpVersionNotSupported =
+                terminal "httpVersionNotSupported"
+                    (function | TryGet httpVersionNotSupported_ x -> Operations.httpVersionNotSupported *> x
+                              | _ -> Operations.httpVersionNotSupported)
 
         (* Decisions *)
 
-        let rec internal serviceAvailable s =
-            decision "serviceAvailable"
-                (function | Get serviceAvailable_ x -> Decision.map x)
-                (terminal "503", httpVersionSupported s)
+        [<RequireQualifiedAccess>]
+        module Decisions =
 
-        and internal httpVersionSupported s =
-            decision "httpVersionSupported"
-                (function | TryGet httpVersionSupported_ x -> Decision.map x
-                          | _ -> Decision.map (Literal true))
-                (terminal "505", s)
+            let private decisions_ =
+                    server_
+                >-> Configuration.Server.decisions_
+
+            let serviceAvailable_ =
+                    decisions_
+                >-> Configuration.Decisions.serviceAvailable_
+
+            let httpVersionSupported_ =
+                    decisions_
+                >-> Configuration.Decisions.httpVersionSupported_
+
+            let private decision =
+                decision "server"
+
+            let rec internal serviceAvailable s =
+                decision "serviceAvailable"
+                    (function | Get serviceAvailable_ x -> Decision.map x)
+                    (Terminals.serviceUnavailable, httpVersionSupported s)
+
+            and internal httpVersionSupported s =
+                decision "httpVersionSupported"
+                    (function | TryGet httpVersionSupported_ x -> Decision.map x
+                              | _ -> Decision.map (Literal true))
+                    (Terminals.httpVersionNotSupported, s)
 
     (* Component *)
 
     open Hephaestus
 
-    let internal export =
+    let internal core =
         { Metadata =
             { Name = "core"
               Description = None }
@@ -247,26 +398,33 @@ module Core =
             { Required = Set.empty
               Preconditions = List.empty }
           Operations =
-            [ Prepend (fun _ -> Server.serviceAvailable (terminal "ok")) ] }
+            [ Prepend (fun _ -> Server.Decisions.serviceAvailable Common.Terminals.ok) ] }
 
 (* Syntax
 
-    Extensions to the operations available as part of the defined Http Machine
-    computation expression. *)
+   Extensions to the operations available as part of the defined Http Machine
+   computation expression. *)
 
 type HttpMachineBuilder with
 
-    (* Core
+    (* Common.Terminals *)
 
-       Syntax elements for the various configuration values used by parts
-       making up the Core component. *)
+    [<CustomOperation ("handleOk", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleOk (m, a) =
+        HttpMachine.Map (m, Optic.set Common.Terminals.ok_ (Some a))
 
-    (* Server *)
+    (* Core.Server.Decisions *)
 
     [<CustomOperation ("serviceAvailable", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.ServiceAvailable (m, a) =
-        HttpMachine.map (m, Optic.set Core.Server.serviceAvailable_ (Infer.decision a))
+        HttpMachine.Map (m, Optic.set Core.Server.Decisions.serviceAvailable_ (Infer.decision a))
 
     [<CustomOperation ("httpVersionSupported", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HttpVersionSupported (m, a) =
-        HttpMachine.map (m, Optic.set Core.Server.httpVersionSupported_ (Some (Infer.decision a)))
+        HttpMachine.Map (m, Optic.set Core.Server.Decisions.httpVersionSupported_ (Some (Infer.decision a)))
+
+    (* Core.Server.Terminals *)
+
+    [<CustomOperation ("handleServiceUnavailable", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleServiceUnavailable (m, a) =
+        HttpMachine.Map (m, Optic.set Core.Server.Terminals.serviceUnavailable_ (Some a))

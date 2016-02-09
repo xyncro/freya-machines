@@ -3,7 +3,6 @@ source https://www.myget.org/F/freya/api/v2
 
 nuget Aether               ~> 8.1
 nuget Arachne.Http         ~> 3.0.0-b
-nuget Arachne.Uri.Template ~> 3.0.0-b
 nuget Freya.Core           ~> 4.0.0-b
 nuget Freya.Optics.Http    ~> 4.0.0-b
 nuget Hekate               ~> 3
