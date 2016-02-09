@@ -41,6 +41,9 @@ type Configuration =
     static member configuration_ =
         (fun (Configuration x) -> x), (Configuration)
 
+    static member empty =
+        Configuration (Map.empty)
+
 (* Decisions
 
    Simple mapping from a Freya Decision to a stateful Hephaestus Decision,
