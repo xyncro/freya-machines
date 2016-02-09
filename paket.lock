@@ -25,7 +25,7 @@ NUGET
       Hekate (>= 3.2.0 < 4.0.0)
   remote: https://www.myget.org/F/freya/api/v2
   specs:
-    Freya.Core (4.0.0-b003)
+    Freya.Core (4.0.0-b005)
       Aether (>= 8.1.0 < 9.0.0)
     Freya.Optics (4.0.0-b001)
       Aether (>= 8.1.0 < 9.0.0)
@@ -50,6 +50,22 @@ FRAMEWORK: >= NET45
 NUGET
   remote: http://www.nuget.org/api/v2
   specs:
+    Microsoft.Owin (3.0.1)
+      Owin (>= 1.0)
+    Microsoft.Owin.Diagnostics (3.0.1)
+      Microsoft.Owin (>= 3.0.1)
+      Owin (>= 1.0)
+    Microsoft.Owin.Host.HttpListener (3.0.1)
+    Microsoft.Owin.Hosting (3.0.1)
+      Microsoft.Owin (>= 3.0.1)
+      Owin (>= 1.0)
+    Microsoft.Owin.SelfHost (3.0.1)
+      Microsoft.Owin (>= 3.0.1)
+      Microsoft.Owin.Diagnostics (>= 3.0.1)
+      Microsoft.Owin.Host.HttpListener (>= 3.0.1)
+      Microsoft.Owin.Hosting (>= 3.0.1)
+      Owin (>= 1.0)
+    Owin (1.0)
     Unquote (3.1.1)
     xunit (2.1.0)
       xunit.assert (2.1.0)

@@ -7,13 +7,13 @@ open Arachne.Http
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Optics.Http
+open Hephaestus
 
 // TODO: Review comments, etc.
-// TODO: Move __.Zero () to Core
 // TODO: Defaults
-// TODO: Operations
-// TODO: Genuine Responses for Server
 // TODO: Rest of Machine!
+// TODO: Clean up decision/terminal functions somehow
+// TODO: Introduce a mechanism for logs, etc.
 
 (* Operations
 
@@ -52,19 +52,19 @@ module Operations =
          *> phrase "HTTP Version Not Supported"
          *> date
 
-(* Machine
+(* Model
 
-   The definition and implementation of a general HTTP Machine, used by the
+   The definition and implementation of a general HTTP Model, used by the
    Hephaestus library to construct and optimize a parameterized execution graph
    for an arbitrary binary decision machine.
 
-   The Machine assumes Freya<bool> functions for decisions (for which a mapping
+   The Model assumes Freya<bool> functions for decisions (for which a mapping
    is provided in the common Freya.Machines library) and Settings for the type
    of configuration, also provided along with utility tooling by the
    Freya.Machines library. *)
 
 [<RequireQualifiedAccess>]
-module Machine =
+module Model =
 
     (* Specification
 
@@ -75,16 +75,11 @@ module Machine =
        element, the section within that element, and the name of the decision
        itself. *)
 
-    [<RequireQualifiedAccess>]
-    module private Specification =
+    let private decision a b c configurator (left, right) =
+        Specification.Decision.create (Key [ a; b; c ]) configurator (left, right)
 
-        open Hephaestus
-
-        let decision a b c configurator (left, right) =
-            Specification.Decision.create (Key [ a; b; c ]) configurator (left, right)
-
-        let terminal a b c f =
-            Specification.Terminal.create (Key [ a; b; c ]) f
+    let private terminal a b c f =
+        Specification.Terminal.create (Key [ a; b; c ]) f
 
     (* Common *)
 
@@ -94,7 +89,7 @@ module Machine =
         (* Specifications *)
 
         let private terminal =
-            Specification.terminal "common"
+            terminal "common"
 
         (* Configuration *)
 
@@ -153,10 +148,10 @@ module Machine =
         (* Specifications *)
 
         let private decision =
-            Specification.decision "core"
+            decision "core"
 
         let private terminal =
-            Specification.terminal "core"
+            terminal "core"
 
         (* Configuration *)
 
@@ -199,7 +194,7 @@ module Machine =
                     (fun x -> x.HttpVersionSupported), (fun h x -> { x with HttpVersionSupported = h })
 
                 static member empty =
-                    { ServiceAvailable = Literal true
+                    { ServiceAvailable = Freya.Machines.Literal true
                       HttpVersionSupported = None }
 
              and Terminals =
@@ -293,12 +288,10 @@ module Machine =
                 and internal httpVersionSupported s =
                     decision "httpVersionSupported"
                         (function | TryGet httpVersionSupported_ x -> Decision.map x
-                                  | _ -> Decision.map (Literal true))
+                                  | _ -> Decision.map (Freya.Machines.Literal true))
                         (Terminals.httpVersionNotSupported, s)
 
         (* Component *)
-
-        open Hephaestus
 
         let internal core =
             { Metadata =
@@ -310,24 +303,36 @@ module Machine =
               Operations =
                 [ Prepend (fun _ -> Server.Decisions.serviceAvailable Common.Terminals.ok) ] }
 
-    (* Execution *)
+(* Machine *)
+
+[<RequireQualifiedAccess>]
+module Machine =
+
+    (* Evaluation *)
 
     [<RequireQualifiedAccess>]
-    module Execution =
+    module Evaluation =
+
+        open Hephaestus
+
+        let evaluate machine =
+            Machine.execute machine
+
+    (* Reification *)
+
+    [<RequireQualifiedAccess>]
+    module Reification =
 
         open Hephaestus
 
         let private model =
-            Model.create (set [ Core.core ])
+            Model.create (set [ Model.Core.core ])
 
         let private prototype =
             Prototype.create model
 
-        let build (configure: Configuration -> unit * Configuration) =
-            let configuration = snd (configure Configuration.empty)
-            let machine = Machine.create prototype configuration
-
-            ()
+        let reify configuration =
+            Evaluation.evaluate (Machine.create prototype configuration)
 
 (* Inference
 
@@ -345,10 +350,10 @@ module Infer =
             | Defaults
 
             static member inline Decision (x: Freya<bool>) =
-                Function x
+                Freya.Machines.Function x
 
             static member inline Decision (x: bool) =
-                Literal x
+                Freya.Machines.Literal x
 
         let inline defaults (a: ^a, _: ^b) =
             ((^a or ^b) : (static member Decision: ^a -> Decision) a)
@@ -392,6 +397,15 @@ type HttpMachine =
 
             (), f (snd (m c)))
 
+    (* Typeclasses *)
+
+    static member Freya (HttpMachine machine) : Freya<_> =
+            Machine.Reification.reify (snd (machine Configuration.empty))
+
+    static member Pipeline (HttpMachine machine) : Pipeline =
+            HttpMachine.Freya (HttpMachine machine)
+         *> Pipeline.next
+
 (* Builder
 
    Computation expression builder for configuring the HTTP Machine, providing a
@@ -399,6 +413,7 @@ type HttpMachine =
    functions. *)
 
 type HttpMachineBuilder () =
+
     inherit Configuration.Builder<HttpMachine>
         { Init = HttpMachine.Init
           Bind = HttpMachine.Bind }
@@ -414,23 +429,23 @@ type HttpMachineBuilder with
 
     [<CustomOperation ("handleOk", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HandleOk (m, a) =
-        HttpMachine.Map (m, Optic.set Machine.Common.Terminals.ok_ (Some a))
+        HttpMachine.Map (m, Optic.set Model.Common.Terminals.ok_ (Some a))
 
     (* Core.Server.Decisions *)
 
     [<CustomOperation ("serviceAvailable", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.ServiceAvailable (m, a) =
-        HttpMachine.Map (m, Optic.set Machine.Core.Server.Decisions.serviceAvailable_ (Infer.decision a))
+        HttpMachine.Map (m, Optic.set Model.Core.Server.Decisions.serviceAvailable_ (Infer.decision a))
 
     [<CustomOperation ("httpVersionSupported", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HttpVersionSupported (m, a) =
-        HttpMachine.Map (m, Optic.set Machine.Core.Server.Decisions.httpVersionSupported_ (Some (Infer.decision a)))
+        HttpMachine.Map (m, Optic.set Model.Core.Server.Decisions.httpVersionSupported_ (Some (Infer.decision a)))
 
     (* Core.Server.Terminals *)
 
     [<CustomOperation ("handleServiceUnavailable", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HandleServiceUnavailable (m, a) =
-        HttpMachine.Map (m, Optic.set Machine.Core.Server.Terminals.serviceUnavailable_ (Some a))
+        HttpMachine.Map (m, Optic.set Model.Core.Server.Terminals.serviceUnavailable_ (Some a))
 
 (* Expressions
 

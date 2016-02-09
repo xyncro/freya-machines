@@ -1,2 +1,6 @@
 Aether
 Freya.Core
+
+group Test
+
+  Microsoft.Owin.SelfHost
