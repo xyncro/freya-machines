@@ -23,9 +23,9 @@ open Hephaestus
 
    Optics are provided for these core Machine types. *)
 
-type Decision =
-    | Function of Freya<bool>
-    | Literal of bool
+type Value<'a> =
+    | Function of Freya<'a>
+    | Literal of 'a
 
     static member function_ =
         (function | Function f -> Some f
@@ -53,16 +53,13 @@ type Configuration =
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module Decision =
 
-    type private Decision =
-        Hephaestus.Decision<State>
-
     let private convert =
         function | true -> Right
                  | _ -> Left
 
     let map =
-        function | Literal l -> Decision.Literal (convert l)
-                 | Function f -> Decision.Function (convert <!> f)
+        function | Literal l -> Hephaestus.Decision<State>.Literal (convert l)
+                 | Function f -> Hephaestus.Decision<State>.Function (convert <!> f)
 
 (* Settings
 
@@ -80,7 +77,7 @@ module Configuration =
         (function | Some a -> a
                   | _ -> def), (Some)
 
-    let element_<'a> element def =
+    let element_<'a> def element =
             Lens.ofIsomorphism Configuration.configuration_
         >-> Map.value_ element
         >-> Option.mapIsomorphism box_<'a>

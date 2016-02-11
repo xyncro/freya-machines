@@ -8,7 +8,8 @@ open Freya.Machines.Http
 let machine =
     freyaMachine {
         serviceAvailable true
-        httpVersionSupported true }
+        httpVersionSupported true
+        authorized true }
 
 let app =
     OwinAppFunc.ofFreya machine
