@@ -219,7 +219,7 @@ module Model =
         module Key =
 
             let add x =
-                Optic.map (Lens.ofIsomorphism Key.key_) ((flip List.append) [ x ])
+                Optic.map (Lens.ofIsomorphism Key.key_) ((flip List.append) x)
 
         (* Decisions *)
 
@@ -248,10 +248,10 @@ module Model =
         (* Specifications *)
 
         let internal decision (key, name) configurator (t, f) =
-            Specification.Decision.create (Key.add name key) (configurator >> Decision.map) (t, f)
+            Specification.Decision.create (Key.add [ name ] key) (configurator >> Decision.map) (t, f)
 
         let internal terminal (key, name) configurator =
-            Specification.Terminal.create (Key.add name key) configurator
+            Specification.Terminal.create (Key.add [ name ] key) configurator
 
     (* Key
 
@@ -260,7 +260,7 @@ module Model =
        key present in all specifications in this instance. *)
 
     let private key =
-        Key.add "http" Key.empty
+        Key.add [ "http" ] Key.empty
 
     (* Properties
 
@@ -388,8 +388,8 @@ module Model =
 
             (* Key *)
 
-            let private key =
-                Key.add "server" key
+            let private key p =
+                Key.add [ p; "server" ] key
 
             (* Types *)
 
@@ -463,16 +463,16 @@ module Model =
                     terminals_
                 >-> Terminals.notImplemented_
 
-            let private serviceUnavailableTerminal =
-                terminal (key, "service-unavailable-terminal")
+            let private serviceUnavailableTerminal p =
+                terminal (key p, "service-unavailable-terminal")
                     (Terminal.fromConfigurationWithOperation serviceUnavailableTerminal_ Operations.serviceUnavailable)
 
-            let private httpVersionNotSupportedTerminal =
-                terminal (key, "http-version-not-supported-terminal")
+            let private httpVersionNotSupportedTerminal p =
+                terminal (key p, "http-version-not-supported-terminal")
                     (Terminal.fromConfigurationWithOperation httpVersionNotSupportedTerminal_ Operations.httpVersionNotSupported)
 
-            let private notImplementedTerminal =
-                terminal (key, "not-implemented-terminal")
+            let private notImplementedTerminal p =
+                terminal (key p, "not-implemented-terminal")
                     (Terminal.fromConfigurationWithOperation notImplementedTerminal_ Operations.notImplemented)
 
             (* Decisions *)
@@ -489,22 +489,22 @@ module Model =
                     decisions_
                 >-> Decisions.httpVersionSupported_
 
-            let rec private serviceAvailableDecision s =
-                decision (key, "service-available-decision")
+            let rec private serviceAvailableDecision p s =
+                decision (key p, "service-available-decision")
                     (Decision.fromConfigurationOrTrue serviceAvailableDecision_)
-                    (serviceUnavailableTerminal, httpVersionSupportedDecision s)
+                    (serviceUnavailableTerminal p, httpVersionSupportedDecision p s)
 
-            and private httpVersionSupportedDecision s =
-                decision (key, "http-version-supported-decision")
+            and private httpVersionSupportedDecision p s =
+                decision (key p, "http-version-supported-decision")
                     (Decision.fromConfigurationOrTrue httpVersionSupportedDecision_)
-                    (httpVersionNotSupportedTerminal, methodImplementedDecision s)
+                    (httpVersionNotSupportedTerminal p, methodImplementedDecision p s)
 
             // TODO: Not Implemented Logic
 
-            and private methodImplementedDecision s =
-                decision (key, "method-implemented-decision")
+            and private methodImplementedDecision p s =
+                decision (key p, "method-implemented-decision")
                     (fun _ -> Static true)
-                    (notImplementedTerminal, s)
+                    (notImplementedTerminal p, s)
 
             (* Element *)
 
@@ -518,8 +518,8 @@ module Model =
 
             (* Key *)
 
-            let private key =
-                Key.add "client" key
+            let private key p =
+                Key.add [ p; "client" ] key
 
             (* Access *)
 
@@ -528,8 +528,8 @@ module Model =
 
                 (* Key *)
 
-                let private key =
-                    Key.add "access" key
+                let private key p =
+                    Key.add [ "access" ] (key p)
 
                 (* Types *)
 
@@ -594,12 +594,12 @@ module Model =
                         terminals_
                     >-> Terminals.forbidden_
 
-                let private unauthorizedTerminal =
-                    terminal (key, "unauthorized-terminal")
+                let private unauthorizedTerminal p =
+                    terminal (key p, "unauthorized-terminal")
                         (Terminal.fromConfigurationWithOperation unauthorizedTerminal_ Operations.unauthorized)
 
-                let private forbiddenTerminal =
-                    terminal (key, "forbidden-terminal")
+                let private forbiddenTerminal p =
+                    terminal (key p, "forbidden-terminal")
                         (Terminal.fromConfigurationWithOperation forbiddenTerminal_ Operations.forbidden)
 
                 (* Decisions *)
@@ -616,15 +616,15 @@ module Model =
                         decisions_
                     >-> Decisions.allowed_
 
-                let rec private authorizedDecision s =
-                    decision (key, "authorized-decision")
+                let rec private authorizedDecision p s =
+                    decision (key p, "authorized-decision")
                         (Decision.fromConfigurationOrTrue authorizedDecision_)
-                        (unauthorizedTerminal, allowedDecision s)
+                        (unauthorizedTerminal p, allowedDecision p s)
 
-                and private allowedDecision s =
-                    decision (key, "allowed-decision")
+                and private allowedDecision p s =
+                    decision (key p, "allowed-decision")
                         (Decision.fromConfigurationOrTrue allowedDecision_)
-                        (forbiddenTerminal, s)
+                        (forbiddenTerminal p, s)
 
                 (* Element *)
 
@@ -638,8 +638,8 @@ module Model =
 
                 (* Key *)
 
-                let private key =
-                    Key.add "request" key
+                let private key p =
+                    Key.add [ "request" ] (key p)
 
                 (* Types *)
 
@@ -732,20 +732,20 @@ module Model =
                         terminals_
                     >-> Terminals.badRequest_
 
-                let private expectationFailedTerminal =
-                    terminal (key, "expectation-failed-terminal")
+                let private expectationFailedTerminal p =
+                    terminal (key p, "expectation-failed-terminal")
                         (Terminal.fromConfigurationWithOperation expectationFailedTerminal_ Operations.expectationFailed)
 
-                let private methodNotAllowedTerminal =
-                    terminal (key, "method-not-allowed-terminal")
+                let private methodNotAllowedTerminal p =
+                    terminal (key p, "method-not-allowed-terminal")
                         (Terminal.fromConfigurationWithOperation methodNotAllowedTerminal_ Operations.methodNotAllowed)
 
-                let private uriTooLongTerminal =
-                    terminal (key, "uri-too-long-terminal")
+                let private uriTooLongTerminal p =
+                    terminal (key p, "uri-too-long-terminal")
                         (Terminal.fromConfigurationWithOperation uriTooLongTerminal_ Operations.uriTooLong)
 
-                let private badRequestTerminal =
-                    terminal (key, "bad-request-terminal")
+                let private badRequestTerminal p =
+                    terminal (key p, "bad-request-terminal")
                         (Terminal.fromConfigurationWithOperation badRequestTerminal_ Operations.badRequest)
 
                 (* Decisions *)
@@ -772,25 +772,25 @@ module Model =
 
                 // TODO: Expectation Met logic
 
-                let rec private expectationMetDecision s =
-                    decision (key, "expectation-met-decision")
+                let rec private expectationMetDecision p s =
+                    decision (key p, "expectation-met-decision")
                         (Decision.fromConfigurationOrTrue expectationMetDecision_)
-                        (expectationFailedTerminal, methodAllowedDecision s)
+                        (expectationFailedTerminal p, methodAllowedDecision p s)
 
-                and private methodAllowedDecision s =
-                    decision (key, "method-allowed-decision")
+                and private methodAllowedDecision p s =
+                    decision (key p, "method-allowed-decision")
                         (Decision.fromConfigurationOrTrue methodAllowedDecision_)
-                        (methodNotAllowedTerminal, uriTooLongDecision s)
+                        (methodNotAllowedTerminal p, uriTooLongDecision p s)
 
-                and private uriTooLongDecision s =
-                    decision (key, "uri-too-long-decision")
-                        (Decision.fromConfigurationOrTrue uriTooLongDecision_)
-                        (uriTooLongTerminal, badRequestDecision s)
+                and private uriTooLongDecision p s =
+                    decision (key p, "uri-too-long-decision")
+                        (Decision.fromConfigurationOrFalse uriTooLongDecision_)
+                        (badRequestDecision p s, uriTooLongTerminal p)
 
-                and private badRequestDecision s =
-                    decision (key, "bad-request-decision")
-                        (Decision.fromConfigurationOrTrue badRequestDecision_)
-                        (badRequestTerminal, s)
+                and private badRequestDecision p s =
+                    decision (key p, "bad-request-decision")
+                        (Decision.fromConfigurationOrFalse badRequestDecision_)
+                        (s, badRequestTerminal p)
 
                 (* Element *)
 
@@ -804,8 +804,8 @@ module Model =
 
                 (* Key *)
 
-                let private key =
-                    Key.add "acceptable" key
+                let private key p =
+                    Key.add [ "acceptable" ] (key p)
 
                 (* Types *)
 
@@ -842,8 +842,8 @@ module Model =
                         terminals_
                     >-> Terminals.notAcceptable_
 
-                let private notAcceptableTerminal =
-                    terminal (key, "not-acceptable-terminal")
+                let private notAcceptableTerminal p =
+                    terminal (key p, "not-acceptable-terminal")
                         (Terminal.fromConfigurationWithOperation notAcceptableTerminal_ Operations.notAcceptable)
 
                 (* Decisions *)
@@ -872,58 +872,92 @@ module Model =
                 let private languagesSupported_ =
                         Representation.languagesSupported_
 
-                let rec private hasAcceptDecision s =
-                    decision (key, "has-accept-decision")
+                let rec private hasAcceptDecision p s =
+                    decision (key p, "has-accept-decision")
                         (fun _ -> Dynamic (Option.isSome <!> !. accept_))
-                        (hasAcceptLanguageDecision s, acceptMatchesDecision s)
+                        (hasAcceptLanguageDecision p s, acceptMatchesDecision p s)
 
-                and private acceptMatchesDecision s =
-                    decision (key, "accept-matches-decision")
+                and private acceptMatchesDecision p s =
+                    decision (key p, "accept-matches-decision")
                         (function | TryGet mediaTypesSupported_ (Dynamic m) -> Dynamic (MediaType.negotiable <!> m <*> !. accept_)
                                   | TryGet mediaTypesSupported_ (Static m) -> Dynamic (MediaType.negotiable m <!> !. accept_)
                                   | _ -> Static true)
-                        (notAcceptableTerminal, hasAcceptLanguageDecision s)
+                        (notAcceptableTerminal p, hasAcceptLanguageDecision p s)
 
-                and private hasAcceptLanguageDecision s =
-                    decision (key, "has-accept-language-decision")
+                and private hasAcceptLanguageDecision p s =
+                    decision (key p, "has-accept-language-decision")
                         (fun _ -> Dynamic (Option.isSome <!> !. acceptLanguage_))
-                        (hasAcceptCharsetDecision s, acceptLanguageMatchesDecision s)
+                        (hasAcceptCharsetDecision p s, acceptLanguageMatchesDecision p s)
 
-                and private acceptLanguageMatchesDecision s =
-                    decision (key, "accept-language-matches-decision")
+                and private acceptLanguageMatchesDecision p s =
+                    decision (key p, "accept-language-matches-decision")
                         (function | TryGet languagesSupported_ (Dynamic l) -> Dynamic (Language.negotiable <!> l <*> !. acceptLanguage_)
                                   | TryGet languagesSupported_ (Static l) -> Dynamic (Language.negotiable l <!> !. acceptLanguage_)
                                   | _ -> Static true)
-                        (notAcceptableTerminal, hasAcceptCharsetDecision s)
+                        (notAcceptableTerminal p, hasAcceptCharsetDecision p s)
 
-                and private hasAcceptCharsetDecision s =
-                    decision (key, "has-accept-charset-decision")
+                and private hasAcceptCharsetDecision p s =
+                    decision (key p, "has-accept-charset-decision")
                         (fun _ -> Dynamic (Option.isSome <!> !. acceptCharset_))
-                        (hasAcceptEncodingDecision s, acceptCharsetMatchesDecision s)
+                        (hasAcceptEncodingDecision p s, acceptCharsetMatchesDecision p s)
 
-                and private acceptCharsetMatchesDecision s =
-                    decision (key, "accept-charset-matches-decision")
+                and private acceptCharsetMatchesDecision p s =
+                    decision (key p, "accept-charset-matches-decision")
                         (function | TryGet charsetsSupported_ (Dynamic c) -> Dynamic (Charset.negotiable <!> c <*> !. acceptCharset_)
                                   | TryGet charsetsSupported_ (Static c) -> Dynamic (Charset.negotiable c <!> !. acceptCharset_)
                                   | _ -> Static true)
-                        (notAcceptableTerminal, hasAcceptEncodingDecision s)
+                        (notAcceptableTerminal p, hasAcceptEncodingDecision p s)
 
-                and private hasAcceptEncodingDecision s =
-                    decision (key, "has-accept-encoding-decision")
+                and private hasAcceptEncodingDecision p s =
+                    decision (key p, "has-accept-encoding-decision")
                         (fun _ -> Dynamic (Option.isSome <!> !. acceptEncoding_))
-                        (s, acceptEncodingMatchesDecision s)
+                        (s, acceptEncodingMatchesDecision p s)
 
-                and private acceptEncodingMatchesDecision s =
-                    decision (key, "accept-encoding-matches-decision")
+                and private acceptEncodingMatchesDecision p s =
+                    decision (key p, "accept-encoding-matches-decision")
                         (function | TryGet contentCodingsSupported_ (Dynamic c) -> Dynamic (ContentCoding.negotiable <!> c <*> !. acceptEncoding_)
                                   | TryGet contentCodingsSupported_ (Static c) -> Dynamic (ContentCoding.negotiable c <!> !. acceptEncoding_)
                                   | _ -> Static true)
-                        (notAcceptableTerminal, s)
+                        (notAcceptableTerminal p, s)
 
                 (* Element *)
 
                 let element =
                     hasAcceptDecision
+
+        (* Request *)
+
+        [<RequireQualifiedAccess>]
+        module Request =
+
+            (* Key *)
+
+            let private key p =
+                Key.add [ p; "request" ] key
+
+            (* Method *)
+
+            [<RequireQualifiedAccess>]
+            module Method =
+
+                (* Key *)
+
+                let private key p =
+                    Key.add [ "method" ] (key p)
+
+                (* Decisions *)
+
+                let private method_ =
+                    Request.method_
+
+                let private methodMatchesDecision p m =
+                    decision (key p, "method-matches-decision")
+                        (fun _ -> Dynamic (flip List.contains m <!> !. method_))
+
+                (* Element *)
+
+                let element =
+                    methodMatchesDecision
 
     (* Components
 
@@ -939,14 +973,30 @@ module Model =
         [<RequireQualifiedAccess>]
         module Core =
 
-            let private endpoint =
-                Specification.Terminal.empty
+            [<Literal>]
+            let private Core =
+                "core"
+
+            (* Terminals *)
+
+            let private endpointTerminal =
+                terminal (key, "endpoint-terminal")
+                    (fun _ -> Operations.ok)
+
+            (* Decisions *)
+
+            let private endpointDecision =
+                decision (key, "endpoint-decision")
+                    (fun _ -> Static true)
+                    (Specification.Terminal.empty, endpointTerminal)
+
+            (* Component *)
 
             let private core =
-                Server.element (
-                    Client.Access.element (
-                        Client.Request.element (
-                            Client.Acceptable.element endpoint)))
+                Server.element Core (
+                    Client.Access.element Core (
+                        Client.Request.element Core (
+                            Client.Acceptable.element Core endpointDecision)))
 
             let export =
                 { Metadata =
@@ -958,12 +1008,41 @@ module Model =
                   Operations =
                     [ Prepend (fun _ -> core) ] }
 
+        (* Get or Head *)
+
+        [<RequireQualifiedAccess>]
+        module GetOrHead =
+
+            [<Literal>]
+            let private GetOrHead =
+                "get-or-head"
+
+            (* Terminals *)
+
+            let private endpointTerminal : Specification<Configuration,unit,State> =
+                terminal (key, "endpoint-terminal-2")
+                    (fun _ -> Operations.ok)
+
+            let private getOrHead s =
+                Request.Method.element GetOrHead [ GET; HEAD ] (s, endpointTerminal)
+
+            let export =
+                { Metadata =
+                    { Name = "http.get"
+                      Description = None }
+                  Requirements =
+                    { Required = Set.empty
+                      Preconditions = List.empty }
+                  Operations =
+                    [ Splice (Key [ "http"; "endpoint-decision" ], Right, getOrHead) ] }
+
     (* Model *)
 
     let model =
         Model.create (
             set [
-                Core.export ])
+                Core.export
+                GetOrHead.export ])
 
 (* Machine
 
