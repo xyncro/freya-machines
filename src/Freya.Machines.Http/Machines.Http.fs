@@ -4,6 +4,7 @@ open System
 open Aether
 open Aether.Operators
 open Arachne.Http
+open Arachne.Language
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Optics.Http
@@ -30,13 +31,64 @@ module internal Negotiation =
         function | Some x -> Negotiated x
                  | _ -> Free
 
+    (* Charset *)
+
+    [<RequireQualifiedAccess>]
+    module Charset =
+
+        let negotiate supported acceptCharset =
+            Option.map (function | AcceptCharset x -> x) acceptCharset
+            |> Charset.negotiate supported
+            |> negotiated
+
+        (* Decisions *)
+
+        let negotiable supported acceptCharset =
+            negotiate supported acceptCharset
+            |> function | Negotiated x when not (List.isEmpty x) -> true
+                        | _ -> false
+
+    (* ContentCoding *)
+
+    [<RequireQualifiedAccess>]
+    module ContentCoding =
+
+        let negotiate supported acceptEncoding =
+            Option.map (function | AcceptEncoding x -> x) acceptEncoding
+            |> ContentCoding.negotiate supported
+            |> negotiated
+
+        (* Decisions *)
+
+        let negotiable supported acceptEncoding =
+            negotiate supported acceptEncoding
+            |> function | Negotiated x when not (List.isEmpty x) -> true
+                        | _ -> false
+
+    (* Language *)
+
+    [<RequireQualifiedAccess>]
+    module Language =
+
+        let negotiate supported acceptLanguage =
+            Option.map (function | AcceptLanguage x -> x) acceptLanguage
+            |> Language.negotiate supported
+            |> negotiated
+
+        (* Decisions *)
+
+        let negotiable supported acceptLanguage =
+            negotiate supported acceptLanguage
+            |> function | Negotiated x when not (List.isEmpty x) -> true
+                        | _ -> false
+
     (* MediaType *)
 
     [<RequireQualifiedAccess>]
     module MediaType =
 
-        let negotiate supported acceptable =
-            Option.map (function | Accept x -> x) acceptable
+        let negotiate supported accept =
+            Option.map (function | Accept x -> x) accept
             |> MediaType.negotiate supported
             |> negotiated
 
@@ -155,7 +207,7 @@ module Model =
         [<RequireQualifiedAccess>]
         module Key =
 
-            let plus x =
+            let add x =
                 Optic.map (Lens.ofIsomorphism Key.key_) ((flip List.append) [ x ])
 
         (* Decisions *)
@@ -163,36 +215,37 @@ module Model =
         [<RequireQualifiedAccess>]
         module Decision =
 
-            let inline orLiteral o l =
+            let inline fromConfigurationOrStatic o s =
                 function | TryGet o x -> x
-                         | _ -> Value.Literal l
+                         | _ -> Static s
 
-            let inline orTrue o =
-                orLiteral o true
+            let inline fromConfigurationOrTrue o =
+                fromConfigurationOrStatic o true
 
-            let inline orFalse o =
-                orLiteral o false
+            let inline fromConfigurationOrFalse o =
+                fromConfigurationOrStatic o false
 
         (* Terminals *)
 
         [<RequireQualifiedAccess>]
         module Terminal =
 
-            let inline from o operation =
+            let inline fromConfigurationWithOperation o operation =
                 function | TryGet o x -> x *> operation
                          | _ -> operation
 
-        let internal decision (key, name) configurator (l, r) =
-            Specification.Decision.create (Key.plus name key) (configurator >> Decision.map) (l, r)
+        (* Specifications *)
+
+        let internal decision (key, name) configurator (t, f) =
+            Specification.Decision.create (Key.add name key) (configurator >> Decision.map) (t, f)
 
         let internal terminal (key, name) configurator =
-            Specification.Terminal.create (Key.plus name key) configurator
-
+            Specification.Terminal.create (Key.add name key) configurator
 
     (* Key *)
 
     let private key =
-        Key.plus "http" Key.empty
+        Key.add "http" Key.empty
 
     (* Common *)
 
@@ -202,7 +255,7 @@ module Model =
         (* Key *)
 
         let private key =
-            Key.plus "common" key
+            Key.add "common" key
 
         (* Configuration *)
 
@@ -226,13 +279,28 @@ module Model =
                       Terminals = Terminals.empty }
 
              and Properties =
-                { MediaTypesSupported: Value<MediaType list> option }
+                { MediaTypesSupported: Value<MediaType list> option
+                  LanguagesSupported: Value<LanguageTag list> option
+                  CharsetsSupported: Value<Charset list> option
+                  ContentCodingsSupported: Value<ContentCoding list> option }
 
                 static member mediaTypesSupported_ =
                     (fun x -> x.MediaTypesSupported), (fun m x -> { x with MediaTypesSupported = m })
 
+                static member languagesSupported_ =
+                    (fun x -> x.LanguagesSupported), (fun l x -> { x with LanguagesSupported = l })
+
+                static member charsetsSupported_ =
+                    (fun x -> x.CharsetsSupported), (fun c x -> { x with CharsetsSupported = c })
+
+                static member contentCodingsSupported_ =
+                    (fun x -> x.ContentCodingsSupported), (fun c x -> { x with ContentCodingsSupported = c })
+
                 static member empty =
-                    { MediaTypesSupported = None }
+                    { MediaTypesSupported = None
+                      LanguagesSupported = None
+                      CharsetsSupported = None
+                      ContentCodingsSupported = None }
 
              and Terminals =
                 { Ok: Freya<unit> option }
@@ -261,6 +329,18 @@ module Model =
                     properties_
                 >-> Configuration.Properties.mediaTypesSupported_
 
+            let languagesSupported_ =
+                    properties_
+                >-> Configuration.Properties.languagesSupported_
+
+            let charsetsSupported_ =
+                    properties_
+                >-> Configuration.Properties.charsetsSupported_
+
+            let contentCodingsSupported_ =
+                    properties_
+                >-> Configuration.Properties.contentCodingsSupported_
+
         (* Terminals *)
 
         [<RequireQualifiedAccess>]
@@ -275,9 +355,8 @@ module Model =
                 >-> Configuration.Terminals.ok_
 
             let internal ok =
-                Specification.Terminal.create
-                    (Key.plus "ok" key)
-                    (Terminal.from ok_ Operations.ok)
+                terminal (key, "ok-terminal")
+                    (Terminal.fromConfigurationWithOperation ok_ Operations.ok)
 
     (* Components *)
 
@@ -287,13 +366,13 @@ module Model =
        // TODO: Consider whether fixed keys is appropriate here
 
         let private key =
-            Key.plus "components" key
+            Key.add "components" key
 
         [<RequireQualifiedAccess>]
         module Common =
 
             let private key =
-                Key.plus "common" key
+                Key.add "common" key
 
             [<RequireQualifiedAccess>]
             module internal Configuration =
@@ -327,18 +406,18 @@ module Model =
             module Method =
 
                 let private key =
-                    Key.plus "method" key
+                    Key.add "method" key
 
                 let internal methodMatches m (l, r) =
                     decision (key, "method-matches-decision")
-                        (fun _ -> Value.Function ((=) m <!> !. Request.method_))
+                        (fun _ -> Dynamic ((=) m <!> !. Request.method_))
                         (l, r)
 
             [<RequireQualifiedAccess>]
             module Existence =
 
                 let private key =
-                    Key.plus "existence" key
+                    Key.add "existence" key
 
                 let exists_ =
                         Configuration.common_
@@ -347,7 +426,7 @@ module Model =
 
                 let internal exists (l, r) =
                     decision (key, "exists-decision")
-                        (Decision.orTrue exists_)
+                        (Decision.fromConfigurationOrTrue exists_)
                         (l, r)
 
     (* Core *)
@@ -356,7 +435,7 @@ module Model =
     module Core =
 
         let private key =
-            Key.plus "core" key
+            Key.add "core" key
 
         (* Configuration *)
 
@@ -578,7 +657,7 @@ module Model =
         module Server =
 
             let private key =
-                Key.plus "server" key
+                Key.add "server" key
 
             let private server_ =
                     Configuration.core_
@@ -607,15 +686,15 @@ module Model =
 
                 let internal serviceUnavailable =
                     terminal (key, "service-unavailable-terminal")
-                        (Terminal.from serviceUnavailable_ Operations.serviceUnavailable)
+                        (Terminal.fromConfigurationWithOperation serviceUnavailable_ Operations.serviceUnavailable)
 
                 let internal httpVersionNotSupported =
                     terminal (key, "http-version-not-supported-terminal")
-                        (Terminal.from httpVersionNotSupported_ Operations.httpVersionNotSupported)
+                        (Terminal.fromConfigurationWithOperation httpVersionNotSupported_ Operations.httpVersionNotSupported)
 
                 let internal notImplemented =
                     terminal (key, "not-implemented-terminal")
-                        (Terminal.from notImplemented_ Operations.notImplemented)
+                        (Terminal.fromConfigurationWithOperation notImplemented_ Operations.notImplemented)
 
             (* Decisions *)
 
@@ -636,19 +715,19 @@ module Model =
 
                 let rec internal serviceAvailable s =
                     decision (key, "service-available-decision")
-                        (Decision.orTrue serviceAvailable_)
+                        (Decision.fromConfigurationOrTrue serviceAvailable_)
                         (Terminals.serviceUnavailable, httpVersionSupported s)
 
                 and internal httpVersionSupported s =
                     decision (key, "http-version-supported-decision")
-                        (Decision.orTrue httpVersionSupported_)
+                        (Decision.fromConfigurationOrTrue httpVersionSupported_)
                         (Terminals.httpVersionNotSupported, methodImplemented s)
 
                 // TODO: Not Implemented Logic
 
                 and internal methodImplemented s =
                     decision (key, "method-implemented-decision")
-                        (fun _ -> Value.Literal true)
+                        (fun _ -> Static true)
                         (Terminals.notImplemented, s)
 
             (* Root *)
@@ -662,7 +741,7 @@ module Model =
         module Client =
 
             let private key =
-                Key.plus "client" key
+                Key.add "client" key
 
             let private client_ =
                     Configuration.core_
@@ -674,7 +753,7 @@ module Model =
             module Access =
 
                 let private key =
-                    Key.plus "access" key
+                    Key.add "access" key
 
                 let private access_ =
                         client_
@@ -697,11 +776,11 @@ module Model =
 
                     let internal unauthorized =
                         terminal (key, "unauthorized-terminal")
-                            (Terminal.from unauthorized_ Operations.unauthorized)
+                            (Terminal.fromConfigurationWithOperation unauthorized_ Operations.unauthorized)
 
                     let internal forbidden =
                         terminal (key, "forbidden-terminal")
-                            (Terminal.from forbidden_ Operations.forbidden)
+                            (Terminal.fromConfigurationWithOperation forbidden_ Operations.forbidden)
 
                 [<RequireQualifiedAccess>]
                 module Decisions =
@@ -720,12 +799,12 @@ module Model =
 
                     let rec internal authorized s =
                         decision (key, "authorized-decision")
-                            (Decision.orTrue authorized_)
+                            (Decision.fromConfigurationOrTrue authorized_)
                             (Terminals.unauthorized, allowed s)
 
                     and internal allowed s =
                         decision (key, "allowed-decision")
-                            (Decision.orTrue allowed_)
+                            (Decision.fromConfigurationOrTrue allowed_)
                             (Terminals.forbidden, s)
 
                 (* Root *)
@@ -739,7 +818,7 @@ module Model =
             module Request =
 
                 let private key =
-                    Key.plus "request" key
+                    Key.add "request" key
 
                 let private request_ =
                         client_
@@ -772,19 +851,19 @@ module Model =
 
                     let internal expectationFailed =
                         terminal (key, "expectation-failed-terminal")
-                            (Terminal.from expectationFailed_ Operations.expectationFailed)
+                            (Terminal.fromConfigurationWithOperation expectationFailed_ Operations.expectationFailed)
 
                     let internal methodNotAllowed =
                         terminal (key, "method-not-allowed-terminal")
-                            (Terminal.from methodNotAllowed_ Operations.methodNotAllowed)
+                            (Terminal.fromConfigurationWithOperation methodNotAllowed_ Operations.methodNotAllowed)
 
                     let internal uriTooLong =
                         terminal (key, "uri-too-long-terminal")
-                            (Terminal.from uriTooLong_ Operations.uriTooLong)
+                            (Terminal.fromConfigurationWithOperation uriTooLong_ Operations.uriTooLong)
 
                     let internal badRequest =
                         terminal (key, "bad-request-terminal")
-                            (Terminal.from badRequest_ Operations.badRequest)
+                            (Terminal.fromConfigurationWithOperation badRequest_ Operations.badRequest)
 
                 (* Decisions *)
 
@@ -815,22 +894,22 @@ module Model =
 
                     let rec internal expectationMet s =
                         decision (key, "expectation-met-decision")
-                            (Decision.orTrue expectationMet_)
+                            (Decision.fromConfigurationOrTrue expectationMet_)
                             (Terminals.expectationFailed, methodAllowed s)
 
                     and internal methodAllowed s =
                         decision (key, "method-allowed-decision")
-                            (Decision.orTrue methodAllowed_)
+                            (Decision.fromConfigurationOrTrue methodAllowed_)
                             (Terminals.methodNotAllowed, uriTooLong s)
 
                     and internal uriTooLong s =
                         decision (key, "uri-too-long-decision")
-                            (Decision.orTrue uriTooLong_)
+                            (Decision.fromConfigurationOrTrue uriTooLong_)
                             (Terminals.uriTooLong, badRequest s)
 
                     and internal badRequest s =
                         decision (key, "bad-request-decision")
-                            (Decision.orTrue badRequest_)
+                            (Decision.fromConfigurationOrTrue badRequest_)
                             (Terminals.badRequest, s)
 
                 (* Root *)
@@ -844,7 +923,7 @@ module Model =
             module Acceptable =
 
                 let private key =
-                    Key.plus "acceptable" key
+                    Key.add "acceptable" key
 
                 let private acceptable_ =
                         client_
@@ -865,7 +944,7 @@ module Model =
 
                     let internal notAcceptable =
                         terminal (key, "not-acceptable-terminal")
-                            (Terminal.from notAcceptable_ Operations.notAcceptable)
+                            (Terminal.fromConfigurationWithOperation notAcceptable_ Operations.notAcceptable)
 
                 (* Decisions *)
 
@@ -874,18 +953,79 @@ module Model =
                     let private accept_ =
                             Request.Headers.accept_
 
+                    let private acceptCharset_ =
+                            Request.Headers.acceptCharset_
+
+                    let private acceptEncoding_ =
+                            Request.Headers.acceptEncoding_
+
+                    let private acceptLanguage_ =
+                            Request.Headers.acceptLanguage_
+
+                    let private charsetsSupported_ =
+                            Common.Properties.charsetsSupported_
+
+                    let private contentCodingsSupported_ =
+                            Common.Properties.contentCodingsSupported_
+
                     let private mediaTypesSupported_ =
                             Common.Properties.mediaTypesSupported_
 
+                    let private languagesSupported_ =
+                            Common.Properties.languagesSupported_
+
                     let rec internal hasAccept s =
                         decision (key, "has-accept-decision")
-                            (fun _ -> Value.Function (Option.isSome <!> !. accept_))
+                            (fun _ -> Dynamic (Option.isSome <!> !. accept_))
+                            (hasAcceptLanguage s, acceptMatches s)
 
                     and internal acceptMatches s =
                         decision (key, "accept-matches-decision")
-                            (function | TryGet mediaTypesSupported_ (Value.Function m) -> Value.Function (MediaType.negotiable <!> m <*> !. accept_)
-                                      | TryGet mediaTypesSupported_ (Value.Literal m) -> Value.Function (MediaType.negotiable m <!> !. accept_)
-                                      | _ -> Value.Literal true)
+                            (function | TryGet mediaTypesSupported_ (Dynamic m) -> Dynamic (MediaType.negotiable <!> m <*> !. accept_)
+                                      | TryGet mediaTypesSupported_ (Static m) -> Dynamic (MediaType.negotiable m <!> !. accept_)
+                                      | _ -> Static true)
+                            (Terminals.notAcceptable, hasAcceptLanguage s)
+
+                    and internal hasAcceptLanguage s =
+                        decision (key, "has-accept-language-decision")
+                            (fun _ -> Dynamic (Option.isSome <!> !. acceptLanguage_))
+                            (hasAcceptCharset s, acceptLanguageMatches s)
+
+                    and internal acceptLanguageMatches s =
+                        decision (key, "accept-language-matches-decision")
+                            (function | TryGet languagesSupported_ (Dynamic l) -> Dynamic (Language.negotiable <!> l <*> !. acceptLanguage_)
+                                      | TryGet languagesSupported_ (Static l) -> Dynamic (Language.negotiable l <!> !. acceptLanguage_)
+                                      | _ -> Static true)
+                            (Terminals.notAcceptable, hasAcceptCharset s)
+
+                    and internal hasAcceptCharset s =
+                        decision (key, "has-accept-charset-decision")
+                            (fun _ -> Dynamic (Option.isSome <!> !. acceptCharset_))
+                            (hasAcceptEncoding s, acceptCharsetMatches s)
+
+                    and internal acceptCharsetMatches s =
+                        decision (key, "accept-charset-matches-decision")
+                            (function | TryGet charsetsSupported_ (Dynamic c) -> Dynamic (Charset.negotiable <!> c <*> !. acceptCharset_)
+                                      | TryGet charsetsSupported_ (Static c) -> Dynamic (Charset.negotiable c <!> !. acceptCharset_)
+                                      | _ -> Static true)
+                            (Terminals.notAcceptable, hasAcceptEncoding s)
+
+                    and internal hasAcceptEncoding s =
+                        decision (key, "has-accept-encoding-decision")
+                            (fun _ -> Dynamic (Option.isSome <!> !. acceptEncoding_))
+                            (s, acceptEncodingMatches s)
+
+                    and internal acceptEncodingMatches s =
+                        decision (key, "accept-encoding-matches-decision")
+                            (function | TryGet contentCodingsSupported_ (Dynamic c) -> Dynamic (ContentCoding.negotiable <!> c <*> !. acceptEncoding_)
+                                      | TryGet contentCodingsSupported_ (Static c) -> Dynamic (ContentCoding.negotiable c <!> !. acceptEncoding_)
+                                      | _ -> Static true)
+                            (Terminals.notAcceptable, s)
+
+                (* Root *)
+
+                let internal root =
+                    Decisions.hasAccept
 
         (* Component *)
 
@@ -893,6 +1033,7 @@ module Model =
                 Server.root
              >> Client.Access.root
              >> Client.Request.root
+             >> Client.Acceptable.root
 
         let internal export =
             { Metadata =
@@ -952,27 +1093,52 @@ module internal Machine =
 [<RequireQualifiedAccess>]
 module Infer =
 
-    (* Value<bool> *)
+    (* Value<'a> *)
 
     module Value =
 
         type Defaults =
             | Defaults
 
-            static member Value (x: Freya<bool>) =
-                Value.Function x
+            static member Value (x: Freya<'a>) =
+                Dynamic x
 
-            static member Value (x: bool) =
-                Value.Literal x
+            static member Value (x: 'a) =
+                Static x
 
         let inline defaults (a: ^a, _: ^b) =
-            ((^a or ^b) : (static member Value: ^a -> Value<bool>) a)
+            ((^a or ^b) : (static member Value: ^a -> Value<_>) a)
 
         let inline infer (x: 'a) =
             defaults (x, Defaults)
 
     let inline value v =
         Value.infer v
+
+    (* MediaType list *)
+
+    module MediaTypes =
+
+        type Defaults =
+            | Defaults
+
+            static member MediaTypes (x: Freya<MediaType list>) =
+                Dynamic x
+
+            static member MediaTypes (x: MediaType list) =
+                Static x
+
+            static member MediaTypes (x: MediaType) = 
+                Static [ x ]
+
+        let inline defaults (a: ^a, _: ^b) =
+            ((^a or ^b) : (static member MediaTypes: ^a -> Value<MediaType list>) a)
+
+        let inline infer (x: 'a) =
+            defaults (x, Defaults)
+
+    let inline mediaTypes v =
+        MediaTypes.infer v
 
     (* Method list *)
 
@@ -981,14 +1147,14 @@ module Infer =
         type Defaults =
             | Defaults
 
-            static member inline Methods (x: Freya<Method list>) =
-                Value.Function x
+            static member Methods (x: Freya<Method list>) =
+                Dynamic x
 
-            static member inline Methods (x: Method list) =
-                Value.Literal x
+            static member Methods (x: Method list) =
+                Static x
 
-            static member inline Methods (x: Method) =
-                Value.Literal [ x ]
+            static member Methods (x: Method) =
+                Static [ x ]
 
         let inline defaults (a: ^a, _: ^b) =
             ((^a or ^b) : (static member Methods: ^a -> Value<Method list>) a)
@@ -1066,6 +1232,12 @@ type HttpMachineBuilder () =
 
 type HttpMachineBuilder with
 
+    (* Common Properties *)
+
+    [<CustomOperation ("mediaTypesSupported", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.MediaTypesSupported (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Common.Properties.mediaTypesSupported_ (Some (Infer.mediaTypes a)))
+
     (* Common Terminals *)
 
     [<CustomOperation ("handleOk", MaintainsVariableSpaceUsingBind = true)>]
@@ -1107,7 +1279,6 @@ type HttpMachineBuilder with
     [<CustomOperation ("handleForbidden", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HandleForbidden (m, a) =
         HttpMachine.Map (m, Optic.set Model.Core.Client.Access.Terminals.forbidden_ (Some a))
-
 
 (* Expressions
 

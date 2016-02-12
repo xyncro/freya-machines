@@ -16,24 +16,24 @@ open Hephaestus
    represent branching points (left or right are always intended to be an
    abstraction which should be targeted by a domain specific abstraction.
 
-   The concept of Settings represents an extensible container for settings of
-   any kind, which may be populated by any relevant component within the system
-   to provide a source of setting information which cannot be known at design
-   time.
+   The concept of Configuration represents an extensible container for settings
+   of any kind, which may be populated by any relevant component within the
+   system to provide a source of setting information which cannot be known at
+   design time.
 
    Optics are provided for these core Machine types. *)
 
 type Value<'a> =
-    | Function of Freya<'a>
-    | Literal of 'a
+    | Dynamic of Freya<'a>
+    | Static of 'a
 
-    static member function_ =
-        (function | Function f -> Some f
-                  | _ -> None), (Function)
+    static member dynamic_ =
+        (function | Dynamic f -> Some f
+                  | _ -> None), (Dynamic)
 
-    static member literal_ =
-        (function | Literal l -> Some l
-                  | _ -> None), (Literal)
+    static member static_ =
+        (function | Static l -> Some l
+                  | _ -> None), (Static)
 
 type Configuration =
     | Configuration of Map<string,obj>
@@ -58,8 +58,9 @@ module Decision =
                  | _ -> Left
 
     let map =
-        function | Literal l -> Hephaestus.Decision<State>.Literal (convert l)
-                 | Function f -> Hephaestus.Decision<State>.Function (convert <!> f)
+        function | Dynamic f -> Function (convert <!> f) 
+                 | Static l -> Literal (convert l)
+                 
 
 (* Settings
 

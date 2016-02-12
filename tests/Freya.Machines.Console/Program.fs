@@ -2,6 +2,7 @@
 
 // Freya
 
+open Arachne.Http
 open Freya.Core
 open Freya.Machines.Http
 
@@ -9,7 +10,8 @@ let machine =
     freyaMachine {
         serviceAvailable true
         httpVersionSupported true
-        authorized true }
+        authorized true
+        mediaTypesSupported MediaType.Json }
 
 let app =
     OwinAppFunc.ofFreya machine
