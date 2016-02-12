@@ -8,9 +8,6 @@ open Freya.Machines.Http
 
 let machine =
     freyaMachine {
-        serviceAvailable true
-        httpVersionSupported true
-        authorized true
         mediaTypesSupported MediaType.Json }
 
 let app =

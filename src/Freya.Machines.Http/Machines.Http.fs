@@ -10,6 +10,23 @@ open Freya.Core.Operators
 open Freya.Optics.Http
 open Hephaestus
 
+(* Decisions
+
+   Simple mapping from a Freya Decision to a stateful Hephaestus Decision,
+   parameterized by the Freya State type. *)
+
+[<RequireQualifiedAccess>]
+[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
+module Decision =
+
+    let private convert =
+        function | true -> Right
+                 | _ -> Left
+
+    let map =
+        function | Dynamic f -> Function (convert <!> f) 
+                 | Static l -> Literal (convert l)
+
 // TODO: Defaults (???)
 // TODO: Rest of Machine!
 // TODO: Introduce a mechanism for logs, etc.
@@ -155,6 +172,11 @@ module Operations =
          *> phrase "Not Acceptable"
          *> date
 
+    let preconditionFailed =
+            status 412
+         *> phrase "Precondition Failed"
+         *> date
+
     let uriTooLong =
             status 414
          *> phrase "URI Too Long"
@@ -282,7 +304,9 @@ module Model =
                 { MediaTypesSupported: Value<MediaType list> option
                   LanguagesSupported: Value<LanguageTag list> option
                   CharsetsSupported: Value<Charset list> option
-                  ContentCodingsSupported: Value<ContentCoding list> option }
+                  ContentCodingsSupported: Value<ContentCoding list> option
+                  ETags: Value<ETag list> option
+                  LastModified: Value<DateTime> option }
 
                 static member mediaTypesSupported_ =
                     (fun x -> x.MediaTypesSupported), (fun m x -> { x with MediaTypesSupported = m })
@@ -296,11 +320,19 @@ module Model =
                 static member contentCodingsSupported_ =
                     (fun x -> x.ContentCodingsSupported), (fun c x -> { x with ContentCodingsSupported = c })
 
+                static member eTags_ =
+                    (fun x -> x.ETags), (fun e x -> { x with ETags = e })
+
+                static member lastModified_ =
+                    (fun x -> x.LastModified), (fun l x -> { x with LastModified = l })
+
                 static member empty =
                     { MediaTypesSupported = None
                       LanguagesSupported = None
                       CharsetsSupported = None
-                      ContentCodingsSupported = None }
+                      ContentCodingsSupported = None
+                      ETags = None
+                      LastModified = None }
 
              and Terminals =
                 { Ok: Freya<unit> option }
@@ -341,6 +373,14 @@ module Model =
                     properties_
                 >-> Configuration.Properties.contentCodingsSupported_
 
+            let eTags_ =
+                    properties_
+                >-> Configuration.Properties.eTags_
+
+            let lastModified_ =
+                    properties_
+                >-> Configuration.Properties.lastModified_
+
         (* Terminals *)
 
         [<RequireQualifiedAccess>]
@@ -367,6 +407,8 @@ module Model =
 
         let private key =
             Key.add "components" key
+
+        (* Common *)
 
         [<RequireQualifiedAccess>]
         module Common =
@@ -410,7 +452,7 @@ module Model =
 
                 let internal methodMatches m (l, r) =
                     decision (key, "method-matches-decision")
-                        (fun _ -> Dynamic ((=) m <!> !. Request.method_))
+                        (fun _ -> Dynamic (flip List.contains m <!> !. Request.method_))
                         (l, r)
 
             [<RequireQualifiedAccess>]
@@ -428,6 +470,141 @@ module Model =
                     decision (key, "exists-decision")
                         (Decision.fromConfigurationOrTrue exists_)
                         (l, r)
+
+        (* Existent *)
+
+        [<RequireQualifiedAccess>]
+        module Existent =
+
+            let private key =
+                Key.add "existent" key
+
+            [<RequireQualifiedAccess>]
+            module Configuration =
+
+                (* Types *)
+
+                type Existent =
+                    { Shared: Shared }
+
+                    static member shared_ =
+                        (fun x -> x.Shared), (fun s x -> { x with Shared = s })
+
+                    static member empty =
+                        { Shared = Shared.empty }
+
+                 and Shared =
+                    { Terminals: SharedTerminals }
+
+                    static member terminals_ =
+                        (fun x -> x.Terminals), (fun s x -> { x with Terminals = s })
+
+                    static member empty =
+                        { Terminals = SharedTerminals.empty }
+
+                 and SharedTerminals =
+                    { PreconditionFailed: Freya<unit> option }
+
+                    static member preconditionFailed_ =
+                        (fun x -> x.PreconditionFailed), (fun p x -> { x with PreconditionFailed = p })
+
+                    static member empty =
+                        { PreconditionFailed = None }
+
+                (* Optics *)
+
+                let existent_ =
+                    Configuration.element_ Existent.empty "existent"
+
+            (* Preconditions *)
+
+            [<RequireQualifiedAccess>]
+            module Preconditions =
+
+                let private key =
+                    Key.add "preconditions" key
+
+                (* Common *)
+
+                [<RequireQualifiedAccess>]
+                module Common =
+
+                    let private key =
+                        Key.add "common" key
+
+                    [<RequireQualifiedAccess>]
+                    module Terminals =
+
+                        let private terminals_ =
+                                Configuration.existent_
+                            >-> Configuration.Existent.shared_
+                            >-> Configuration.Shared.terminals_
+
+                        let preconditionFailed_ =
+                                terminals_
+                            >-> Configuration.SharedTerminals.preconditionFailed_
+
+                        let internal preconditionFailed =
+                            terminal (key, "precondition-failed-terminal")
+                                (Terminal.fromConfigurationWithOperation preconditionFailed_ Operations.preconditionFailed)
+
+                    [<RequireQualifiedAccess>]
+                    module Decisions =
+
+                        let private ifMatch_ =
+                                Request.Headers.ifMatch_
+
+                        let private ifUnmodifiedSince_ =
+                                Request.Headers.ifUnmodifiedSince_
+
+                        let private eTags_ =
+                                Common.Properties.eTags_
+
+                        let private lastModified_ =
+                                Common.Properties.lastModified_
+
+                        let rec internal hasIfMatch s =
+                            decision (key, "has-if-match-decision")
+                                (fun _ -> Dynamic (Option.isSome <!> !. ifMatch_))
+                                (hasIfUnmodifiedSince s, ifMatchMatches s)
+
+                        // TODO: Logic
+
+                        and internal ifMatchMatches s =
+                            decision (key, "if-match-matches-decision")
+                                (function | TryGet eTags_ (Dynamic _) -> Static true
+                                          | _ -> Static true)
+                                (Terminals.preconditionFailed, s)
+
+                        and internal hasIfUnmodifiedSince s =
+                            decision (key, "has-if-unmodified-since-decision")
+                                (fun _ -> Dynamic (Option.isSome <!> !. ifUnmodifiedSince_))
+                                (s, ifUnmodifiedSinceMatches s)
+
+                        // TODO: Logic
+
+                        and internal ifUnmodifiedSinceMatches s =
+                            decision (key, "if-unmodified-since-matches-decision")
+                                (function | TryGet lastModified_ (Dynamic _) -> Static true
+                                          | _ -> Static true)
+                                (Terminals.preconditionFailed, s)
+
+                    (* Root *)
+
+                    let root s =
+                        Decisions.hasIfMatch s
+
+                (* Safe *)
+
+                [<RequireQualifiedAccess>]
+                module Safe =
+
+                    let x = ()
+
+                [<RequireQualifiedAccess>]
+                module Unsafe =
+
+                    let x = ()
 
     (* Core *)
 
@@ -1029,11 +1206,18 @@ module Model =
 
         (* Component *)
 
-        let private specification =
-                Server.root
-             >> Client.Access.root
-             >> Client.Request.root
-             >> Client.Acceptable.root
+        let private endpoint s =
+            decision (key, "endpoint-decision")
+                (fun _ -> Static true)
+                (terminal (key, "endpoint-terminal") (fun _ -> Operations.ok), s)
+
+        let private specification s =
+                Server.root (Client.Access.root (Client.Request.root (Client.Acceptable.root (endpoint s))))
+//                Server.root
+//             >> Client.Access.root
+//             >> Client.Request.root
+//             >> Client.Acceptable.root
+//             >> endpoint
 
         let internal export =
             { Metadata =
@@ -1045,10 +1229,44 @@ module Model =
               Operations =
                 [ Prepend (fun _ -> specification Common.Terminals.ok) ] }
 
+    (* Get *)
+
+    [<RequireQualifiedAccess>]
+    module GetOrHead =
+
+        let rec internal getOrHeadMethod s =
+            Components.Common.Method.methodMatches [ GET; HEAD ] (s, getOrHeadExists s)
+
+        and internal getOrHeadExists s =
+            Components.Common.Existence.exists (s, getOrHeadExistentPreconditionsCommon s)
+
+        and internal getOrHeadExistentPreconditionsCommon s =
+            Components.Existent.Preconditions.Common.root s
+
+        (* Root *)
+
+        let internal root s =
+            getOrHeadMethod s
+
+        (* Component *)
+
+        let internal export =
+            { Metadata =
+                { Name = "http-get"
+                  Description = None }
+              Requirements =
+                { Required = set [ "http-core" ]
+                  Preconditions = List.empty }
+              Operations =
+                [ Splice (Key [ "http"; "core"; "endpoint-decision" ], Right, root) ] }
+
     (* Model *)
 
     let model =
-        Model.create (set [ Core.export ])
+        Model.create (
+            set [
+                Core.export //])
+                GetOrHead.export ])
 
 (* Machine
 

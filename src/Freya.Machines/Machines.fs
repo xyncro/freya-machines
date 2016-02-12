@@ -60,7 +60,6 @@ module Decision =
     let map =
         function | Dynamic f -> Function (convert <!> f) 
                  | Static l -> Literal (convert l)
-                 
 
 (* Settings
 
