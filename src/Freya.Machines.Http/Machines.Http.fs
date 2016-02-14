@@ -959,7 +959,7 @@ module Model =
                 { Decisions: Decisions }
 
                 static member decisions_ =
-                    (fun x -> x.Decisions), (fun d x -> { x with Existence.Decisions = d })
+                    (fun x -> x.Decisions), (fun d x -> { x with Decisions = d })
 
                 static member empty =
                     { Decisions = Decisions.empty }
@@ -976,7 +976,7 @@ module Model =
             (* Optics *)
 
             let private existence_ =
-                Configuration.element_ Existence.empty "resource.existence"
+                Configuration.element_ Existence.empty "existence"
 
             (* Decisions *)
 
