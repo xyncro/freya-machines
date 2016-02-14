@@ -381,27 +381,33 @@ module Model =
     [<AutoOpen>]
     module Elements =
 
-        (* Server *)
+        (* Assertion
+
+           Decisions asserting the capability of the server to handle the given
+           request, based on the defined availability, HTTP protocols, etc.
+
+           Failures of these assertions/checks of server capability will result
+           in 5xx error responses, signalling a server error of some type. *)
 
         [<RequireQualifiedAccess>]
-        module Server =
+        module Assertion =
 
             (* Key *)
 
             let private key p =
-                Key.add [ p; "server" ] key
+                Key.add [ p; "assertion" ] key
 
             (* Types *)
 
-            type private Server =
+            type private Assertion =
                 { Decisions: Decisions
                   Terminals: Terminals }
 
                 static member decisions_ =
-                    (fun x -> x.Decisions), (fun d x -> { x with Server.Decisions = d })
+                    (fun x -> x.Decisions), (fun d x -> { x with Decisions = d })
 
                 static member terminals_ =
-                    (fun x -> x.Terminals), (fun t x -> { x with Server.Terminals = t })
+                    (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
 
                 static member empty =
                     { Decisions = Decisions.empty
@@ -442,14 +448,14 @@ module Model =
 
             (* Optics *)
 
-            let private server_ =
-                    Configuration.element_ Server.empty "server"
+            let private assertion_ =
+                    Configuration.element_ Assertion.empty "assertion"
 
             (* Terminals *)
 
             let private terminals_ =
-                    server_
-                >-> Server.terminals_
+                    assertion_
+                >-> Assertion.terminals_
 
             let serviceUnavailableTerminal_ =
                     terminals_
@@ -478,8 +484,8 @@ module Model =
             (* Decisions *)
 
             let private decisions_ =
-                    server_
-                >-> Server.decisions_
+                    assertion_
+                >-> Assertion.decisions_
 
             let serviceAvailableDecision_ =
                     decisions_
@@ -506,458 +512,490 @@ module Model =
                     (fun _ -> Static true)
                     (notImplementedTerminal p, s)
 
-            (* Element *)
+            (* Export *)
 
-            let element =
+            let export =
                 serviceAvailableDecision
 
-        (* Client *)
+        (* Permission *)
 
         [<RequireQualifiedAccess>]
-        module Client =
+        module Permission =
 
             (* Key *)
 
             let private key p =
-                Key.add [ p; "client" ] key
+                Key.add [ p; "permission" ] key
 
-            (* Access *)
+            (* Types *)
 
-            [<RequireQualifiedAccess>]
-            module Access =
+            type private Permission =
+                { Decisions: Decisions
+                  Terminals: Terminals }
 
-                (* Key *)
+                static member decisions_ =
+                    (fun x -> x.Decisions), (fun d x -> { x with Decisions = d })
 
-                let private key p =
-                    Key.add [ "access" ] (key p)
+                static member terminals_ =
+                    (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
 
-                (* Types *)
+                static member empty =
+                    { Decisions = Decisions.empty
+                      Terminals = Terminals.empty }
 
-                type private Access =
-                    { Decisions: Decisions
-                      Terminals: Terminals }
+             and private Decisions =
+                { Authorized: Value<bool> option
+                  Allowed: Value<bool> option }
 
-                    static member decisions_ =
-                        (fun x -> x.Decisions), (fun d x -> { x with Access.Decisions = d })
+                static member authorized_ =
+                    (fun x -> x.Authorized), (fun a x -> { x with Authorized = a })
 
-                    static member terminals_ =
-                        (fun x -> x.Terminals), (fun t x -> { x with Access.Terminals = t })
+                static member allowed_ =
+                    (fun x -> x.Allowed), (fun a x -> { x with Allowed = a })
 
-                    static member empty =
-                        { Decisions = Decisions.empty
-                          Terminals = Terminals.empty }
+                static member empty =
+                    { Authorized = None
+                      Allowed = None }
 
-                 and private Decisions =
-                    { Authorized: Value<bool> option
-                      Allowed: Value<bool> option }
+             and private Terminals =
+                { Unauthorized: Freya<unit> option
+                  Forbidden: Freya<unit> option }
 
-                    static member authorized_ =
-                        (fun x -> x.Authorized), (fun a x -> { x with Authorized = a })
+                static member unauthorized_ =
+                    (fun x -> x.Unauthorized), (fun u x -> { x with Unauthorized = u })
 
-                    static member allowed_ =
-                        (fun x -> x.Allowed), (fun a x -> { x with Allowed = a })
+                static member forbidden_ =
+                    (fun x -> x.Forbidden), (fun u x -> { x with Forbidden = u })
 
-                    static member empty =
-                        { Authorized = None
-                          Allowed = None }
+                static member empty =
+                    { Unauthorized = None
+                      Forbidden = None }
 
-                 and private Terminals =
-                    { Unauthorized: Freya<unit> option
-                      Forbidden: Freya<unit> option }
+            (* Optics *)
 
-                    static member unauthorized_ =
-                        (fun x -> x.Unauthorized), (fun u x -> { x with Unauthorized = u })
+            let private permission_ =
+                Configuration.element_ Permission.empty "permission"
 
-                    static member forbidden_ =
-                        (fun x -> x.Forbidden), (fun u x -> { x with Forbidden = u })
+            (* Terminals *)
 
-                    static member empty =
-                        { Unauthorized = None
-                          Forbidden = None }
+            let private terminals_ =
+                    permission_
+                >-> Permission.terminals_
 
-                (* Optics *)
+            let unauthorizedTerminal_ =
+                    terminals_
+                >-> Terminals.unauthorized_
 
-                let private access_ =
-                    Configuration.element_ Access.empty "client.access"
+            let forbiddenTerminal_ =
+                    terminals_
+                >-> Terminals.forbidden_
 
-                (* Terminals *)
+            let private unauthorizedTerminal p =
+                terminal (key p, "unauthorized-terminal")
+                    (Terminal.fromConfigurationWithOperation unauthorizedTerminal_ Operations.unauthorized)
 
-                let private terminals_ =
-                        access_
-                    >-> Access.terminals_
+            let private forbiddenTerminal p =
+                terminal (key p, "forbidden-terminal")
+                    (Terminal.fromConfigurationWithOperation forbiddenTerminal_ Operations.forbidden)
 
-                let unauthorizedTerminal_ =
-                        terminals_
-                    >-> Terminals.unauthorized_
+            (* Decisions *)
 
-                let forbiddenTerminal_ =
-                        terminals_
-                    >-> Terminals.forbidden_
+            let private decisions_ =
+                    permission_
+                >-> Permission.decisions_
 
-                let private unauthorizedTerminal p =
-                    terminal (key p, "unauthorized-terminal")
-                        (Terminal.fromConfigurationWithOperation unauthorizedTerminal_ Operations.unauthorized)
+            let authorizedDecision_ =
+                    decisions_
+                >-> Decisions.authorized_
 
-                let private forbiddenTerminal p =
-                    terminal (key p, "forbidden-terminal")
-                        (Terminal.fromConfigurationWithOperation forbiddenTerminal_ Operations.forbidden)
+            let allowedDecision_ =
+                    decisions_
+                >-> Decisions.allowed_
 
-                (* Decisions *)
+            let rec private authorizedDecision p s =
+                decision (key p, "authorized-decision")
+                    (Decision.fromConfigurationOrTrue authorizedDecision_)
+                    (unauthorizedTerminal p, allowedDecision p s)
 
-                let private decisions_ =
-                        access_
-                    >-> Access.decisions_
+            and private allowedDecision p s =
+                decision (key p, "allowed-decision")
+                    (Decision.fromConfigurationOrTrue allowedDecision_)
+                    (forbiddenTerminal p, s)
 
-                let authorizedDecision_ =
-                        decisions_
-                    >-> Decisions.authorized_
+            (* Export *)
 
-                let allowedDecision_ =
-                        decisions_
-                    >-> Decisions.allowed_
+            let export =
+                authorizedDecision
 
-                let rec private authorizedDecision p s =
-                    decision (key p, "authorized-decision")
-                        (Decision.fromConfigurationOrTrue authorizedDecision_)
-                        (unauthorizedTerminal p, allowedDecision p s)
-
-                and private allowedDecision p s =
-                    decision (key p, "allowed-decision")
-                        (Decision.fromConfigurationOrTrue allowedDecision_)
-                        (forbiddenTerminal p, s)
-
-                (* Element *)
-
-                let element =
-                    authorizedDecision
-
-            (* Request *)
-
-            [<RequireQualifiedAccess>]
-            module Request =
-
-                (* Key *)
-
-                let private key p =
-                    Key.add [ "request" ] (key p)
-
-                (* Types *)
-
-                type private Request =
-                    { Decisions: Decisions
-                      Terminals: Terminals }
-
-                    static member decisions_ =
-                        (fun x -> x.Decisions), (fun d x -> { x with Request.Decisions = d })
-
-                    static member terminals_ =
-                        (fun x -> x.Terminals), (fun t x -> { x with Request.Terminals = t })
-
-                    static member empty =
-                        { Decisions = Decisions.empty
-                          Terminals = Terminals.empty }
-
-                 and private Decisions =
-                    { ExpectationMet: Value<bool> option
-                      MethodAllowed: Value<bool> option
-                      UriTooLong: Value<bool> option
-                      BadRequest: Value<bool> option }
-
-                    static member expectationMet_ =
-                        (fun x -> x.ExpectationMet), (fun e x -> { x with ExpectationMet = e })
-
-                    static member methodAllowed_ =
-                        (fun x -> x.MethodAllowed), (fun m x -> { x with MethodAllowed = m })
-
-                    static member uriTooLong_ =
-                        (fun x -> x.UriTooLong), (fun u x -> { x with Decisions.UriTooLong = u })
-
-                    static member badRequest_ =
-                        (fun x -> x.BadRequest), (fun b x -> { x with Decisions.BadRequest = b })
-
-                    static member empty =
-                        { ExpectationMet = None
-                          MethodAllowed = None
-                          UriTooLong = None
-                          BadRequest = None }
-
-                 and private Terminals =
-                    { ExpectationFailed: Freya<unit> option
-                      MethodNotAllowed: Freya<unit> option
-                      UriTooLong: Freya<unit> option
-                      BadRequest: Freya<unit> option }
-
-                    static member expectationFailed_ =
-                        (fun x -> x.ExpectationFailed), (fun e x -> { x with ExpectationFailed = e })
-
-                    static member methodNotAllowed_ =
-                        (fun x -> x.MethodNotAllowed), (fun e x -> { x with MethodNotAllowed = e })
-
-                    static member uriTooLong_ =
-                        (fun x -> x.UriTooLong), (fun u x -> { x with Terminals.UriTooLong = u })
-
-                    static member badRequest_ =
-                        (fun x -> x.BadRequest), (fun b x -> { x with Terminals.BadRequest = b })
-
-                    static member empty =
-                        { ExpectationFailed = None
-                          MethodNotAllowed = None
-                          UriTooLong = None
-                          BadRequest = None }
-
-                (* Optics *)
-
-                let private request_ =
-                    Configuration.element_ Request.empty "client.request"
-
-                (* Terminals *)
-
-                let private terminals_ =
-                        request_
-                    >-> Request.terminals_
-
-                let expectationFailedTerminal_ =
-                        terminals_
-                    >-> Terminals.expectationFailed_
-
-                let methodNotAllowedTerminal_ =
-                        terminals_
-                    >-> Terminals.methodNotAllowed_
-
-                let uriTooLongTerminal_ =
-                        terminals_
-                    >-> Terminals.uriTooLong_
-
-                let badRequestTerminal_ =
-                        terminals_
-                    >-> Terminals.badRequest_
-
-                let private expectationFailedTerminal p =
-                    terminal (key p, "expectation-failed-terminal")
-                        (Terminal.fromConfigurationWithOperation expectationFailedTerminal_ Operations.expectationFailed)
-
-                let private methodNotAllowedTerminal p =
-                    terminal (key p, "method-not-allowed-terminal")
-                        (Terminal.fromConfigurationWithOperation methodNotAllowedTerminal_ Operations.methodNotAllowed)
-
-                let private uriTooLongTerminal p =
-                    terminal (key p, "uri-too-long-terminal")
-                        (Terminal.fromConfigurationWithOperation uriTooLongTerminal_ Operations.uriTooLong)
-
-                let private badRequestTerminal p =
-                    terminal (key p, "bad-request-terminal")
-                        (Terminal.fromConfigurationWithOperation badRequestTerminal_ Operations.badRequest)
-
-                (* Decisions *)
-
-                let private decisions_ =
-                        request_
-                    >-> Request.decisions_
-
-                let expectationMetDecision_ =
-                        decisions_
-                    >-> Decisions.expectationMet_
-
-                let methodAllowedDecision_ =
-                        decisions_
-                    >-> Decisions.methodAllowed_
-
-                let uriTooLongDecision_ =
-                        decisions_
-                    >-> Decisions.uriTooLong_
-
-                let badRequestDecision_ =
-                        decisions_
-                    >-> Decisions.badRequest_
-
-                // TODO: Expectation Met logic
-
-                let rec private expectationMetDecision p s =
-                    decision (key p, "expectation-met-decision")
-                        (Decision.fromConfigurationOrTrue expectationMetDecision_)
-                        (expectationFailedTerminal p, methodAllowedDecision p s)
-
-                and private methodAllowedDecision p s =
-                    decision (key p, "method-allowed-decision")
-                        (Decision.fromConfigurationOrTrue methodAllowedDecision_)
-                        (methodNotAllowedTerminal p, uriTooLongDecision p s)
-
-                and private uriTooLongDecision p s =
-                    decision (key p, "uri-too-long-decision")
-                        (Decision.fromConfigurationOrFalse uriTooLongDecision_)
-                        (badRequestDecision p s, uriTooLongTerminal p)
-
-                and private badRequestDecision p s =
-                    decision (key p, "bad-request-decision")
-                        (Decision.fromConfigurationOrFalse badRequestDecision_)
-                        (s, badRequestTerminal p)
-
-                (* Element *)
-
-                let element =
-                    expectationMetDecision
-
-            (* Acceptable *)
-
-            [<RequireQualifiedAccess>]
-            module Acceptable =
-
-                (* Key *)
-
-                let private key p =
-                    Key.add [ "acceptable" ] (key p)
-
-                (* Types *)
-
-                type private Acceptable =
-                    { Terminals: Terminals }
-
-                    static member terminals_ =
-                        (fun x -> x.Terminals), (fun t x -> { x with Acceptable.Terminals = t })
-
-                    static member empty =
-                        { Terminals = Terminals.empty }
-
-                 and private Terminals =
-                    { NotAcceptable: Freya<unit> option }
-
-                    static member notAcceptable_ =
-                        (fun x -> x.NotAcceptable), (fun n x -> { x with NotAcceptable = n })
-
-                    static member empty =
-                        { NotAcceptable = None }
-
-                (* Optics *)
-
-                let private acceptable_ =
-                    Configuration.element_ Acceptable.empty "client.acceptable"
-
-                (* Terminals *)
-
-                let private terminals_ =
-                        acceptable_
-                    >-> Acceptable.terminals_
-
-                let notAcceptableTerminal_ =
-                        terminals_
-                    >-> Terminals.notAcceptable_
-
-                let private notAcceptableTerminal p =
-                    terminal (key p, "not-acceptable-terminal")
-                        (Terminal.fromConfigurationWithOperation notAcceptableTerminal_ Operations.notAcceptable)
-
-                (* Decisions *)
-
-                let private accept_ =
-                        Request.Headers.accept_
-
-                let private acceptCharset_ =
-                        Request.Headers.acceptCharset_
-
-                let private acceptEncoding_ =
-                        Request.Headers.acceptEncoding_
-
-                let private acceptLanguage_ =
-                        Request.Headers.acceptLanguage_
-
-                let private charsetsSupported_ =
-                        Representation.charsetsSupported_
-
-                let private contentCodingsSupported_ =
-                        Representation.contentCodingsSupported_
-
-                let private mediaTypesSupported_ =
-                        Representation.mediaTypesSupported_
-
-                let private languagesSupported_ =
-                        Representation.languagesSupported_
-
-                let rec private hasAcceptDecision p s =
-                    decision (key p, "has-accept-decision")
-                        (fun _ -> Dynamic (Option.isSome <!> !. accept_))
-                        (hasAcceptLanguageDecision p s, acceptMatchesDecision p s)
-
-                and private acceptMatchesDecision p s =
-                    decision (key p, "accept-matches-decision")
-                        (function | TryGet mediaTypesSupported_ (Dynamic m) -> Dynamic (MediaType.negotiable <!> m <*> !. accept_)
-                                  | TryGet mediaTypesSupported_ (Static m) -> Dynamic (MediaType.negotiable m <!> !. accept_)
-                                  | _ -> Static true)
-                        (notAcceptableTerminal p, hasAcceptLanguageDecision p s)
-
-                and private hasAcceptLanguageDecision p s =
-                    decision (key p, "has-accept-language-decision")
-                        (fun _ -> Dynamic (Option.isSome <!> !. acceptLanguage_))
-                        (hasAcceptCharsetDecision p s, acceptLanguageMatchesDecision p s)
-
-                and private acceptLanguageMatchesDecision p s =
-                    decision (key p, "accept-language-matches-decision")
-                        (function | TryGet languagesSupported_ (Dynamic l) -> Dynamic (Language.negotiable <!> l <*> !. acceptLanguage_)
-                                  | TryGet languagesSupported_ (Static l) -> Dynamic (Language.negotiable l <!> !. acceptLanguage_)
-                                  | _ -> Static true)
-                        (notAcceptableTerminal p, hasAcceptCharsetDecision p s)
-
-                and private hasAcceptCharsetDecision p s =
-                    decision (key p, "has-accept-charset-decision")
-                        (fun _ -> Dynamic (Option.isSome <!> !. acceptCharset_))
-                        (hasAcceptEncodingDecision p s, acceptCharsetMatchesDecision p s)
-
-                and private acceptCharsetMatchesDecision p s =
-                    decision (key p, "accept-charset-matches-decision")
-                        (function | TryGet charsetsSupported_ (Dynamic c) -> Dynamic (Charset.negotiable <!> c <*> !. acceptCharset_)
-                                  | TryGet charsetsSupported_ (Static c) -> Dynamic (Charset.negotiable c <!> !. acceptCharset_)
-                                  | _ -> Static true)
-                        (notAcceptableTerminal p, hasAcceptEncodingDecision p s)
-
-                and private hasAcceptEncodingDecision p s =
-                    decision (key p, "has-accept-encoding-decision")
-                        (fun _ -> Dynamic (Option.isSome <!> !. acceptEncoding_))
-                        (s, acceptEncodingMatchesDecision p s)
-
-                and private acceptEncodingMatchesDecision p s =
-                    decision (key p, "accept-encoding-matches-decision")
-                        (function | TryGet contentCodingsSupported_ (Dynamic c) -> Dynamic (ContentCoding.negotiable <!> c <*> !. acceptEncoding_)
-                                  | TryGet contentCodingsSupported_ (Static c) -> Dynamic (ContentCoding.negotiable c <!> !. acceptEncoding_)
-                                  | _ -> Static true)
-                        (notAcceptableTerminal p, s)
-
-                (* Element *)
-
-                let element =
-                    hasAcceptDecision
-
-        (* Request *)
+        (* Validation *)
 
         [<RequireQualifiedAccess>]
-        module Request =
+        module Validation =
 
             (* Key *)
 
             let private key p =
-                Key.add [ p; "request" ] key
+                Key.add [ p; "validation" ] key
 
-            (* Method *)
+            (* Types *)
 
-            [<RequireQualifiedAccess>]
-            module Method =
+            type private Validation =
+                { Decisions: Decisions
+                  Terminals: Terminals }
 
-                (* Key *)
+                static member decisions_ =
+                    (fun x -> x.Decisions), (fun d x -> { x with Decisions = d })
 
-                let private key p =
-                    Key.add [ "method" ] (key p)
+                static member terminals_ =
+                    (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
 
-                (* Decisions *)
+                static member empty =
+                    { Decisions = Decisions.empty
+                      Terminals = Terminals.empty }
 
-                let private method_ =
-                    Request.method_
+             and private Decisions =
+                { ExpectationMet: Value<bool> option
+                  MethodAllowed: Value<bool> option
+                  UriTooLong: Value<bool> option
+                  BadRequest: Value<bool> option }
 
-                let private methodMatchesDecision p m =
-                    decision (key p, "method-matches-decision")
-                        (fun _ -> Dynamic (flip List.contains m <!> !. method_))
+                static member expectationMet_ =
+                    (fun x -> x.ExpectationMet), (fun e x -> { x with ExpectationMet = e })
 
-                (* Element *)
+                static member methodAllowed_ =
+                    (fun x -> x.MethodAllowed), (fun m x -> { x with MethodAllowed = m })
 
-                let element =
-                    methodMatchesDecision
+                static member uriTooLong_ =
+                    (fun x -> x.UriTooLong), (fun u x -> { x with Decisions.UriTooLong = u })
+
+                static member badRequest_ =
+                    (fun x -> x.BadRequest), (fun b x -> { x with Decisions.BadRequest = b })
+
+                static member empty =
+                    { ExpectationMet = None
+                      MethodAllowed = None
+                      UriTooLong = None
+                      BadRequest = None }
+
+             and private Terminals =
+                { ExpectationFailed: Freya<unit> option
+                  MethodNotAllowed: Freya<unit> option
+                  UriTooLong: Freya<unit> option
+                  BadRequest: Freya<unit> option }
+
+                static member expectationFailed_ =
+                    (fun x -> x.ExpectationFailed), (fun e x -> { x with ExpectationFailed = e })
+
+                static member methodNotAllowed_ =
+                    (fun x -> x.MethodNotAllowed), (fun e x -> { x with MethodNotAllowed = e })
+
+                static member uriTooLong_ =
+                    (fun x -> x.UriTooLong), (fun u x -> { x with Terminals.UriTooLong = u })
+
+                static member badRequest_ =
+                    (fun x -> x.BadRequest), (fun b x -> { x with Terminals.BadRequest = b })
+
+                static member empty =
+                    { ExpectationFailed = None
+                      MethodNotAllowed = None
+                      UriTooLong = None
+                      BadRequest = None }
+
+            (* Optics *)
+
+            let private validation_ =
+                Configuration.element_ Validation.empty "validation"
+
+            (* Terminals *)
+
+            let private terminals_ =
+                    validation_
+                >-> Validation.terminals_
+
+            let expectationFailedTerminal_ =
+                    terminals_
+                >-> Terminals.expectationFailed_
+
+            let methodNotAllowedTerminal_ =
+                    terminals_
+                >-> Terminals.methodNotAllowed_
+
+            let uriTooLongTerminal_ =
+                    terminals_
+                >-> Terminals.uriTooLong_
+
+            let badRequestTerminal_ =
+                    terminals_
+                >-> Terminals.badRequest_
+
+            let private expectationFailedTerminal p =
+                terminal (key p, "expectation-failed-terminal")
+                    (Terminal.fromConfigurationWithOperation expectationFailedTerminal_ Operations.expectationFailed)
+
+            let private methodNotAllowedTerminal p =
+                terminal (key p, "method-not-allowed-terminal")
+                    (Terminal.fromConfigurationWithOperation methodNotAllowedTerminal_ Operations.methodNotAllowed)
+
+            let private uriTooLongTerminal p =
+                terminal (key p, "uri-too-long-terminal")
+                    (Terminal.fromConfigurationWithOperation uriTooLongTerminal_ Operations.uriTooLong)
+
+            let private badRequestTerminal p =
+                terminal (key p, "bad-request-terminal")
+                    (Terminal.fromConfigurationWithOperation badRequestTerminal_ Operations.badRequest)
+
+            (* Decisions *)
+
+            let private decisions_ =
+                    validation_
+                >-> Validation.decisions_
+
+            let expectationMetDecision_ =
+                    decisions_
+                >-> Decisions.expectationMet_
+
+            let methodAllowedDecision_ =
+                    decisions_
+                >-> Decisions.methodAllowed_
+
+            let uriTooLongDecision_ =
+                    decisions_
+                >-> Decisions.uriTooLong_
+
+            let badRequestDecision_ =
+                    decisions_
+                >-> Decisions.badRequest_
+
+            // TODO: Expectation Met logic
+
+            let rec private expectationMetDecision p s =
+                decision (key p, "expectation-met-decision")
+                    (Decision.fromConfigurationOrTrue expectationMetDecision_)
+                    (expectationFailedTerminal p, methodAllowedDecision p s)
+
+            and private methodAllowedDecision p s =
+                decision (key p, "method-allowed-decision")
+                    (Decision.fromConfigurationOrTrue methodAllowedDecision_)
+                    (methodNotAllowedTerminal p, uriTooLongDecision p s)
+
+            and private uriTooLongDecision p s =
+                decision (key p, "uri-too-long-decision")
+                    (Decision.fromConfigurationOrFalse uriTooLongDecision_)
+                    (badRequestDecision p s, uriTooLongTerminal p)
+
+            and private badRequestDecision p s =
+                decision (key p, "bad-request-decision")
+                    (Decision.fromConfigurationOrFalse badRequestDecision_)
+                    (s, badRequestTerminal p)
+
+            (* Export *)
+
+            let export =
+                expectationMetDecision
+
+        (* Method *)
+
+        [<RequireQualifiedAccess>]
+        module Method =
+
+            (* Key *)
+
+            let private key p =
+                Key.add [ p; "method" ] key
+
+            (* Decisions *)
+
+            let private method_ =
+                Request.method_
+
+            let private methodMatchesDecision p m =
+                decision (key p, "method-matches-decision")
+                    (fun _ -> Dynamic (flip List.contains m <!> !. method_))
+
+            (* Export *)
+
+            let export =
+                methodMatchesDecision
+
+        (* Negotiation *)
+
+        [<RequireQualifiedAccess>]
+        module Negotiation =
+
+            (* Key *)
+
+            let private key p =
+                Key.add [ p; "negotiation" ] key
+
+            (* Types *)
+
+            type private Negotiation =
+                { Terminals: Terminals }
+
+                static member terminals_ =
+                    (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
+
+                static member empty =
+                    { Terminals = Terminals.empty }
+
+             and private Terminals =
+                { NotAcceptable: Freya<unit> option }
+
+                static member notAcceptable_ =
+                    (fun x -> x.NotAcceptable), (fun n x -> { x with NotAcceptable = n })
+
+                static member empty =
+                    { NotAcceptable = None }
+
+            (* Optics *)
+
+            let private negotiation_ =
+                Configuration.element_ Negotiation.empty "negotiation"
+
+            (* Terminals *)
+
+            let private terminals_ =
+                    negotiation_
+                >-> Negotiation.terminals_
+
+            let notAcceptableTerminal_ =
+                    terminals_
+                >-> Terminals.notAcceptable_
+
+            let private notAcceptableTerminal p =
+                terminal (key p, "not-acceptable-terminal")
+                    (Terminal.fromConfigurationWithOperation notAcceptableTerminal_ Operations.notAcceptable)
+
+            (* Decisions *)
+
+            let private accept_ =
+                    Request.Headers.accept_
+
+            let private acceptCharset_ =
+                    Request.Headers.acceptCharset_
+
+            let private acceptEncoding_ =
+                    Request.Headers.acceptEncoding_
+
+            let private acceptLanguage_ =
+                    Request.Headers.acceptLanguage_
+
+            let private charsetsSupported_ =
+                    Representation.charsetsSupported_
+
+            let private contentCodingsSupported_ =
+                    Representation.contentCodingsSupported_
+
+            let private mediaTypesSupported_ =
+                    Representation.mediaTypesSupported_
+
+            let private languagesSupported_ =
+                    Representation.languagesSupported_
+
+            let rec private hasAcceptDecision p s =
+                decision (key p, "has-accept-decision")
+                    (fun _ -> Dynamic (Option.isSome <!> !. accept_))
+                    (hasAcceptLanguageDecision p s, acceptMatchesDecision p s)
+
+            and private acceptMatchesDecision p s =
+                decision (key p, "accept-matches-decision")
+                    (function | TryGet mediaTypesSupported_ (Dynamic m) -> Dynamic (MediaType.negotiable <!> m <*> !. accept_)
+                                | TryGet mediaTypesSupported_ (Static m) -> Dynamic (MediaType.negotiable m <!> !. accept_)
+                                | _ -> Static true)
+                    (notAcceptableTerminal p, hasAcceptLanguageDecision p s)
+
+            and private hasAcceptLanguageDecision p s =
+                decision (key p, "has-accept-language-decision")
+                    (fun _ -> Dynamic (Option.isSome <!> !. acceptLanguage_))
+                    (hasAcceptCharsetDecision p s, acceptLanguageMatchesDecision p s)
+
+            and private acceptLanguageMatchesDecision p s =
+                decision (key p, "accept-language-matches-decision")
+                    (function | TryGet languagesSupported_ (Dynamic l) -> Dynamic (Language.negotiable <!> l <*> !. acceptLanguage_)
+                                | TryGet languagesSupported_ (Static l) -> Dynamic (Language.negotiable l <!> !. acceptLanguage_)
+                                | _ -> Static true)
+                    (notAcceptableTerminal p, hasAcceptCharsetDecision p s)
+
+            and private hasAcceptCharsetDecision p s =
+                decision (key p, "has-accept-charset-decision")
+                    (fun _ -> Dynamic (Option.isSome <!> !. acceptCharset_))
+                    (hasAcceptEncodingDecision p s, acceptCharsetMatchesDecision p s)
+
+            and private acceptCharsetMatchesDecision p s =
+                decision (key p, "accept-charset-matches-decision")
+                    (function | TryGet charsetsSupported_ (Dynamic c) -> Dynamic (Charset.negotiable <!> c <*> !. acceptCharset_)
+                                | TryGet charsetsSupported_ (Static c) -> Dynamic (Charset.negotiable c <!> !. acceptCharset_)
+                                | _ -> Static true)
+                    (notAcceptableTerminal p, hasAcceptEncodingDecision p s)
+
+            and private hasAcceptEncodingDecision p s =
+                decision (key p, "has-accept-encoding-decision")
+                    (fun _ -> Dynamic (Option.isSome <!> !. acceptEncoding_))
+                    (s, acceptEncodingMatchesDecision p s)
+
+            and private acceptEncodingMatchesDecision p s =
+                decision (key p, "accept-encoding-matches-decision")
+                    (function | TryGet contentCodingsSupported_ (Dynamic c) -> Dynamic (ContentCoding.negotiable <!> c <*> !. acceptEncoding_)
+                                | TryGet contentCodingsSupported_ (Static c) -> Dynamic (ContentCoding.negotiable c <!> !. acceptEncoding_)
+                                | _ -> Static true)
+                    (notAcceptableTerminal p, s)
+
+            (* Export *)
+
+            let export =
+                hasAcceptDecision
+
+        (* Existence *)
+
+        [<RequireQualifiedAccess>]
+        module Existence =
+
+            let private key p =
+                Key.add [ p; "existence" ] key
+
+            (* Types *)
+
+            type private Existence =
+                { Decisions: Decisions }
+
+                static member decisions_ =
+                    (fun x -> x.Decisions), (fun d x -> { x with Existence.Decisions = d })
+
+                static member empty =
+                    { Decisions = Decisions.empty }
+
+             and private Decisions =
+                { Exists: Value<bool> option }
+
+                static member exists_ =
+                    (fun x -> x.Exists), (fun e x -> { x with Exists = e })
+
+                static member empty =
+                    { Exists = None }
+
+            (* Optics *)
+
+            let private existence_ =
+                Configuration.element_ Existence.empty "resource.existence"
+
+            (* Decisions *)
+
+            let private decisions_ =
+                    existence_
+                >-> Existence.decisions_
+
+            let exists_ =
+                    decisions_
+                >-> Decisions.exists_
+
+            let private existsDecision p =
+                decision (key p, "exists-decision")
+                    (Decision.fromConfigurationOrTrue exists_)
+
+            (* Export *)
+
+            let export =
+                existsDecision
 
     (* Components
 
@@ -980,23 +1018,23 @@ module Model =
             (* Terminals *)
 
             let private endpointTerminal =
-                terminal (key, "endpoint-terminal")
+                terminal (key, "end-terminal")
                     (fun _ -> Operations.ok)
 
             (* Decisions *)
 
             let private endpointDecision =
-                decision (key, "endpoint-decision")
+                decision (key, "end-decision")
                     (fun _ -> Static true)
                     (Specification.Terminal.empty, endpointTerminal)
 
-            (* Component *)
+            (* Export *)
 
             let private core =
-                Server.element Core (
-                    Client.Access.element Core (
-                        Client.Request.element Core (
-                            Client.Acceptable.element Core endpointDecision)))
+                Assertion.export Core (
+                    Permission.export Core (
+                        Validation.export Core (
+                            Negotiation.export Core endpointDecision)))
 
             let export =
                 { Metadata =
@@ -1019,12 +1057,15 @@ module Model =
 
             (* Terminals *)
 
-            let private endpointTerminal : Specification<Configuration,unit,State> =
-                terminal (key, "endpoint-terminal-2")
+            let private endpoint2Terminal =
+                terminal (key, "endpoint-2-terminal")
                     (fun _ -> Operations.ok)
 
+            (* Export *)
+
             let private getOrHead s =
-                Request.Method.element GetOrHead [ GET; HEAD ] (s, endpointTerminal)
+                Method.export GetOrHead [ GET; HEAD ] (
+                    s, Existence.export GetOrHead (endpoint2Terminal, endpoint2Terminal))
 
             let export =
                 { Metadata =
@@ -1034,7 +1075,7 @@ module Model =
                     { Required = Set.empty
                       Preconditions = List.empty }
                   Operations =
-                    [ Splice (Key [ "http"; "endpoint-decision" ], Right, getOrHead) ] }
+                    [ Splice (Key [ "http"; "end-decision" ], Right, getOrHead) ] }
 
     (* Model *)
 
@@ -1224,55 +1265,77 @@ type HttpMachineBuilder () =
    builder, giving strongly typed syntax for the configuration elements that
    can be set as part of an HTTP Machine. *)
 
-type HttpMachineBuilder with
+(* Properties
 
-    (* Common Properties *)
+   Configuration for common properties of a the HTTP model which may be used by
+   multiple elements/components as part. Multiple implementations may rely on
+   the same core declarative property of a resource without needing to be aware
+   of the existence of other consumers of that property. *)
+
+(* Representation *)
+
+type HttpMachineBuilder with
 
     [<CustomOperation ("mediaTypesSupported", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.MediaTypesSupported (m, a) =
         HttpMachine.Map (m, Optic.set Model.Properties.Representation.mediaTypesSupported_ (Some (Infer.mediaTypes a)))
 
-//    (* Common Terminals *)
-//
-//    [<CustomOperation ("handleOk", MaintainsVariableSpaceUsingBind = true)>]
-//    member inline __.HandleOk (m, a) =
-//        HttpMachine.Map (m, Optic.set Model.Common.Terminals.ok_ (Some a))
+(* Elements
 
-    (* Core.Server Decisions *)
+   Configuration for discrete elements used to make up specific components used
+   within the HTTP model. *)
+
+(* Assertion *)
+
+type HttpMachineBuilder with
+
+    (* Decisions *)
 
     [<CustomOperation ("serviceAvailable", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.ServiceAvailable (m, a) =
-        HttpMachine.Map (m, Optic.set Model.Elements.Server.serviceAvailableDecision_ (Some (Infer.value a)))
+        HttpMachine.Map (m, Optic.set Model.Elements.Assertion.serviceAvailableDecision_ (Some (Infer.value a)))
 
     [<CustomOperation ("httpVersionSupported", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HttpVersionSupported (m, a) =
-        HttpMachine.Map (m, Optic.set Model.Elements.Server.httpVersionSupportedDecision_ (Some (Infer.value a)))
+        HttpMachine.Map (m, Optic.set Model.Elements.Assertion.httpVersionSupportedDecision_ (Some (Infer.value a)))
 
-    (* Core.Server Terminals *)
+    (* Terminals *)
 
     [<CustomOperation ("handleServiceUnavailable", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HandleServiceUnavailable (m, a) =
-        HttpMachine.Map (m, Optic.set Model.Elements.Server.serviceUnavailableTerminal_ (Some a))
+        HttpMachine.Map (m, Optic.set Model.Elements.Assertion.serviceUnavailableTerminal_ (Some a))
 
-    (* Core.Client.Access Decisions *)
+    [<CustomOperation ("handleNotImplemented", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleNotImplemented (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Assertion.notImplementedTerminal_ (Some a))
+
+    [<CustomOperation ("handleNotSupported", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleNotSupported (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Assertion.httpVersionNotSupportedTerminal_ (Some a))
+
+(* Permission *)
+
+type HttpMachineBuilder with
+
+    (* Decisions *)
 
     [<CustomOperation ("authorized", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.Authorized (m, a) =
-        HttpMachine.Map (m, Optic.set Model.Elements.Client.Access.authorizedDecision_ (Some (Infer.value a)))
+        HttpMachine.Map (m, Optic.set Model.Elements.Permission.authorizedDecision_ (Some (Infer.value a)))
 
     [<CustomOperation ("allowed", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.Allowed (m, a) =
-        HttpMachine.Map (m, Optic.set Model.Elements.Client.Access.allowedDecision_ (Some (Infer.value a)))
+        HttpMachine.Map (m, Optic.set Model.Elements.Permission.allowedDecision_ (Some (Infer.value a)))
 
-    (* Core.Client.Access Terminals *)
+    (* Terminals *)
 
     [<CustomOperation ("handleUnauthorized", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HandleUnauthorized (m, a) =
-        HttpMachine.Map (m, Optic.set Model.Elements.Client.Access.unauthorizedTerminal_ (Some a))
+        HttpMachine.Map (m, Optic.set Model.Elements.Permission.unauthorizedTerminal_ (Some a))
 
     [<CustomOperation ("handleForbidden", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HandleForbidden (m, a) =
-        HttpMachine.Map (m, Optic.set Model.Elements.Client.Access.forbiddenTerminal_ (Some a))
+        HttpMachine.Map (m, Optic.set Model.Elements.Permission.forbiddenTerminal_ (Some a))
 
 (* Expressions
 
