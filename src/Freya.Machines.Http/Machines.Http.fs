@@ -517,7 +517,13 @@ module Model =
             let export =
                 serviceAvailableDecision
 
-        (* Permission *)
+        (* Permission
+
+           Decisions determining the permission of the client to make the
+           current request, whether for reasons of authorization or allowance.
+
+           Failures of these checks will result in  401 or 403 responses,
+           signalling a client error. *)
 
         [<RequireQualifiedAccess>]
         module Permission =
@@ -627,7 +633,14 @@ module Model =
             let export =
                 authorizedDecision
 
-        (* Validation *)
+        (* Validation
+
+           Decisions determing the basic syntactic and semantic validity of the
+           request made by the client, such as whether the method requested is
+           allowed, whether the URI is of an appropriate length, etc.
+
+           Failures of these checks will result in 4xx responses of the
+           appropriate value, signalling a client error of some type. *)
 
         [<RequireQualifiedAccess>]
         module Validation =
@@ -793,7 +806,14 @@ module Model =
             let export =
                 expectationMetDecision
 
-        (* Method *)
+        (* Method
+
+           Decision determining whether the method matches any of a supplied
+           list of methods given as part of parameterization of this element.
+
+           The element does not result in a response, only in control flow of
+           the machine, and as such must be provided with both left and right
+           cases (no terminals are implied). *)
 
         [<RequireQualifiedAccess>]
         module Method =
@@ -817,7 +837,15 @@ module Model =
             let export =
                 methodMatchesDecision
 
-        (* Negotiation *)
+        (* Negotiation
+
+           Decisions determining whether an appropriate representation of the
+           resource is available given the specifications of acceptability
+           provided by the client (negotiating on media type, language, etc.)
+
+           Where the client does specify a requirement for representation which
+           is incompatible with the representation defined by the resource, a
+           412 response will result. *)
 
         [<RequireQualifiedAccess>]
         module Negotiation =
