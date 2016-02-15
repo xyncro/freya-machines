@@ -99,6 +99,16 @@ module Negotiation =
             |> function | Negotiated x when not (List.isEmpty x) -> true
                         | _ -> false
 
+(* Defaults *)
+
+[<RequireQualifiedAccess>]
+module Defaults =
+
+    let methodsAllowed =
+        [ GET
+          HEAD
+          OPTIONS ]
+
 (* Operations
 
    Common operations for standard HTTP responses, setting various header values
@@ -140,6 +150,11 @@ module Operations =
          *> phrase "Multiple Choices"
          *> date
 
+    let movedPermanently =
+            status 301
+         *> phrase "Moved Permanently"
+         *> date
+
     let found =
             status 302
          *> phrase "Found"
@@ -153,6 +168,11 @@ module Operations =
     let notModified =
             status 304
          *> phrase "Not Modified"
+         *> date
+
+    let temporaryRedirect =
+            status 307
+         *> phrase "Temporary Redirect"
          *> date
 
     (* 4xx *)
@@ -185,6 +205,11 @@ module Operations =
     let notAcceptable =
             status 406
          *> phrase "Not Acceptable"
+         *> date
+
+    let gone =
+            status 410
+         *> phrase "Gone"
          *> date
 
     let preconditionFailed =
@@ -733,15 +758,11 @@ module Model =
 
              and private Decisions =
                 { ExpectationMet: Value<bool> option
-                  MethodAllowed: Value<bool> option
                   UriTooLong: Value<bool> option
                   BadRequest: Value<bool> option }
 
                 static member expectationMet_ =
                     (fun x -> x.ExpectationMet), (fun e x -> { x with ExpectationMet = e })
-
-                static member methodAllowed_ =
-                    (fun x -> x.MethodAllowed), (fun m x -> { x with MethodAllowed = m })
 
                 static member uriTooLong_ =
                     (fun x -> x.UriTooLong), (fun u x -> { x with Decisions.UriTooLong = u })
@@ -751,7 +772,6 @@ module Model =
 
                 static member empty =
                     { ExpectationMet = None
-                      MethodAllowed = None
                       UriTooLong = None
                       BadRequest = None }
 
@@ -857,7 +877,7 @@ module Model =
                 decision (key p, "method-allowed-decision")
                     (function | TryGet methodsAllowed_ (Dynamic m) -> Dynamic (flip List.contains <!> m <*> !. method_)
                               | TryGet methodsAllowed_ (Static m) -> Dynamic (flip List.contains m <!> !. method_)
-                              | _ -> Dynamic (flip List.contains [ GET; HEAD; OPTIONS ] <!> !. method_))
+                              | _ -> Dynamic (flip List.contains Defaults.methodsAllowed <!> !. method_))
                     (methodNotAllowedTerminal p, uriTooLongDecision p s)
 
             and private uriTooLongDecision p s =
@@ -887,6 +907,15 @@ module Model =
         [<RequireQualifiedAccess>]
         module Method =
 
+            [<RequireQualifiedAccess>]
+            module private Seq =
+
+                let intersection l1 l2 =
+                    Set.toSeq (Set.intersect (set l1) (set l2))
+
+                let isSame l1 l2 =
+                    (set l1) = (set l2)
+
             (* Key *)
 
             let private key p =
@@ -895,11 +924,17 @@ module Model =
             (* Decisions *)
 
             let private method_ =
-                Request.method_
+                    Request.method_
+
+            let private methodsAllowed_ =
+                    Properties.Request.methodsAllowed_
 
             let private methodMatchesDecision p m =
                 decision (key p, "method-matches-decision")
-                    (fun _ -> Dynamic (flip List.contains m <!> !. method_))
+                    (function | TryGet methodsAllowed_ (Static ms) when Seq.isSame m ms -> Static true
+                              | TryGet methodsAllowed_ (Static ms) when Seq.isEmpty (Seq.intersection m ms) -> Static false
+                              | _ when Seq.isEmpty (Seq.intersection m Defaults.methodsAllowed) -> Static false
+                              | _ -> Dynamic (flip List.contains m <!> !. method_))
 
             (* Export *)
 
@@ -1452,6 +1487,143 @@ module Model =
                 let export =
                     notFoundTerminal
 
+            (* Moved *)
+
+            [<RequireQualifiedAccess>]
+            module Moved =
+
+                (* Key *)
+
+                let private key p =
+                    Key.add [ "other" ] (key p)
+
+                (* Types *)
+
+                type private Moved =
+                    { Decisions: Decisions
+                      Terminals: Terminals }
+
+                    static member decisions_ =
+                        (fun x -> x.Decisions), (fun d x -> { x with Decisions = d })
+
+                    static member terminals_ =
+                        (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
+
+                    static member empty =
+                        { Decisions = Decisions.empty
+                          Terminals = Terminals.empty }
+
+                 and private Decisions =
+                    { Gone: Value<bool> option
+                      MovedTemporarily: Value<bool> option
+                      MovedPermanently: Value<bool> option }
+
+                    static member gone_ =
+                        (fun x -> x.Gone), (fun g x -> { x with Decisions.Gone = g })
+
+                    static member movedTemporarily_ =
+                        (fun x -> x.MovedTemporarily), (fun m x -> { x with MovedTemporarily = m })
+
+                    static member movedPermanently_ =
+                        (fun x -> x.MovedPermanently), (fun m x -> { x with Decisions.MovedPermanently = m })
+
+                    static member empty =
+                        { Gone = None
+                          MovedTemporarily = None
+                          MovedPermanently = None }
+
+                 and private Terminals =
+                    { Gone: Freya<unit> option
+                      TemporaryRedirect: Freya<unit> option
+                      MovedPermanently: Freya<unit> option }
+
+                    static member gone_ =
+                        (fun x -> x.Gone), (fun g x -> { x with Terminals.Gone = g })
+
+                    static member temporaryRedirect_ =
+                        (fun x -> x.TemporaryRedirect), (fun t x -> { x with TemporaryRedirect = t })
+
+                    static member movedPermanently_ =
+                        (fun x -> x.MovedPermanently), (fun m x -> { x with Terminals.MovedPermanently = m })
+
+                    static member empty =
+                        { Gone = None
+                          TemporaryRedirect = None
+                          MovedPermanently = None }
+
+                (* Optics *)
+
+                let private moved_ =
+                        Configuration.element_ Moved.empty "responses.moved"
+
+                (* Terminals *)
+
+                let private terminals_ =
+                        moved_
+                    >-> Moved.terminals_
+
+                let goneTerminal_ =
+                        terminals_
+                    >-> Terminals.gone_
+
+                let temporaryRedirectTemporal_ =
+                        terminals_
+                    >-> Terminals.temporaryRedirect_
+
+                let movedPermanentlyTerminal_ =
+                        terminals_
+                    >-> Terminals.movedPermanently_
+
+                let private goneTerminal p =
+                    terminal (key p, "gone-terminal")
+                        (Terminal.fromConfigurationWithOperation goneTerminal_ Operations.gone)
+
+                let private temporaryRedirectTerminal_ p =
+                    terminal (key p, "temporary-redirect-terminal")
+                        (Terminal.fromConfigurationWithOperation temporaryRedirectTemporal_ Operations.temporaryRedirect)
+
+                let private movedPermanentlyTerminal p =
+                    terminal (key p, "moved-permanently-terminal")
+                        (Terminal.fromConfigurationWithOperation movedPermanentlyTerminal_ Operations.movedPermanently)
+
+                (* Decisions *)
+
+                let private decisions_ =
+                        moved_
+                    >-> Moved.decisions_
+
+                let goneDecision_ =
+                        decisions_
+                    >-> Decisions.gone_
+
+                let movedTemporarilyDecision_ =
+                        decisions_
+                    >-> Decisions.movedTemporarily_
+
+                let movedPermanentlyDecision_ =
+                        decisions_
+                    >-> Decisions.movedPermanently_
+
+                let rec private goneDecision p s =
+                    decision (key p, "see-other-decision")
+                        (Decision.fromConfigurationOrFalse goneDecision_)
+                        (movedTemporarilyDecision p s, goneTerminal p)
+
+                and private movedTemporarilyDecision p s =
+                    decision (key p, "found-decision")
+                        (Decision.fromConfigurationOrFalse movedTemporarilyDecision_)
+                        (movedPermanentlyDecision p s, temporaryRedirectTerminal_ p)
+
+                and private movedPermanentlyDecision p s =
+                    decision (key p, "see-other-decision")
+                        (Decision.fromConfigurationOrFalse movedPermanentlyDecision_)
+                        (s, movedPermanentlyTerminal p)
+
+                (* Export *)
+
+                let export =
+                    goneDecision
+
             (* Other *)
 
             [<RequireQualifiedAccess>]
@@ -1652,8 +1824,8 @@ module Model =
             let private getOrHead s =
                 Method.export GetOrHead [ GET; HEAD ] (
                     s, Existence.export GetOrHead (
-                        // TODO: Responses.Moved
-                            Responses.Missing.export GetOrHead,
+                        Responses.Moved.export GetOrHead (
+                            Responses.Missing.export GetOrHead),
                         Preconditions.Common.export GetOrHead (
                             Preconditions.Safe.export GetOrHead (
                                 Responses.Other.export GetOrHead (
@@ -1664,10 +1836,43 @@ module Model =
                     { Name = "http.get"
                       Description = None }
                   Requirements =
-                    { Required = Set.empty
+                    { Required = set [ "http.core" ]
                       Preconditions = List.empty }
                   Operations =
                     [ Splice (Key [ "http"; "end-decision" ], Right, getOrHead) ] }
+
+        (* Post *)
+
+        [<RequireQualifiedAccess>]
+        module Post =
+
+            [<Literal>]
+            let private Post =
+                "post"
+
+            (* Export *)
+
+            let private post s =
+                Method.export Post [ POST ] (
+                    s, Existence.export Post (
+                        Responses.Moved.export Post (
+                            Responses.Missing.export Post),
+                        Preconditions.Common.export Post (
+
+                            // TODO: Etc.
+
+                                Responses.Other.export Post (
+                                    Responses.Common.export Post))))
+
+            let export =
+                { Metadata =
+                    { Name = "http.post"
+                      Description = None }
+                  Requirements =
+                    { Required = set [ "http.core" ]
+                      Preconditions = List.empty }
+                  Operations =
+                    [ Splice (Key [ "http"; "end-decision" ], Right, post) ] }
 
     (* Model *)
 
@@ -1675,7 +1880,8 @@ module Model =
         Model.create (
             set [
                 Core.export
-                GetOrHead.export ])
+                GetOrHead.export
+                Post.export ])
 
 (* Machine
 
