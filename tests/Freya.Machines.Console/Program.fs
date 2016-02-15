@@ -8,7 +8,7 @@ open Freya.Machines.Http
 
 let machine =
     freyaMachine {
-        mediaTypesSupported MediaType.Json }
+        methodsAllowed [ GET; HEAD ] }
 
 let app =
     OwinAppFunc.ofFreya machine

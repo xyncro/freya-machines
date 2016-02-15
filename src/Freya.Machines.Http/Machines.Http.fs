@@ -128,6 +128,33 @@ module Operations =
          *> phrase "OK"
          *> date
 
+    let noContent =
+            status 204
+         *> phrase "No Content"
+         *> date
+
+    (* 3xx *)
+
+    let multipleChoices =
+            status 300
+         *> phrase "Multiple Choices"
+         *> date
+
+    let found =
+            status 302
+         *> phrase "Found"
+         *> date
+
+    let seeOther =
+            status 303
+         *> phrase "See Other"
+         *> date
+
+    let notModified =
+            status 304
+         *> phrase "Not Modified"
+         *> date
+
     (* 4xx *)
 
     let badRequest =
@@ -143,6 +170,11 @@ module Operations =
     let forbidden =
             status 403
          *> phrase "Forbidden"
+         *> date
+
+    let notFound =
+            status 404
+         *> phrase "Not Found"
          *> date
 
     let methodNotAllowed =
@@ -274,8 +306,13 @@ module Model =
         (* Types *)
 
         type private Properties =
-            { Representation: Representation
+            { Request: Request
+              Representation: Representation
               Resource: Resource }
+
+            static member request_ =
+                (fun x -> x.Request), (fun r x -> { x with Request = r })
+
 
             static member representation_ =
                 (fun x -> x.Representation), (fun r x -> { x with Representation = r })
@@ -284,8 +321,18 @@ module Model =
                 (fun x -> x.Resource), (fun r x -> { x with Resource = r })
 
             static member empty =
-                { Representation = Representation.empty
+                { Request = Request.empty
+                  Representation = Representation.empty
                   Resource = Resource.empty }
+
+         and private Request =
+            { MethodsAllowed: Value<Method list> option }
+
+            static member methodsAllowed_ =
+                (fun x -> x.MethodsAllowed), (fun m x -> { x with MethodsAllowed = m })
+
+            static member empty =
+                { MethodsAllowed = None }
 
          and private Representation =
             { MediaTypesSupported: Value<MediaType list> option
@@ -330,19 +377,33 @@ module Model =
         let private properties_ =
                 Configuration.element_ Properties.empty "properties"
 
-        let private representation_ =
+        let private request_ =
                 properties_
-            >-> Properties.representation_
+            >-> Properties.request_
 
-        let private resource_ =
-                properties_
-            >-> Properties.resource_
+        (* Request *)
+
+        [<RequireQualifiedAccess>]
+        [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
+        module Request =
+
+            let private request_ =
+                    properties_
+                >-> Properties.request_
+
+            let methodsAllowed_ =
+                    request_
+                >-> Request.methodsAllowed_
 
         (* Representation *)
 
         [<RequireQualifiedAccess>]
         [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
         module Representation =
+
+            let private representation_ =
+                    properties_
+                >-> Properties.representation_
 
             let charsetsSupported_ =
                     representation_
@@ -363,6 +424,10 @@ module Model =
         [<RequireQualifiedAccess>]
         [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
         module Resource =
+
+            let private resource_ =
+                    properties_
+                >-> Properties.resource_
 
             let eTags_ =
                     resource_
@@ -763,13 +828,15 @@ module Model =
                     validation_
                 >-> Validation.decisions_
 
+            let private method_ =
+                    Request.method_
+
+            let private methodsAllowed_ =
+                    Properties.Request.methodsAllowed_
+
             let expectationMetDecision_ =
                     decisions_
                 >-> Decisions.expectationMet_
-
-            let methodAllowedDecision_ =
-                    decisions_
-                >-> Decisions.methodAllowed_
 
             let uriTooLongDecision_ =
                     decisions_
@@ -779,7 +846,7 @@ module Model =
                     decisions_
                 >-> Decisions.badRequest_
 
-            // TODO: Expectation Met logic
+            // TODO: Logic
 
             let rec private expectationMetDecision p s =
                 decision (key p, "expectation-met-decision")
@@ -788,7 +855,9 @@ module Model =
 
             and private methodAllowedDecision p s =
                 decision (key p, "method-allowed-decision")
-                    (Decision.fromConfigurationOrTrue methodAllowedDecision_)
+                    (function | TryGet methodsAllowed_ (Dynamic m) -> Dynamic (flip List.contains <!> m <*> !. method_)
+                              | TryGet methodsAllowed_ (Static m) -> Dynamic (flip List.contains m <!> !. method_)
+                              | _ -> Dynamic (flip List.contains [ GET; HEAD; OPTIONS ] <!> !. method_))
                     (methodNotAllowedTerminal p, uriTooLongDecision p s)
 
             and private uriTooLongDecision p s =
@@ -973,7 +1042,15 @@ module Model =
             let export =
                 hasAcceptDecision
 
-        (* Existence *)
+        (* Existence
+
+           Decision determining whether or not the relevant resource exists at
+           this point (it may have existed previously, but this is about the
+           existence of the resource currently).
+
+           The element does not result in a response, only in control flow of
+           the machine, and as such must be provided with both left and right
+           cases (no terminals are implied). *)
 
         [<RequireQualifiedAccess>]
         module Existence =
@@ -1012,18 +1089,505 @@ module Model =
                     existence_
                 >-> Existence.decisions_
 
-            let exists_ =
+            let existsDecision_ =
                     decisions_
                 >-> Decisions.exists_
 
             let private existsDecision p =
                 decision (key p, "exists-decision")
-                    (Decision.fromConfigurationOrTrue exists_)
+                    (Decision.fromConfigurationOrTrue existsDecision_)
 
             (* Export *)
 
             let export =
                 existsDecision
+
+        (* Preconditions *)
+
+        [<RequireQualifiedAccess>]
+        module Preconditions =
+
+            (* Key *)
+
+            let private key p =
+                Key.add [ p; "preconditions" ] key
+
+            (* Types *)
+
+            type private Preconditions =
+                { Terminals: Terminals }
+
+                static member terminals_ =
+                    (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
+
+                static member empty =
+                    { Terminals = Terminals.empty }
+
+             and Terminals =
+                { PreconditionFailed: Freya<unit> option }
+
+                static member preconditionFailed_ =
+                    (fun x -> x.PreconditionFailed), (fun p x -> { x with PreconditionFailed = p })
+
+                static member empty =
+                    { PreconditionFailed = None }
+
+            (* Optics *)
+
+            let private preconditions_ =
+                Configuration.element_ Preconditions.empty "preconditions"
+
+            let eTags_ =
+                  Properties.Resource.eTags_
+
+            let lastModified_ =
+                  Properties.Resource.lastModified_
+
+            (* Terminals *)
+
+            let private terminals_ =
+                    preconditions_
+                >-> Preconditions.terminals_
+
+            let preconditionFailedTerminal_ =
+                    terminals_
+                >-> Terminals.preconditionFailed_
+
+            let private preconditionFailedTerminal p =
+                terminal (key p, "precondition-failed-terminal")
+                    (Terminal.fromConfigurationWithOperation preconditionFailedTerminal_ Operations.preconditionFailed)
+
+            (* Common *)
+
+            [<RequireQualifiedAccess>]
+            module Common =
+
+                (* Key *)
+
+                let private key p =
+                    Key.add [ "common" ] (key p)
+
+                (* Decisions *)
+
+                let private ifMatch_ =
+                        Request.Headers.ifMatch_
+
+                let private ifUnmodifiedSince_ =
+                        Request.Headers.ifUnmodifiedSince_
+
+                let rec private hasIfMatchDecision p s =
+                    decision (key p, "has-if-match-decision")
+                        (fun _ -> Dynamic (Option.isSome <!> !. ifMatch_))
+                        (hasIfUnmodifiedSinceDecision p s, ifMatchMatchesDecision p s)
+
+                // TODO: Logic
+
+                and private ifMatchMatchesDecision p s =
+                    decision (key p, "if-match-matches-decision")
+                        (function | TryGet eTags_ (Dynamic _) -> Static true
+                                  | _ -> Static true)
+                        (preconditionFailedTerminal p, s)
+
+                and private hasIfUnmodifiedSinceDecision p s =
+                    decision (key p, "has-if-unmodified-since-decision")
+                        (fun _ -> Dynamic (Option.isSome <!> !. ifUnmodifiedSince_))
+                        (s, ifUnmodifiedSinceMatchesDecision p s)
+
+                // TODO: Logic
+
+                and private ifUnmodifiedSinceMatchesDecision p s =
+                    decision (key p, "if-unmodified-since-matches-decision")
+                        (function | TryGet lastModified_ (Dynamic _) -> Static true
+                                  | _ -> Static true)
+                        (preconditionFailedTerminal p, s)
+
+                (* Export *)
+
+                let export =
+                    hasIfMatchDecision
+
+            (* Safe *)
+
+            [<RequireQualifiedAccess>]
+            module Safe =
+
+                (* Key *)
+
+                let private key p =
+                    Key.add [ "safe" ] (key p)
+
+                (* Types *)
+
+                type private Safe =
+                    { Terminals: Terminals }
+
+                    static member terminals_ =
+                        (fun x -> x.Terminals), (fun t x -> { x with Safe.Terminals = t })
+
+                    static member empty =
+                        { Terminals = Terminals.empty }
+
+                 and Terminals =
+                    { NotModified: Freya<unit> option }
+
+                    static member notModified_ =
+                        (fun x -> x.NotModified), (fun n x -> { x with NotModified = n })
+
+                    static member empty =
+                        { NotModified = None }
+
+                (* Optics *)
+
+                let private safe_ =
+                    Configuration.element_ Safe.empty "preconditions.safe"
+
+                (* Terminals *)
+
+                let private terminals_ =
+                        safe_
+                    >-> Safe.terminals_
+
+                let private notModifiedTerminal_ =
+                        terminals_
+                    >-> Terminals.notModified_
+
+                let private notModifiedTerminal p =
+                    terminal (key p, "not-modified-terminal")
+                        (Terminal.fromConfigurationWithOperation notModifiedTerminal_ Operations.notModified)
+
+                (* Decisions *)
+
+                let private ifNoneMatch_ =
+                        Request.Headers.ifNoneMatch_
+
+                let private ifModifiedSince_ =
+                        Request.Headers.ifModifiedSince_
+
+                let rec private hasIfNoneMatchDecision p s =
+                    decision (key p, "has-if-none-match-decision")
+                        (fun _ -> Dynamic (Option.isSome <!> !. ifNoneMatch_))
+                        (hasIfModifiedSinceDecision p s, ifNoneMatchMatches p s)
+
+                // TODO: Logic
+
+                and private ifNoneMatchMatches p s =
+                    decision (key p, "if-none-match-matches-decision")
+                        (function | _ -> Static true)
+                        (notModifiedTerminal p, s)
+
+                and private hasIfModifiedSinceDecision p s =
+                    decision (key p, "has-if-modified-since-decision")
+                        (fun _ -> Dynamic (Option.isSome <!> !. ifModifiedSince_))
+                        (s, ifModifiedSinceMatchesDecision p s)
+
+                // TODO: Logic
+
+                and private ifModifiedSinceMatchesDecision p s =
+                    decision (key p, "if-modified-since-matches-decision")
+                        (function | _ -> Static true)
+                        (notModifiedTerminal p, s)
+
+                (* Export *)
+
+                let export =
+                    hasIfNoneMatchDecision
+
+        (* Responses *)
+
+        [<RequireQualifiedAccess>]
+        module Responses =
+
+            (* Key *)
+
+            let private key p =
+                Key.add [ p; "responses" ] key
+
+            (* Common *)
+
+            [<RequireQualifiedAccess>]
+            module Common =
+
+                (* Key *)
+
+                let private key p =
+                    Key.add [ "common" ] (key p)
+
+                (* Types *)
+
+                type private Common =
+                    { Decisions: Decisions
+                      Terminals: Terminals }
+
+                    static member decisions_ =
+                        (fun x -> x.Decisions), (fun d x -> { x with Decisions = d })
+
+                    static member terminals_ =
+                        (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
+
+                    static member empty =
+                        { Decisions = Decisions.empty
+                          Terminals = Terminals.empty }
+
+                 and private Decisions =
+                    { NoContent: Value<bool> option }
+
+                    static member noContent_ =
+                        (fun x -> x.NoContent), (fun n x -> { x with Decisions.NoContent = n })
+
+                    static member empty =
+                        { NoContent = None }
+
+                 and private Terminals =
+                    { NoContent: Freya<unit> option
+                      Ok: Freya<unit> option }
+
+                    static member noContent_ =
+                        (fun x -> x.NoContent), (fun n x -> { x with Terminals.NoContent = n })
+
+                    static member ok_ =
+                        (fun x -> x.Ok), (fun o x -> { x with Ok = o })
+
+                    static member empty =
+                        { NoContent = None
+                          Ok = None }
+
+                (* Optics *)
+
+                let private common_ =
+                        Configuration.element_ Common.empty "responses.common"
+
+                (* Terminals *)
+
+                let private terminals_ =
+                        common_
+                    >-> Common.terminals_
+
+                let noContentTerminal_ =
+                        terminals_
+                    >-> Terminals.noContent_
+
+                let okTerminal_ =
+                        terminals_
+                    >-> Terminals.ok_
+
+                let private noContentTerminal p =
+                    terminal (key p, "no-content-terminal")
+                        (Terminal.fromConfigurationWithOperation noContentTerminal_ Operations.noContent)
+
+                let private okTerminal p =
+                    terminal (key p, "ok-terminal")
+                        (Terminal.fromConfigurationWithOperation okTerminal_ Operations.ok)
+
+                (* Decisions *)
+
+                let private decisions_ =
+                        common_
+                    >-> Common.decisions_
+
+                let noContentDecision_ =
+                        decisions_
+                    >-> Decisions.noContent_
+
+                let private noContentDecision p =
+                    decision (key p, "no-content-decision")
+                        (Decision.fromConfigurationOrFalse noContentDecision_)
+                        (okTerminal p, noContentTerminal p)
+
+                (* Export *)
+
+                let export =
+                    noContentDecision
+
+            (* Missing *)
+
+            [<RequireQualifiedAccess>]
+            module Missing =
+
+                (* Key *)
+
+                let private key p =
+                    Key.add [ "missing" ] (key p)
+
+                (* Types *)
+
+                type private Missing =
+                    { Terminals: Terminals }
+
+                    static member terminals_ =
+                        (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
+
+                    static member empty =
+                        { Terminals = Terminals.empty }
+
+                 and private Terminals =
+                    { NotFound: Freya<unit> option }
+
+                    static member notFound_ =
+                        (fun x -> x.NotFound), (fun n x -> { x with NotFound = n })
+
+                    static member empty =
+                        { NotFound = None }
+
+                (* Optics *)
+
+                let private missing_ =
+                    Configuration.element_ Missing.empty "responses.missing"
+
+                (* Terminals *)
+
+                let private terminals_ =
+                        missing_
+                    >-> Missing.terminals_
+
+                let notFoundTerminal_ =
+                        terminals_
+                    >-> Terminals.notFound_
+
+                let private notFoundTerminal p =
+                    terminal (key p, "not-found-terminal")
+                        (Terminal.fromConfigurationWithOperation notFoundTerminal_ Operations.notFound)
+
+                (* Export *)
+
+                let export =
+                    notFoundTerminal
+
+            (* Other *)
+
+            [<RequireQualifiedAccess>]
+            module Other =
+
+                (* Key *)
+
+                let private key p =
+                    Key.add [ "other" ] (key p)
+
+                (* Types *)
+
+                type private Other =
+                    { Decisions: Decisions
+                      Terminals: Terminals }
+
+                    static member decisions_ =
+                        (fun x -> x.Decisions), (fun d x -> { x with Decisions = d })
+
+                    static member terminals_ =
+                        (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
+
+                    static member empty =
+                        { Decisions = Decisions.empty
+                          Terminals = Terminals.empty }
+
+                 and private Decisions =
+                    { SeeOther: Value<bool> option
+                      Found: Value<bool> option
+                      MultipleChoices: Value<bool> option }
+
+                    static member seeOther_ =
+                        (fun x -> x.SeeOther), (fun s x -> { x with Decisions.SeeOther = s })
+
+                    static member found_ =
+                        (fun x -> x.Found), (fun f x -> { x with Decisions.Found = f })
+
+                    static member multipleChoices_ =
+                        (fun x -> x.MultipleChoices), (fun m x -> { x with Decisions.MultipleChoices = m })
+
+                    static member empty =
+                        { SeeOther = None
+                          Found = None
+                          MultipleChoices = None }
+
+                 and private Terminals =
+                    { SeeOther: Freya<unit> option
+                      Found: Freya<unit> option
+                      MultipleChoices: Freya<unit> option }
+
+                    static member seeOther_ =
+                        (fun x -> x.SeeOther), (fun s x -> { x with Terminals.SeeOther = s })
+
+                    static member found_ =
+                        (fun x -> x.Found), (fun f x -> { x with Terminals.Found = f })
+
+                    static member multipleChoices_ =
+                        (fun x -> x.MultipleChoices), (fun m x -> { x with Terminals.MultipleChoices = m })
+
+                    static member empty =
+                        { SeeOther = None
+                          Found = None
+                          MultipleChoices = None }
+
+                (* Optics *)
+
+                let private other_ =
+                        Configuration.element_ Other.empty "responses.other"
+
+                (* Terminals *)
+
+                let private terminals_ =
+                        other_
+                    >-> Other.terminals_
+
+                let seeOtherTerminal_ =
+                        terminals_
+                    >-> Terminals.seeOther_
+
+                let foundTerminal_ =
+                        terminals_
+                    >-> Terminals.found_
+
+                let multipleChoicesTerminal_ =
+                        terminals_
+                    >-> Terminals.multipleChoices_
+
+                let private seeOtherTerminal p =
+                    terminal (key p, "see-other-terminal")
+                        (Terminal.fromConfigurationWithOperation seeOtherTerminal_ Operations.seeOther)
+
+                let private foundTerminal p =
+                    terminal (key p, "found-terminal")
+                        (Terminal.fromConfigurationWithOperation foundTerminal_ Operations.found)
+
+                let private multipleChoicesTerminal p =
+                    terminal (key p, "multiple-choices-terminal")
+                        (Terminal.fromConfigurationWithOperation multipleChoicesTerminal_ Operations.multipleChoices)
+
+                (* Decisions *)
+
+                let private decisions_ =
+                        other_
+                    >-> Other.decisions_
+
+                let seeOtherDecision_ =
+                        decisions_
+                    >-> Decisions.seeOther_
+
+                let foundDecision_ =
+                        decisions_
+                    >-> Decisions.found_
+
+                let multipleChoicesDecision_ =
+                        decisions_
+                    >-> Decisions.multipleChoices_
+
+                let rec private seeOtherDecision p s =
+                    decision (key p, "see-other-decision")
+                        (Decision.fromConfigurationOrFalse seeOtherDecision_)
+                        (foundDecision p s, seeOtherTerminal p)
+
+                and private foundDecision p s =
+                    decision (key p, "found-decision")
+                        (Decision.fromConfigurationOrFalse foundDecision_)
+                        (multipleChoicesDecision p s, foundTerminal p)
+
+                and private multipleChoicesDecision p s =
+                    decision (key p, "see-other-decision")
+                        (Decision.fromConfigurationOrFalse multipleChoicesDecision_)
+                        (s, multipleChoicesTerminal p)
+
+                (* Export *)
+
+                let export =
+                    seeOtherDecision
 
     (* Components
 
@@ -1083,17 +1647,17 @@ module Model =
             let private GetOrHead =
                 "get-or-head"
 
-            (* Terminals *)
-
-            let private endpoint2Terminal =
-                terminal (key, "endpoint-2-terminal")
-                    (fun _ -> Operations.ok)
-
             (* Export *)
 
             let private getOrHead s =
                 Method.export GetOrHead [ GET; HEAD ] (
-                    s, Existence.export GetOrHead (endpoint2Terminal, endpoint2Terminal))
+                    s, Existence.export GetOrHead (
+                        // TODO: Responses.Moved
+                            Responses.Missing.export GetOrHead,
+                        Preconditions.Common.export GetOrHead (
+                            Preconditions.Safe.export GetOrHead (
+                                Responses.Other.export GetOrHead (
+                                    Responses.Common.export GetOrHead)))))
 
             let export =
                 { Metadata =
@@ -1299,6 +1863,14 @@ type HttpMachineBuilder () =
    multiple elements/components as part. Multiple implementations may rely on
    the same core declarative property of a resource without needing to be aware
    of the existence of other consumers of that property. *)
+
+(* Request *)
+
+type HttpMachineBuilder with
+
+    [<CustomOperation ("methodsAllowed", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.MethodsAllowed (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Properties.Request.methodsAllowed_ (Some (Infer.methods a)))
 
 (* Representation *)
 
