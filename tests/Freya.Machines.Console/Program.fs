@@ -2,14 +2,15 @@
 
 // Freya
 
-open Arachne.Http
 open Freya.Core
 open Freya.Machines.Http
 
+let ok =
+    Freya.init ()
+
 let machine =
     freyaMachine {
-        methodsAllowed [ GET; HEAD; POST ]
-        doPost (Freya.init ()) }
+        handleOk ok }
 
 let app =
     OwinAppFunc.ofFreya machine

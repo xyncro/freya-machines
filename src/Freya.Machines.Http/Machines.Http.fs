@@ -10,8 +10,10 @@ open Freya.Core.Operators
 open Freya.Optics.Http
 open Hephaestus
 
-// TODO: Defaults (???)
-// TODO: Rest of Machine!
+// TODO: Complete syntax
+// TODO: Representation in handlers
+// TODO: Complete operations
+// TODO: Options
 // TODO: Introduce a mechanism for logs, etc.
 
 (* Negotiation *)
@@ -136,6 +138,11 @@ module Operations =
     let ok =
             status 200
          *> phrase "OK"
+         *> date
+
+    let options =
+            status 200
+         *> phrase "Options"
          *> date
 
     let created =
@@ -1984,6 +1991,60 @@ module Model =
                 let export =
                     goneDecision
 
+            (* Options *)
+
+            [<RequireQualifiedAccess>]
+            module Options =
+
+                (* Key *)
+
+                let private key p =
+                    Key.add [ "options" ] (key p)
+
+                 (* Types *)
+
+                type private Options =
+                    { Terminals: Terminals }
+
+                    static member terminals_ =
+                        (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
+
+                    static member empty =
+                        { Terminals = Terminals.empty }
+
+                 and private Terminals =
+                    { Options: Freya<unit> option }
+
+                    static member options_ =
+                        (fun x -> x.Options), (fun n x -> { x with Options = n })
+
+                    static member empty =
+                        { Options = None }
+
+                (* Optics *)
+
+                let private options_ =
+                    Configuration.element_ Options.empty "responses.options"
+
+                (* Terminals *)
+
+                let private terminals_ =
+                        options_
+                    >-> Options.terminals_
+
+                let optionsTerminal_ =
+                        terminals_
+                    >-> Terminals.options_
+
+                let private optionsTerminal p =
+                    terminal (key p, "options-terminal")
+                        (Terminal.fromConfigurationWithOperation optionsTerminal_ Operations.options)
+
+                (* Export *)
+
+                let export =
+                    optionsTerminal
+
             (* Other *)
 
             [<RequireQualifiedAccess>]
@@ -2201,6 +2262,31 @@ module Model =
                   Operations =
                     [ Splice (Key [ "http"; "end-decision" ], Right, getOrHead) ] }
 
+        (* Options *)
+
+        [<RequireQualifiedAccess>]
+        module Options =
+
+            [<Literal>]
+            let private Options =
+                "options"
+
+            (* Export *)
+
+            let private options s =
+                Method.export Options [ OPTIONS ] (
+                    s, Responses.Options.export Options)
+
+            let export =
+                { Metadata =
+                    { Name = "http.options"
+                      Description = None }
+                  Requirements =
+                    { Required = set [ "http.core" ]
+                      Preconditions = List.empty }
+                  Operations =
+                    [ Splice (Key [ "http"; "end-decision" ], Right, options) ] }
+
         (* Post *)
 
         [<RequireQualifiedAccess>]
@@ -2310,6 +2396,7 @@ module Model =
             set [
                 Core.export
                 GetOrHead.export
+                Options.export
                 Post.export
                 Put.export
                 Delete.export ])
@@ -2629,6 +2716,18 @@ type HttpMachineBuilder with
     [<CustomOperation ("doPut", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.DoPut (m, a) =
         HttpMachine.Map (m, Optic.set (Model.Elements.Operation.operationMethod_ PUT) (Some (Infer.bool a)))
+
+(* Responses *)
+
+type HttpMachineBuilder with
+
+    (* Common *)
+
+    (* Terminals *)
+
+    [<CustomOperation ("handleOk", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleOk (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Common.okTerminal_ (Some (Infer.freya a)))
 
 (* Expressions
 
