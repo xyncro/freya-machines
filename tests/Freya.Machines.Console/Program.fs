@@ -8,7 +8,8 @@ open Freya.Machines.Http
 
 let machine =
     freyaMachine {
-        methodsAllowed [ GET; HEAD ] }
+        methodsAllowed [ GET; HEAD; POST ]
+        doPost (Freya.init ()) }
 
 let app =
     OwinAppFunc.ofFreya machine

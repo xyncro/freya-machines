@@ -138,6 +138,16 @@ module Operations =
          *> phrase "OK"
          *> date
 
+    let created =
+            status 201
+         *> phrase "Created"
+         *> date
+
+    let accepted =
+            status 202
+         *> phrase "Accepted"
+         *> date
+
     let noContent =
             status 204
          *> phrase "No Content"
@@ -207,6 +217,11 @@ module Operations =
          *> phrase "Not Acceptable"
          *> date
 
+    let conflict =
+            status 409
+         *> phrase "Conflict"
+         *> date
+
     let gone =
             status 410
          *> phrase "Gone"
@@ -228,6 +243,11 @@ module Operations =
          *> date
 
     (* 5xx *)
+
+    let internalServerError =
+            status 500
+         *> phrase "Internal Server Error"
+         *> date
 
     let notImplemented =
             status 501
@@ -902,7 +922,14 @@ module Model =
 
            The element does not result in a response, only in control flow of
            the machine, and as such must be provided with both left and right
-           cases (no terminals are implied). *)
+           cases (no terminals are implied).
+
+           NOTE: This decision has a significant optimization, in that it will
+           become a Static value of false if the method to be matched is not
+           an allowed method for this resource. This aids significantly in
+           graph optimization, but does imply that a method validation check
+           should be put of the workflow (i.e. that it should correctly be
+           preceded by a Validation element). *)
 
         [<RequireQualifiedAccess>]
         module Method =
@@ -910,10 +937,10 @@ module Model =
             [<RequireQualifiedAccess>]
             module private Seq =
 
-                let intersection l1 l2 =
-                    Set.toSeq (Set.intersect (set l1) (set l2))
+                let disjoint l1 l2 =
+                    Set.isEmpty (Set.intersect (set l1) (set l2))
 
-                let isSame l1 l2 =
+                let identical l1 l2 =
                     (set l1) = (set l2)
 
             (* Key *)
@@ -929,12 +956,12 @@ module Model =
             let private methodsAllowed_ =
                     Properties.Request.methodsAllowed_
 
-            let private methodMatchesDecision p m =
+            let private methodMatchesDecision p ms =
                 decision (key p, "method-matches-decision")
-                    (function | TryGet methodsAllowed_ (Static ms) when Seq.isSame m ms -> Static true
-                              | TryGet methodsAllowed_ (Static ms) when Seq.isEmpty (Seq.intersection m ms) -> Static false
-                              | _ when Seq.isEmpty (Seq.intersection m Defaults.methodsAllowed) -> Static false
-                              | _ -> Dynamic (flip List.contains m <!> !. method_))
+                    (function | TryGet methodsAllowed_ (Static ms') when Seq.disjoint ms ms' -> Static false
+                              | TryGet methodsAllowed_ _ -> Dynamic (flip List.contains ms <!> !. method_)
+                              | _ when Seq.disjoint ms Defaults.methodsAllowed -> Static false
+                              | _ -> Dynamic (flip List.contains ms <!> !. method_))
 
             (* Export *)
 
@@ -1327,6 +1354,256 @@ module Model =
                 let export =
                     hasIfNoneMatchDecision
 
+            (* Unsafe *)
+
+            module Unsafe =
+
+                (* Key *)
+
+                let private key p =
+                    Key.add [ "unsafe" ] (key p)
+
+                (* Decisions *)
+
+                let private ifNoneMatch_ =
+                        Request.Headers.ifNoneMatch_
+
+                let private eTags_ =
+                        Properties.Resource.eTags_
+
+                // TODO: Logic
+
+                let rec private hasIfNoneMatchDecision p s =
+                    decision (key p, "has-if-none-match-decision")
+                        (function | _ -> Static true)
+                        (s, ifNoneMatchMatchesDecision p s)
+
+                // TODO: Logic
+
+                and private ifNoneMatchMatchesDecision p s =
+                    decision (key p, "if-none-match-matches-decision")
+                        (function | _ -> Static true)
+                        (preconditionFailedTerminal p, s)
+
+                (* Export *)
+
+                let export =
+                    hasIfNoneMatchDecision
+
+        (* Conflict
+
+           Decision determining whether the requested operation would cause a
+           conflict given the current state of the resource.
+
+           Where a conflict would be caused, a 409 response is returned,
+           signalling a client error. *)
+
+        [<RequireQualifiedAccess>]
+        module Conflict =
+
+            (* Key *)
+
+            let private key p =
+                Key.add [ p; "conflict" ] key
+
+            (* Types *)
+
+            type private Conflict =
+                { Decisions: Decisions
+                  Terminals: Terminals }
+
+                static member decisions_ =
+                    (fun x -> x.Decisions), (fun d x -> { x with Decisions = d })
+
+                static member terminals_ =
+                    (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
+
+                static member empty =
+                    { Decisions = Decisions.empty
+                      Terminals = Terminals.empty }
+
+             and private Decisions =
+                { Conflict: Value<bool> option }
+
+                static member conflict_ =
+                    (fun x -> x.Conflict), (fun e x -> { x with Decisions.Conflict = e })
+
+                static member empty =
+                    { Conflict = None }
+
+             and private Terminals =
+                { Conflict: Freya<unit> option }
+
+                static member conflict_ =
+                    (fun x -> x.Conflict), (fun e x -> { x with Terminals.Conflict = e })
+
+                static member empty =
+                    { Conflict = None }
+
+            (* Optics *)
+
+            let private conflict_ =
+                Configuration.element_ Conflict.empty "conflict"
+
+            (* Terminals *)
+
+            let private terminals_ =
+                    conflict_
+                >-> Conflict.terminals_
+
+            let conflictTerminal_ =
+                    terminals_
+                >-> Terminals.conflict_
+
+            let private conflictTerminal p =
+                terminal (key p, "conflict-terminal")
+                    (Terminal.fromConfigurationWithOperation conflictTerminal_ Operations.conflict)
+
+            (* Decisions*)
+
+            let private decisions_ =
+                    conflict_
+                >-> Conflict.decisions_
+
+            let conflictDecision_ =
+                    decisions_
+                >-> Decisions.conflict_
+
+            let private conflictDecision p s =
+                decision (key p, "conflict-decision")
+                    (Decision.fromConfigurationOrFalse conflictDecision_)
+                    (s, conflictTerminal p)
+
+            (* Export *)
+
+            let export =
+                conflictDecision
+
+        (* Operation *)
+
+        [<RequireQualifiedAccess>]
+        module Operation =
+
+            (* Key *)
+
+            let private key p =
+                Key.add [ p; "operation" ] key
+
+            (* Types *)
+
+            type private Operation =
+                { Operations: Operations
+                  Decisions: Decisions
+                  Terminals: Terminals }
+
+                static member operations_ =
+                    (fun x -> x.Operations), (fun o x -> { x with Operation.Operations = o })
+
+                static member decisions_ =
+                    (fun x -> x.Decisions), (fun d x -> { x with Decisions = d })
+
+                static member terminals_ =
+                    (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
+
+                static member empty =
+                    { Operations = Operations.empty
+                      Decisions = Decisions.empty
+                      Terminals = Terminals.empty }
+
+             and private Operations =
+                { Operations: Map<Method,Freya<bool>> }
+
+                static member operations_ =
+                    (fun x -> x.Operations), (fun o x -> { x with Operations.Operations = o })
+
+                static member empty =
+                    { Operations = Map.empty }
+
+             and private Decisions =
+                { Completed: Value<bool> option }
+
+                static member completed_ =
+                    (fun x -> x.Completed), (fun c x -> { x with Completed = c })
+
+                static member empty =
+                    { Completed = None }
+
+             and private Terminals =
+                { InternalServerError: Freya<unit> option
+                  Accepted: Freya<unit> option }
+
+                static member internalServerError_ =
+                    (fun x -> x.InternalServerError), (fun i x -> { x with InternalServerError = i })
+
+                static member accepted_ =
+                    (fun x -> x.Accepted), (fun a x -> { x with Accepted = a })
+
+                static member empty =
+                    { InternalServerError = None
+                      Accepted = None }
+
+            (* Optics *)
+
+            let private operation_ =
+                Configuration.element_ Operation.empty "operation"
+
+            (* Terminals *)
+
+            let private terminals_ =
+                    operation_
+                >-> Operation.terminals_
+
+            let internalServerErrorTerminal_ =
+                    terminals_
+                >-> Terminals.internalServerError_
+
+            let acceptedTerminal_ =
+                    terminals_
+                >-> Terminals.accepted_
+
+            let private internalServerErrorTerminal p =
+                terminal (key p, "internal-server-error-terminal")
+                    (Terminal.fromConfigurationWithOperation internalServerErrorTerminal_ Operations.internalServerError)
+
+            let private acceptedTerminal p =
+                terminal (key p, "accepted-terminal")
+                    (Terminal.fromConfigurationWithOperation acceptedTerminal_ Operations.accepted)
+
+            (* Decisions *)
+
+            let private operations_ =
+                    operation_
+                >-> Operation.operations_
+
+            let operationMethod_ m =
+                    operations_
+                >-> Operations.operations_
+                >-> Map.value_ m
+
+            let private decisions_ =
+                    operation_
+                >-> Operation.decisions_
+
+            let private completedDecision_ =
+                    decisions_
+                >-> Decisions.completed_
+
+            let rec private operationDecision p m s =
+                decision (key p, "operation-decision")
+                    (function | Get (operationMethod_ m) (Some f) -> Dynamic (f)
+                              | _ -> Static true)
+                    (internalServerErrorTerminal p, completedDecision p s)
+
+            and private completedDecision p s =
+                decision (key p, "accepted-decision")
+                    (Decision.fromConfigurationOrFalse completedDecision_)
+                    (s, acceptedTerminal p)
+
+            (* Export *)
+
+            let export =
+                operationDecision
+
         (* Responses *)
 
         [<RequireQualifiedAccess>]
@@ -1432,6 +1709,89 @@ module Model =
 
                 let export =
                     noContentDecision
+
+            (* Created *)
+
+            [<RequireQualifiedAccess>]
+            module Created =
+
+                (* Key *)
+
+                let private key p =
+                    Key.add [ "created" ] (key p)
+
+                (* Types *)
+
+                type private Created =
+                    { Decisions: Decisions
+                      Terminals: Terminals }
+
+                    static member decisions_ =
+                        (fun x -> x.Decisions), (fun d x -> { x with Decisions = d })
+
+                    static member terminals_ =
+                        (fun x -> x.Terminals), (fun t x -> { x with Terminals = t })
+
+                    static member empty =
+                        { Decisions = Decisions.empty
+                          Terminals = Terminals.empty }
+
+                 and private Decisions =
+                    { Created: Value<bool> option }
+
+                    static member created_ =
+                        (fun x -> x.Created), (fun e x -> { x with Decisions.Created = e })
+
+                    static member empty =
+                        { Created = None }
+
+                 and private Terminals =
+                    { Created: Freya<unit> option }
+
+                    static member created_ =
+                        (fun x -> x.Created), (fun e x -> { x with Terminals.Created = e })
+
+                    static member empty =
+                        { Created = None }
+
+                (* Optics *)
+
+                let private created_ =
+                    Configuration.element_ Created.empty "responses.created"
+
+                (* Terminals *)
+
+                let private terminals_ =
+                        created_
+                    >-> Created.terminals_
+
+                let createdTerminal_ =
+                        terminals_
+                    >-> Terminals.created_
+
+                let private createdTerminal p =
+                    terminal (key p, "created-terminal")
+                        (Terminal.fromConfigurationWithOperation createdTerminal_ Operations.created)
+
+                (* Decisions*)
+
+                let private decisions_ =
+                        created_
+                    >-> Created.decisions_
+
+                let createdDecision_ =
+                        decisions_
+                    >-> Decisions.created_
+
+                let private createdDecision p s =
+                    decision (key p, "created-decision")
+                        (Decision.fromConfigurationOrFalse createdDecision_)
+                        (s, createdTerminal p)
+
+                (* Export *)
+
+                let export =
+                    createdDecision
 
             (* Missing *)
 
@@ -1858,11 +2218,12 @@ module Model =
                         Responses.Moved.export Post (
                             Responses.Missing.export Post),
                         Preconditions.Common.export Post (
-
-                            // TODO: Etc.
-
-                                Responses.Other.export Post (
-                                    Responses.Common.export Post))))
+                            Preconditions.Unsafe.export Post (
+                                Conflict.export Post (
+                                    Operation.export Post POST (
+                                        Responses.Created.export Post (
+                                            Responses.Other.export Post (
+                                                Responses.Common.export Post))))))))
 
             let export =
                 { Metadata =
@@ -1874,6 +2235,74 @@ module Model =
                   Operations =
                     [ Splice (Key [ "http"; "end-decision" ], Right, post) ] }
 
+        (* Put *)
+
+        [<RequireQualifiedAccess>]
+        module Put =
+
+            [<Literal>]
+            let private Put =
+                "put"
+
+            (* Export *)
+
+            let rec private put s =
+                Method.export Put [ PUT ] (
+                    s, Existence.export Put (
+                        Responses.Moved.export Put (
+                            continuation),
+                        Preconditions.Common.export Put (
+                            Preconditions.Unsafe.export Put (
+                                Conflict.export Put (
+                                    continuation)))))
+
+            and private continuation =
+                Operation.export Put PUT (
+                    Responses.Created.export Put (
+                        Responses.Other.export Put (
+                            Responses.Common.export Put)))
+
+            let export =
+                { Metadata =
+                    { Name = "http.put"
+                      Description = None }
+                  Requirements =
+                    { Required = set [ "http.core" ]
+                      Preconditions = List.empty }
+                  Operations =
+                    [ Splice (Key [ "http"; "end-decision" ], Right, put) ] }
+
+        (* Delete *)
+
+        [<RequireQualifiedAccess>]
+        module Delete =
+
+            [<Literal>]
+            let private Delete =
+                "delete"
+
+            (* Export *)
+
+            let private delete s =
+                Method.export Delete [ DELETE ] (
+                    s, Existence.export Delete (
+                        Responses.Moved.export Delete (
+                            Responses.Missing.export Delete),
+                        Preconditions.Common.export Delete (
+                            Preconditions.Unsafe.export Delete (
+                                Operation.export Delete DELETE (
+                                    Responses.Common.export Delete)))))
+
+            let export =
+                { Metadata =
+                    { Name = "http.delete"
+                      Description = None }
+                  Requirements =
+                    { Required = set [ "http.core" ]
+                      Preconditions = List.empty }
+                  Operations =
+                    [ Splice (Key [ "http"; "end-decision" ], Right, delete) ] }
+
     (* Model *)
 
     let model =
@@ -1881,7 +2310,9 @@ module Model =
             set [
                 Core.export
                 GetOrHead.export
-                Post.export ])
+                Post.export
+                Put.export
+                Delete.export ])
 
 (* Machine
 
@@ -1910,6 +2341,22 @@ module internal Machine =
 
         let reify configuration =
             let machine, machineLog = Machine.createLogged prototype configuration
+
+            let (Log.Graph (nodes, edges)) =
+                machineLog.Optimization.Graphs.Post
+
+            printfn "Nodes:\n"
+
+            nodes
+            |> List.iter (fun (Key k, _) ->
+                printfn "%s" (String.Join (".", k))) 
+
+            printfn "\nEdges:\n"
+
+            edges
+            |> List.rev
+            |> List.iter (fun (Key k1, Key k2, v) ->
+                printfn "%s -- %A --> %s" (String.Join (".", k1)) v (String.Join (".", k2)))
 
             Evaluation.evaluate machine
 
@@ -1948,6 +2395,28 @@ module Infer =
     let inline value v =
         Value.infer v
 
+    (* Freya<bool> *)
+
+    module Bool =
+
+        type Defaults =
+            | Defaults
+
+            static member Bool (x: Freya<bool>) =
+                x
+
+            static member Bool (x: Freya<unit>) =
+                Freya.map (x, fun _ -> true)
+
+        let inline defaults (a: ^a, _: ^b) =
+            ((^a or ^b) : (static member Bool: ^a -> Freya<bool>) a)
+
+        let inline infer (x: 'a) =
+            defaults (x, Defaults)
+
+    let inline bool v =
+        Bool.infer v
+
     (* MediaType list *)
 
     module MediaTypes =
@@ -1961,7 +2430,7 @@ module Infer =
             static member MediaTypes (x: MediaType list) =
                 Static x
 
-            static member MediaTypes (x: MediaType) = 
+            static member MediaTypes (x: MediaType) =
                 Static [ x ]
 
         let inline defaults (a: ^a, _: ^b) =
@@ -2142,6 +2611,24 @@ type HttpMachineBuilder with
     [<CustomOperation ("handleForbidden", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HandleForbidden (m, a) =
         HttpMachine.Map (m, Optic.set Model.Elements.Permission.forbiddenTerminal_ (Some a))
+
+(* Operation *)
+
+type HttpMachineBuilder with
+
+    (* Operations *)
+
+    [<CustomOperation ("doDelete", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.DoDelete (m, a) =
+        HttpMachine.Map (m, Optic.set (Model.Elements.Operation.operationMethod_ DELETE) (Some (Infer.bool a)))
+
+    [<CustomOperation ("doPost", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.DoPost (m, a) =
+        HttpMachine.Map (m, Optic.set (Model.Elements.Operation.operationMethod_ POST) (Some (Infer.bool a)))
+
+    [<CustomOperation ("doPut", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.DoPut (m, a) =
+        HttpMachine.Map (m, Optic.set (Model.Elements.Operation.operationMethod_ PUT) (Some (Infer.bool a)))
 
 (* Expressions
 
