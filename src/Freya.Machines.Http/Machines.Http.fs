@@ -13,8 +13,8 @@ open Hephaestus
 // TODO: Complete syntax
 // TODO: Representation in handlers
 // TODO: Complete operations
-// TODO: Options
-// TODO: Introduce a mechanism for logs, etc.
+// TODO: Determine correct ending for core
+// TODO: Introduce a mechanism for logs, etc. (this might be more Freya.Core?)
 
 (* Negotiation *)
 
@@ -617,6 +617,8 @@ module Model =
                     (Decision.fromConfigurationOrTrue serviceAvailableDecision_)
                     (serviceUnavailableTerminal p, httpVersionSupportedDecision p s)
 
+            // TODO: Decide on public override?
+
             and private httpVersionSupportedDecision p s =
                 decision (key p, "http-version-supported-decision")
                     (Decision.fromConfigurationOrTrue httpVersionSupportedDecision_)
@@ -893,7 +895,7 @@ module Model =
                     decisions_
                 >-> Decisions.badRequest_
 
-            // TODO: Logic
+            // TODO: Decide if this is public or not
 
             let rec private expectationMetDecision p s =
                 decision (key p, "expectation-met-decision")
@@ -1171,7 +1173,15 @@ module Model =
             let export =
                 existsDecision
 
-        (* Preconditions *)
+        (* Preconditions
+
+           Decisions representing the negotiation of optional preconditions
+           declared by the client, which should preclude further processing of
+           the request if not met. Preconditions are divided in to common
+           (applying to all requests) and safe/unsafe, where the unsafe set
+           are applicable to methods which would change state.
+
+           Preconditions failing results in a 412 response. *)
 
         [<RequireQualifiedAccess>]
         module Preconditions =
@@ -2186,7 +2196,11 @@ module Model =
 
        The components of an HTTP machine model, formed by composing and in some
        cases parameterizing elements in specific orders to give a useful HTTP
-       processing cycle. *)
+       processing cycle.
+
+       In this HTTP machine the components are defined as a single common core
+       component, and additional components for each of the methods, being
+       spliced in to the core component at appropriate points. *)
 
     [<AutoOpen>]
     module Components =
@@ -2285,7 +2299,7 @@ module Model =
                     { Required = set [ "http.core" ]
                       Preconditions = List.empty }
                   Operations =
-                    [ Splice (Key [ "http"; "end-decision" ], Right, options) ] }
+                    [ Splice (Key [ "http"; "core"; "validation"; "bad-request-decision" ], Left, options) ] }
 
         (* Post *)
 
@@ -2410,12 +2424,12 @@ module Model =
 [<RequireQualifiedAccess>]
 module internal Machine =
 
-    (* Evaluation *)
+    (* Execution *)
 
     [<RequireQualifiedAccess>]
-    module Evaluation =
+    module Execution =
 
-        let evaluate machine =
+        let execute machine =
             Machine.execute machine
 
     (* Reification *)
@@ -2429,23 +2443,7 @@ module internal Machine =
         let reify configuration =
             let machine, machineLog = Machine.createLogged prototype configuration
 
-            let (Log.Graph (nodes, edges)) =
-                machineLog.Optimization.Graphs.Post
-
-            printfn "Nodes:\n"
-
-            nodes
-            |> List.iter (fun (Key k, _) ->
-                printfn "%s" (String.Join (".", k))) 
-
-            printfn "\nEdges:\n"
-
-            edges
-            |> List.rev
-            |> List.iter (fun (Key k1, Key k2, v) ->
-                printfn "%s -- %A --> %s" (String.Join (".", k1)) v (String.Join (".", k2)))
-
-            Evaluation.evaluate machine
+            Execution.execute machine
 
 (* Inference
 
@@ -2503,6 +2501,128 @@ module Infer =
 
     let inline bool v =
         Bool.infer v
+
+    (* Charset list *)
+
+    module Charsets =
+
+        type Defaults =
+            | Defaults
+
+            static member Charsets (x: Freya<Charset list>) =
+                Dynamic x
+
+            static member Charsets (x: Charset list) =
+                Static x
+
+            static member Charsets (x: Charset) =
+                Static [ x ]
+
+        let inline defaults (a: ^a, _: ^b) =
+            ((^a or ^b) : (static member Charsets: ^a -> Value<Charset list>) a)
+
+        let inline infer (x: 'a) =
+            defaults (x, Defaults)
+
+    let inline charsets v =
+        Charsets.infer v
+
+    (* ContentCoding list *)
+
+    module ContentCodings =
+
+        type Defaults =
+            | Defaults
+
+            static member ContentCodings (x: Freya<ContentCoding list>) =
+                Dynamic x
+
+            static member ContentCodings (x: ContentCoding list) =
+                Static x
+
+            static member ContentCodings (x: ContentCoding) =
+                Static [ x ]
+
+        let inline defaults (a: ^a, _: ^b) =
+            ((^a or ^b) : (static member ContentCodings: ^a -> Value<ContentCoding list>) a)
+
+        let inline infer (x: 'a) =
+            defaults (x, Defaults)
+
+    let inline contentCodings v =
+        ContentCodings.infer v
+
+    (* DateTime *)
+
+    module DateTime =
+
+        type Defaults =
+            | Defaults
+
+            static member DateTime (x: Freya<DateTime>) =
+                Dynamic x
+
+            static member DateTime (x: DateTime) =
+                Static x
+
+        let inline defaults (a: ^a, _: ^b) =
+            ((^a or ^b) : (static member DateTime: ^a -> Value<DateTime>) a)
+
+        let inline infer (x: 'a) =
+            defaults (x, Defaults)
+
+    let inline dateTime v =
+        DateTime.infer v
+
+    (* ETag list *)
+
+    module ETags =
+
+        type Defaults =
+            | Defaults
+
+            static member ETags (x: Freya<ETag list>) =
+                Dynamic x
+
+            static member ETags (x: ETag list) =
+                Static x
+
+            static member ETags (x: ETag) =
+                Static [ x ]
+
+        let inline defaults (a: ^a, _: ^b) =
+            ((^a or ^b) : (static member ETags: ^a -> Value<ETag list>) a)
+
+        let inline infer (x: 'a) =
+            defaults (x, Defaults)
+
+    let inline eTags v =
+        ETags.infer v
+
+    (* LanguageTag list *)
+
+    module LanguageTags =
+
+        type Defaults =
+            | Defaults
+
+            static member LanguageTags (x: Freya<LanguageTag list>) =
+                Dynamic x
+
+            static member LanguageTags (x: LanguageTag list) =
+                Static x
+
+            static member LanguageTags (x: LanguageTag) =
+                Static [ x ]
+
+        let inline defaults (a: ^a, _: ^b) =
+            ((^a or ^b) : (static member LanguageTags: ^a -> Value<LanguageTag list>) a)
+
+        let inline infer (x: 'a) =
+            defaults (x, Defaults)
+
+    let inline languageTags v =
+        LanguageTags.infer v
 
     (* MediaType list *)
 
@@ -2638,9 +2758,33 @@ type HttpMachineBuilder with
 
 type HttpMachineBuilder with
 
+    [<CustomOperation ("charsetsSupported", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.CharsetsSupported (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Properties.Representation.charsetsSupported_ (Some (Infer.charsets a)))
+
+    [<CustomOperation ("contentCodingsSupported", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.ContentCodingsSupported (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Properties.Representation.contentCodingsSupported_ (Some (Infer.contentCodings a)))
+
+    [<CustomOperation ("languagesSupported", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.LanguagesSupported (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Properties.Representation.languagesSupported_ (Some (Infer.languageTags a)))
+
     [<CustomOperation ("mediaTypesSupported", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.MediaTypesSupported (m, a) =
         HttpMachine.Map (m, Optic.set Model.Properties.Representation.mediaTypesSupported_ (Some (Infer.mediaTypes a)))
+
+(* Resource *)
+
+type HttpMachineBuilder with
+
+    [<CustomOperation ("eTags", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.ETags (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Properties.Resource.eTags_ (Some (Infer.eTags a)))
+
+    [<CustomOperation ("lastModified", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.LastModified (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Properties.Resource.lastModified_ (Some (Infer.dateTime a)))
 
 (* Elements
 
@@ -2699,6 +2843,48 @@ type HttpMachineBuilder with
     member inline __.HandleForbidden (m, a) =
         HttpMachine.Map (m, Optic.set Model.Elements.Permission.forbiddenTerminal_ (Some a))
 
+(* Validation *)
+
+type HttpMachineBuilder with
+
+    (* Decisions *)
+
+    [<CustomOperation ("badRequest", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.BadRequest (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Validation.badRequestDecision_ (Some (Infer.value a)))
+
+    [<CustomOperation ("uriTooLong", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.UriTooLong (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Validation.uriTooLongDecision_ (Some (Infer.value a)))
+
+    (* Terminals *)
+
+    [<CustomOperation ("handleBadRequest", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleBadRequest (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Validation.badRequestTerminal_ (Some (Infer.freya a)))
+
+    [<CustomOperation ("handleExpectationFailed", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleExpectationFailed (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Validation.expectationFailedTerminal_ (Some (Infer.freya a)))
+
+    [<CustomOperation ("handleMethodNotAllowed", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleMethodNotAllowed (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Validation.methodNotAllowedTerminal_ (Some (Infer.freya a)))
+
+    [<CustomOperation ("handleUriTooLong", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleUriTooLong (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Validation.uriTooLongTerminal_ (Some (Infer.freya a)))
+
+(* Negotiation *)
+
+type HttpMachineBuilder with
+
+    (* Terminals *)
+
+    [<CustomOperation ("handleNotAcceptable", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleNotAcceptable (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Negotiation.notAcceptableTerminal_ (Some (Infer.freya a)))
+
 (* Operation *)
 
 type HttpMachineBuilder with
@@ -2717,11 +2903,9 @@ type HttpMachineBuilder with
     member inline __.DoPut (m, a) =
         HttpMachine.Map (m, Optic.set (Model.Elements.Operation.operationMethod_ PUT) (Some (Infer.bool a)))
 
-(* Responses *)
+(* Responses.Common *)
 
 type HttpMachineBuilder with
-
-    (* Common *)
 
     (* Terminals *)
 

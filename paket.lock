@@ -19,7 +19,7 @@ NUGET
     FParsec (1.0.2)
     Hekate (3.2.0)
       Aether (>= 8.0.2 < 9.0.0)
-    Hephaestus (1.0.0-b009)
+    Hephaestus (1.0.0-b013)
       Aether (>= 8.0.0 < 9.0.0)
       Anat (>= 1.0.0-b < 1.1.0)
       Hekate (>= 3.2.0 < 4.0.0)
