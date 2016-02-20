@@ -10,7 +10,6 @@ open Freya.Core.Operators
 open Freya.Optics.Http
 open Hephaestus
 
-// TODO: Complete syntax
 // TODO: Representation in handlers
 // TODO: Complete operations
 // TODO: Determine correct ending for core
@@ -1496,7 +1495,12 @@ module Model =
             let export =
                 conflictDecision
 
-        (* Operation *)
+        (* Operation
+
+           Decisions representing the processing of a specific operation (one
+           of the non-idempotent methods supported by the HTTP model). The
+           decision for the operation is a Freya<bool> and thus will always
+           remain dynamic throughout optimization (if present). *)
 
         [<RequireQualifiedAccess>]
         module Operation =
@@ -1943,7 +1947,7 @@ module Model =
                         terminals_
                     >-> Terminals.gone_
 
-                let temporaryRedirectTemporal_ =
+                let temporaryRedirectTerminal_ =
                         terminals_
                     >-> Terminals.temporaryRedirect_
 
@@ -1955,9 +1959,9 @@ module Model =
                     terminal (key p, "gone-terminal")
                         (Terminal.fromConfigurationWithOperation goneTerminal_ Operations.gone)
 
-                let private temporaryRedirectTerminal_ p =
+                let private temporaryRedirectTerminal p =
                     terminal (key p, "temporary-redirect-terminal")
-                        (Terminal.fromConfigurationWithOperation temporaryRedirectTemporal_ Operations.temporaryRedirect)
+                        (Terminal.fromConfigurationWithOperation temporaryRedirectTerminal_ Operations.temporaryRedirect)
 
                 let private movedPermanentlyTerminal p =
                     terminal (key p, "moved-permanently-terminal")
@@ -1989,7 +1993,7 @@ module Model =
                 and private movedTemporarilyDecision p s =
                     decision (key p, "found-decision")
                         (Decision.fromConfigurationOrFalse movedTemporarilyDecision_)
-                        (movedPermanentlyDecision p s, temporaryRedirectTerminal_ p)
+                        (movedPermanentlyDecision p s, temporaryRedirectTerminal p)
 
                 and private movedPermanentlyDecision p s =
                     decision (key p, "see-other-decision")
@@ -2458,21 +2462,21 @@ module internal Machine =
 [<RequireQualifiedAccess>]
 module Infer =
 
-    (* Value<'a> *)
+    (* Value (Value<bool>) *)
 
     module Value =
 
         type Defaults =
             | Defaults
 
-            static member Value (x: Freya<'a>) =
+            static member Value (x: Freya<bool>) =
                 Dynamic x
 
-            static member Value (x: 'a) =
+            static member Value (x: bool) =
                 Static x
 
         let inline defaults (a: ^a, _: ^b) =
-            ((^a or ^b) : (static member Value: ^a -> Value<_>) a)
+            ((^a or ^b) : (static member Value: ^a -> Value<bool>) a)
 
         let inline infer (x: 'a) =
             defaults (x, Defaults)
@@ -2480,27 +2484,27 @@ module Infer =
     let inline value v =
         Value.infer v
 
-    (* Freya<bool> *)
+    (* Operation (Freya<bool>) *)
 
-    module Bool =
+    module Operation =
 
         type Defaults =
             | Defaults
 
-            static member Bool (x: Freya<bool>) =
+            static member Operation (x: Freya<bool>) =
                 x
 
-            static member Bool (x: Freya<unit>) =
+            static member Operation (x: Freya<unit>) =
                 Freya.map (x, fun _ -> true)
 
         let inline defaults (a: ^a, _: ^b) =
-            ((^a or ^b) : (static member Bool: ^a -> Freya<bool>) a)
+            ((^a or ^b) : (static member Operation: ^a -> Freya<bool>) a)
 
         let inline infer (x: 'a) =
             defaults (x, Defaults)
 
-    let inline bool v =
-        Bool.infer v
+    let inline operation v =
+        Operation.infer v
 
     (* Charset list *)
 
@@ -2789,7 +2793,8 @@ type HttpMachineBuilder with
 (* Elements
 
    Configuration for discrete elements used to make up specific components used
-   within the HTTP model. *)
+   within the HTTP model. The elements structure is flattened here to make the
+   application of custom syntax more tractable. *)
 
 (* Assertion *)
 
@@ -2885,6 +2890,42 @@ type HttpMachineBuilder with
     member inline __.HandleNotAcceptable (m, a) =
         HttpMachine.Map (m, Optic.set Model.Elements.Negotiation.notAcceptableTerminal_ (Some (Infer.freya a)))
 
+(* Existence *)
+
+type HttpMachineBuilder with
+
+    (* Decisions *)
+
+    [<CustomOperation ("exists", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.Exists (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Existence.existsDecision_ (Some (Infer.value a)))
+
+(* Preconditions *)
+
+type HttpMachineBuilder with
+
+    (* Terminals *)
+
+    [<CustomOperation ("handlePreconditionFailed", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandlePreconditionFailed (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Preconditions.preconditionFailedTerminal_ (Some (Infer.freya a)))
+
+(* Conflict *)
+
+type HttpMachineBuilder with
+
+    (* Decisions *)
+
+    [<CustomOperation ("conflict", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.Conflict (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Conflict.conflictDecision_ (Some (Infer.value a)))
+
+    (* Terminals *)
+
+    [<CustomOperation ("handleConflict", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleConflict (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Conflict.conflictTerminal_ (Some (Infer.freya a)))
+
 (* Operation *)
 
 type HttpMachineBuilder with
@@ -2893,15 +2934,15 @@ type HttpMachineBuilder with
 
     [<CustomOperation ("doDelete", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.DoDelete (m, a) =
-        HttpMachine.Map (m, Optic.set (Model.Elements.Operation.operationMethod_ DELETE) (Some (Infer.bool a)))
+        HttpMachine.Map (m, Optic.set (Model.Elements.Operation.operationMethod_ DELETE) (Some (Infer.operation a)))
 
     [<CustomOperation ("doPost", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.DoPost (m, a) =
-        HttpMachine.Map (m, Optic.set (Model.Elements.Operation.operationMethod_ POST) (Some (Infer.bool a)))
+        HttpMachine.Map (m, Optic.set (Model.Elements.Operation.operationMethod_ POST) (Some (Infer.operation a)))
 
     [<CustomOperation ("doPut", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.DoPut (m, a) =
-        HttpMachine.Map (m, Optic.set (Model.Elements.Operation.operationMethod_ PUT) (Some (Infer.bool a)))
+        HttpMachine.Map (m, Optic.set (Model.Elements.Operation.operationMethod_ PUT) (Some (Infer.operation a)))
 
 (* Responses.Common *)
 
@@ -2912,6 +2953,106 @@ type HttpMachineBuilder with
     [<CustomOperation ("handleOk", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HandleOk (m, a) =
         HttpMachine.Map (m, Optic.set Model.Elements.Responses.Common.okTerminal_ (Some (Infer.freya a)))
+
+(* Responses.Created *)
+
+type HttpMachineBuilder with
+
+    (* Decisions *)
+
+    [<CustomOperation ("created", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.Created (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Created.createdDecision_ (Some (Infer.value a)))
+
+    (* Terminals *)
+
+    [<CustomOperation ("handleCreated", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleCreated (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Created.createdTerminal_ (Some (Infer.freya a)))
+
+(* Responses.Missing *)
+
+type HttpMachineBuilder with
+
+    (* Terminals *)
+
+    [<CustomOperation ("handleNotFound", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleNotFound (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Missing.notFoundTerminal_ (Some (Infer.freya a)))
+
+(* Responses.Moved *)
+
+type HttpMachineBuilder with
+
+    (* Decisions *)
+
+    [<CustomOperation ("gone", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.Gone (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Moved.goneDecision_ (Some (Infer.value a)))
+
+    [<CustomOperation ("movedPermanently", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.MovedPermanently (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Moved.movedPermanentlyDecision_ (Some (Infer.value a)))
+
+    [<CustomOperation ("movedTemporarily", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.MovedTemporarily (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Moved.movedTemporarilyDecision_ (Some (Infer.value a)))
+
+    (* Terminals *)
+
+    [<CustomOperation ("handleGone", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleGone (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Moved.goneTerminal_ (Some (Infer.freya a)))
+
+    [<CustomOperation ("handleMovedPermanently", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleMovedPermanently (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Moved.movedPermanentlyTerminal_ (Some (Infer.freya a)))
+
+    [<CustomOperation ("handleTemporaryRedirect", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleTemporaryRedirect (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Moved.temporaryRedirectTerminal_ (Some (Infer.freya a)))
+
+(* Responses.Options *)
+
+type HttpMachineBuilder with
+
+    (* Terminals *)
+
+    [<CustomOperation ("handleOptions", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleOptions (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Options.optionsTerminal_ (Some (Infer.freya a)))
+
+(* Responses.Other *)
+
+type HttpMachineBuilder with
+
+    (* Decisions *)
+
+    [<CustomOperation ("found", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.Found (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Other.foundDecision_ (Some (Infer.value a)))
+
+    [<CustomOperation ("multipleChoices", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.MultipleChoices (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Other.multipleChoicesDecision_ (Some (Infer.value a)))
+
+    [<CustomOperation ("seeOther", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.SeeOther (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Other.seeOtherDecision_ (Some (Infer.value a)))
+
+    (* Terminals *)
+
+    [<CustomOperation ("handleFound", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleFound (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Other.foundTerminal_ (Some (Infer.freya a)))
+
+    [<CustomOperation ("handleMultipleChoices", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleMultipleChoices (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Other.multipleChoicesTerminal_ (Some (Infer.freya a)))
+
+    [<CustomOperation ("handleSeeOther", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleSeeOther (m, a) =
+        HttpMachine.Map (m, Optic.set Model.Elements.Responses.Other.seeOtherTerminal_ (Some (Infer.freya a)))
 
 (* Expressions
 
