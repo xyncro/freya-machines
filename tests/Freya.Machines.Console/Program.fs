@@ -6,7 +6,7 @@ open Freya.Core
 open Freya.Machines.Http
 
 let ok =
-    Freya.empty
+    Freya.init Content.Representation.empty
 
 let machine =
     freyaMachine {
