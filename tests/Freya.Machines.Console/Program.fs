@@ -2,11 +2,21 @@
 
 // Freya
 
+open Arachne.Http
+open Arachne.Language
 open Freya.Core
 open Freya.Machines.Http
 
 let ok =
-    Freya.init Content.Representation.empty
+    freya {
+        return {
+            Data = "Hello World!"B
+            Description =
+                { Charset = Some Charset.Utf8
+                  Encodings = None
+                  MediaType = Some MediaType.Text
+                  Languages = Some [ LanguageTag.parse "en-gb"
+                                     LanguageTag.parse "en" ] } } }
 
 let machine =
     freyaMachine {

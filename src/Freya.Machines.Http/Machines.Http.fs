@@ -12,7 +12,6 @@ open Hephaestus
 
 // Sunday!
 
-// TODO: Full representation writer
 // TODO: Module documentation
 // TODO: Complete operations
 
@@ -20,6 +19,51 @@ open Hephaestus
 
 // TODO: Determine correct ending for core
 // TODO: Introduce a mechanism for logs, etc. (this might be more Freya.Core?)
+
+
+(* Types
+
+    Types relating to principle operations related to the HTTP machine,
+    particularly around the specification and representation of resources. A
+    specification is defined as the result of the content negotiations which
+    are possible, giving the handler the information needed to decide which
+    representation of the resource to create.
+
+    The handler returns the Representation, which includes the data to be
+    returned as a byte array, and a Description, which gives the charsets,
+    encodings, etc. that the handler selected for the representation (given
+    the Specification). *)
+
+type Specification =
+    { Charsets: Negotiation<Charset>
+      Encodings: Negotiation<ContentCoding>
+      MediaTypes: Negotiation<MediaType>
+      Languages: Negotiation<LanguageTag> }
+
+ and Negotiation<'a> =
+    | Negotiated of 'a list
+    | Free
+
+type Representation =
+    { Data: byte []
+      Description: Description }
+
+    static member empty =
+        { Data = [||]
+          Description =
+            { Charset = None
+              Encodings = None
+              MediaType = None
+              Languages = None } }
+
+ and Description =
+    { Charset: Charset option
+      Encodings: ContentCoding list option
+      MediaType: MediaType option
+      Languages: LanguageTag list option }
+
+type Handler =
+    Specification -> Freya<Representation>
 
 (* Defaults
 
@@ -184,62 +228,12 @@ module Properties =
    the HTTP model as part of the defined Handler type signature). *)
 
 [<RequireQualifiedAccess>]
-module Content =
-
-    (* Types
-    
-       Types relating to content based operations, particularly around the
-       specification and representation of resources. A specification is
-       defined as the result of the content negotiations which are possible,
-       giving the handler the information needed to decide which representation
-       of the resource to create.
-
-       The handler returns the Representation, which includes the data to be
-       returned as a byte array, and a Description, which gives the charsets,
-       encodings, etc. that the handler selected for the representation (given
-       the Specification). *)
-
-    (* Negotiation *)
-
-    type Specification =
-        { Charsets: Negotiation<Charset>
-          Encodings: Negotiation<ContentCoding>
-          MediaTypes: Negotiation<MediaType>
-          Languages: Negotiation<LanguageTag> }
-
-     and Negotiation<'a> =
-        | Negotiated of 'a list
-        | Free
-
-    (* Specification *)
-
-    type Representation =
-        { Data: byte []
-          Description: Description }
-
-        static member empty =
-            { Data = [||]
-              Description =
-                { Charset = None
-                  Encodings = None
-                  MediaType = None
-                  Languages = None } }
-
-     and Description =
-        { Charset: Charset option
-          Encodings: ContentCoding list option
-          MediaType: MediaType option
-          Languages: LanguageTag list option }
-
-    (* Handling *)
-
-    type Handler =
-        Specification -> Freya<Representation>
+module internal Content =
 
     (* Negotiation *)
 
     [<RequireQualifiedAccess>]
-    module internal Negotiation =
+    module Negotiation =
 
         (* Negotiation *)
 
@@ -360,27 +354,77 @@ module Content =
                          | TryGet supported_ (Static c) -> Some (negotiate c <!> !. accepted_)
                          | _ -> None
 
-    (* Specification *)
+    (* Representation *)
 
     [<RequireQualifiedAccess>]
-    [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
-    module internal Representation =
+    module Representation =
 
-        let private charsets =
-                Negotiation.Charset.configure
+        (* Optics *)
+
+        let private body_ =
+                Response.body_
+
+        let private charset_ =
+                Response.Headers.contentType_
+            >-> Option.mapIsomorphism ContentType.mediaType_
+            >-> Option.mapLens MediaType.parameters_
+            >?> Parameters.parameters_
+            >?> Map.value_ "charset"
+
+        let private contentType_ =
+                Response.Headers.contentType_
+
+        let private contentEncoding_ =
+                Response.Headers.contentEncoding_
+
+        let private contentLanguage_ =
+                Response.Headers.contentLanguage_
+
+        (* Specification*)
+
+        let private lift configure =
+                configure
              >> function | Some f -> f
                          | _ -> Freya.init Free
 
         let private specify configuration =
-                fun c ->
-                    { Charsets = c
-                      Encodings = Free
-                      MediaTypes = Free
-                      Languages = Free }
-            <!> charsets configuration
+                fun charsets encodings mediaTypes languages ->
+                    { Charsets = charsets
+                      Encodings = encodings
+                      MediaTypes = mediaTypes
+                      Languages = languages }
+            <!> lift Negotiation.Charset.configure configuration
+            <*> lift Negotiation.ContentCoding.configure configuration
+            <*> lift Negotiation.MediaType.configure configuration
+            <*> lift Negotiation.Language.configure configuration
+
+        (* Representation *)
+
+        let private body =
+                function | data -> body_ %= (fun x -> x.Write (data, 0, data.Length); x)
+
+        let private charset =
+                function | Some (Charset charset) -> charset_ .= Some charset
+                         | _ -> Freya.empty
+
+        let private encodings =
+                function | Some encodings -> contentEncoding_ .= Some (ContentEncoding encodings)
+                         | _ -> Freya.empty
+
+        let private languages =
+                function | Some languages -> contentLanguage_ .= Some (ContentLanguage languages)
+                         | _ -> Freya.empty
+
+        let private mediaType =
+                function | Some mediaType -> contentType_ .= Some (ContentType mediaType)
+                         | _ -> Freya.empty
 
         let private write (r: Representation) =
-                Response.body_ %= (fun s -> s.Write (r.Data, 0, r.Data.Length); s)
+                mediaType r.Description.MediaType
+             *> charset   r.Description.Charset
+             *> encodings r.Description.Encodings
+             *> languages r.Description.Languages
+             *> body r.Data
 
         let represent configuration handler =
                 specify configuration
@@ -401,13 +445,17 @@ module Content =
 module Operations =
 
     let private date =
-        Date.Date >> Some >> (.=) Response.Headers.date_ <| DateTime.UtcNow
+            Date.Date
+         >> Some
+         >> Freya.Optic.set Response.Headers.date_ <| DateTime.UtcNow
 
     let private phrase =
-        Some >> (.=) Response.reasonPhrase_
+            Some
+         >> Freya.Optic.set Response.reasonPhrase_
 
     let private status =
-        Some >> (.=) Response.statusCode_
+            Some
+         >> Freya.Optic.set Response.statusCode_
 
     (* 2xx *)
 
@@ -582,14 +630,17 @@ module Model =
         [<RequireQualifiedAccess>]
         module Decision =
 
+            let private append =
+                sprintf "%s-decision"
+
             let create (key, name) configurator =
                 Specification.Decision.create
-                    (Key.add [ name ] key)
+                    (Key.add [ append name ] key)
                     (configurator >> Decision.map)
 
             let fromConfiguration (key, name) o def =
                 Specification.Decision.create
-                    (Key.add [ name ] key)
+                    (Key.add [ append name ] key)
                     (fun c ->
                         match Optic.get o c with
                         | Some d -> Decision.map d
@@ -598,9 +649,12 @@ module Model =
         [<RequireQualifiedAccess>]
         module Terminal =
 
+            let private append =
+                sprintf "%s-terminal"
+
             let fromConfiguration (key, name) o operation =
                 Specification.Terminal.create
-                    (Key.add [ name ] key)
+                    (Key.add [ append name ] key)
                     (fun c ->
                         match Optic.get o c with
                         | Some h -> operation *> Content.Representation.represent c h
@@ -671,9 +725,9 @@ module Model =
                       HttpVersionSupported = None }
 
              and private Terminals =
-                { ServiceUnavailable: Content.Handler option
-                  HttpVersionNotSupported: Content.Handler option
-                  NotImplemented: Content.Handler option }
+                { ServiceUnavailable: Handler option
+                  HttpVersionNotSupported: Handler option
+                  NotImplemented: Handler option }
 
                 static member serviceUnavailable_ =
                     (fun x -> x.ServiceUnavailable), (fun s x -> { x with ServiceUnavailable = s })
@@ -717,7 +771,7 @@ module Model =
                     >-> Terminals.notImplemented_
 
                 let internal serviceUnavailable p =
-                    Terminal.fromConfiguration (key p, "service-unavailable-terminal")
+                    Terminal.fromConfiguration (key p, "service-unavailable")
                         serviceUnavailable_ Operations.serviceUnavailable
 
                 let internal httpVersionNotSupported p =
@@ -725,7 +779,7 @@ module Model =
                         httpVersionNotSupported_ Operations.httpVersionNotSupported
 
                 let internal notImplemented p =
-                    Terminal.fromConfiguration (key p, "not-implemented-terminal")
+                    Terminal.fromConfiguration (key p, "not-implemented")
                         notImplemented_ Operations.notImplemented
 
             (* Decisions *)
@@ -747,21 +801,21 @@ module Model =
                     >-> Decisions.httpVersionSupported_
 
                 let rec internal serviceAvailable p s =
-                    Decision.fromConfiguration (key p, "service-available-decision")
+                    Decision.fromConfiguration (key p, "service-available")
                         serviceAvailable_ true
                         (Terminals.serviceUnavailable p, httpVersionSupported p s)
 
                 // TODO: Decide on public override?
 
                 and internal httpVersionSupported p s =
-                    Decision.fromConfiguration (key p, "http-version-supported-decision")
+                    Decision.fromConfiguration (key p, "http-version-supported")
                         httpVersionSupported_ true
                         (Terminals.httpVersionNotSupported p, methodImplemented p s)
 
                 // TODO: Not Implemented Logic
 
                 and internal methodImplemented p s =
-                    Decision.create (key p, "method-implemented-decision")
+                    Decision.create (key p, "method-implemented")
                         (fun _ -> Static true)
                         (Terminals.notImplemented p, s)
 
@@ -817,8 +871,8 @@ module Model =
                       Allowed = None }
 
              and private Terminals =
-                { Unauthorized: Content.Handler option
-                  Forbidden: Content.Handler option }
+                { Unauthorized: Handler option
+                  Forbidden: Handler option }
 
                 static member unauthorized_ =
                     (fun x -> x.Unauthorized), (fun u x -> { x with Unauthorized = u })
@@ -854,11 +908,11 @@ module Model =
                     >-> Terminals.forbidden_
 
                 let internal unauthorized p =
-                    Terminal.fromConfiguration (key p, "unauthorized-terminal")
+                    Terminal.fromConfiguration (key p, "unauthorized")
                         unauthorized_ Operations.unauthorized
 
                 let internal forbidden p =
-                    Terminal.fromConfiguration (key p, "forbidden-terminal")
+                    Terminal.fromConfiguration (key p, "forbidden")
                         forbidden_ Operations.forbidden
 
             (* Decisions *)
@@ -880,12 +934,12 @@ module Model =
                     >-> Decisions.allowed_
 
                 let rec internal authorized p s =
-                    Decision.fromConfiguration (key p, "authorized-decision")
+                    Decision.fromConfiguration (key p, "authorized")
                         authorized_ true
                         (Terminals.unauthorized p, allowed p s)
 
                 and internal allowed p s =
-                    Decision.fromConfiguration (key p, "allowed-decision")
+                    Decision.fromConfiguration (key p, "allowed")
                         allowed_ true
                         (Terminals.forbidden p, s)
 
@@ -947,10 +1001,10 @@ module Model =
                       BadRequest = None }
 
              and private Terminals =
-                { ExpectationFailed: Content.Handler option
-                  MethodNotAllowed: Content.Handler option
-                  UriTooLong: Content.Handler option
-                  BadRequest: Content.Handler option }
+                { ExpectationFailed: Handler option
+                  MethodNotAllowed: Handler option
+                  UriTooLong: Handler option
+                  BadRequest: Handler option }
 
                 static member expectationFailed_ =
                     (fun x -> x.ExpectationFailed), (fun e x -> { x with ExpectationFailed = e })
@@ -1002,19 +1056,19 @@ module Model =
                     >-> Terminals.badRequest_
 
                 let internal expectationFailed p =
-                    Terminal.fromConfiguration (key p, "expectation-failed-terminal")
+                    Terminal.fromConfiguration (key p, "expectation-failed")
                         expectationFailed_ Operations.expectationFailed
 
                 let internal methodNotAllowed p =
-                    Terminal.fromConfiguration (key p, "method-not-allowed-terminal")
+                    Terminal.fromConfiguration (key p, "method-not-allowed")
                         methodNotAllowed_ Operations.methodNotAllowed
 
                 let internal uriTooLong p =
-                    Terminal.fromConfiguration (key p, "uri-too-long-terminal")
+                    Terminal.fromConfiguration (key p, "uri-too-long")
                         uriTooLong_ Operations.uriTooLong
 
                 let internal badRequest p =
-                    Terminal.fromConfiguration (key p, "bad-request-terminal")
+                    Terminal.fromConfiguration (key p, "bad-request")
                         badRequest_ Operations.badRequest
 
             (* Decisions *)
@@ -1048,24 +1102,24 @@ module Model =
                 // TODO: Decide if this is public or not
 
                 let rec internal expectationMet p s =
-                    Decision.fromConfiguration (key p, "expectation-met-decision")
+                    Decision.fromConfiguration (key p, "expectation-met")
                         expectationMet_ true
                         (Terminals.expectationFailed p, methodAllowed p s)
 
                 and internal methodAllowed p s =
-                    Decision.create (key p, "method-allowed-decision")
-                        (function | TryGet methodsAllowed_ (Dynamic m) -> Dynamic (flip List.contains <!> m <*> !. method_)
+                    Decision.create (key p, "method-allowed")
+                        (function | TryGet methodsAllowed_ (Dynamic m) -> Dynamic (List.contains <!> !. method_ <*> m)
                                   | TryGet methodsAllowed_ (Static m) -> Dynamic (flip List.contains m <!> !. method_)
                                   | _ -> Dynamic (flip List.contains Defaults.methodsAllowed <!> !. method_))
                         (Terminals.methodNotAllowed p, uriTooLong p s)
 
                 and internal uriTooLong p s =
-                    Decision.fromConfiguration (key p, "uri-too-long-decision")
+                    Decision.fromConfiguration (key p, "uri-too-long")
                         uriTooLong_ false
                         (badRequest p s, Terminals.uriTooLong p)
 
                 and internal badRequest p s =
-                    Decision.fromConfiguration (key p, "bad-request-decision")
+                    Decision.fromConfiguration (key p, "bad-request")
                         badRequest_ false
                         (s, Terminals.badRequest p)
 
@@ -1100,7 +1154,7 @@ module Model =
                     { Terminals = Terminals.empty }
 
              and private Terminals =
-                { NotAcceptable: Content.Handler option }
+                { NotAcceptable: Handler option }
 
                 static member notAcceptable_ =
                     (fun x -> x.NotAcceptable), (fun n x -> { x with NotAcceptable = n })
@@ -1128,7 +1182,7 @@ module Model =
                     >-> Terminals.notAcceptable_
 
                 let internal notAcceptable p =
-                    Terminal.fromConfiguration (key p, "not-acceptable-terminal")
+                    Terminal.fromConfiguration (key p, "not-acceptable")
                         notAcceptable_ Operations.notAcceptable
 
             (* Decisions *)
@@ -1138,48 +1192,48 @@ module Model =
             module Decisions =
 
                 let rec internal hasAccept p s =
-                    Decision.create (key p, "has-accept-decision")
+                    Decision.create (key p, "has-accept")
                         (fun _ -> Dynamic (Option.isSome <!> !. Content.Negotiation.MediaType.accepted_))
                         (hasAcceptLanguage p s, acceptMatches p s)
 
                 and internal acceptMatches p s =
-                    Decision.create (key p, "accept-matches-decision")
+                    Decision.create (key p, "accept-matches")
                         (Content.Negotiation.MediaType.configure 
                          >> function | Some f -> Dynamic (Content.Negotiation.negotiable <!> f)
                                      | _ -> Static true)
                         (Terminals.notAcceptable p, hasAcceptLanguage p s)
 
                 and internal hasAcceptLanguage p s =
-                    Decision.create (key p, "has-accept-language-decision")
+                    Decision.create (key p, "has-accept-language")
                         (fun _ -> Dynamic (Option.isSome <!> !. Content.Negotiation.Language.accepted_))
                         (hasAcceptCharset p s, acceptLanguageMatches p s)
 
                 and internal acceptLanguageMatches p s =
-                    Decision.create (key p, "accept-language-matches-decision")
+                    Decision.create (key p, "accept-language-matches")
                         (Content.Negotiation.Language.configure
                          >> function | Some f -> Dynamic (Content.Negotiation.negotiable <!> f)
                                      | _ -> Static true)
                         (Terminals.notAcceptable p, hasAcceptCharset p s)
 
                 and internal hasAcceptCharset p s =
-                    Decision.create (key p, "has-accept-charset-decision")
+                    Decision.create (key p, "has-accept-charset")
                         (fun _ -> Dynamic (Option.isSome <!> !. Content.Negotiation.Charset.accepted_))
                         (hasAcceptEncoding p s, acceptCharsetMatches p s)
 
                 and internal acceptCharsetMatches p s =
-                    Decision.create (key p, "accept-charset-matches-decision")
+                    Decision.create (key p, "accept-charset-matches")
                         (Content.Negotiation.Charset.configure
                          >> function | Some f -> Dynamic (Content.Negotiation.negotiable <!> f)
                                      | _ -> Static true)
                         (Terminals.notAcceptable p, hasAcceptEncoding p s)
 
                 and internal hasAcceptEncoding p s =
-                    Decision.create (key p, "has-accept-encoding-decision")
+                    Decision.create (key p, "has-accept-encoding")
                         (fun _ -> Dynamic (Option.isSome <!> !. Content.Negotiation.ContentCoding.accepted_))
                         (s, acceptEncodingMatches p s)
 
                 and internal acceptEncodingMatches p s =
-                    Decision.create (key p, "accept-encoding-matches-decision")
+                    Decision.create (key p, "accept-encoding-matches")
                         (Content.Negotiation.ContentCoding.configure
                          >> function | Some f -> Dynamic (Content.Negotiation.negotiable <!> f)
                                      | _ -> Static true)
@@ -1233,7 +1287,7 @@ module Model =
                         Properties.Request.methodsAllowed_
 
                 let internal methodMatches p ms =
-                    Decision.create (key p, "method-matches-decision")
+                    Decision.create (key p, "method-matches")
                         (function | TryGet methodsAllowed_ (Static ms') when Seq.disjoint ms ms' -> Static false
                                   | TryGet methodsAllowed_ _ -> Dynamic (flip List.contains ms <!> !. method_)
                                   | _ when Seq.disjoint ms Defaults.methodsAllowed -> Static false
@@ -1300,7 +1354,7 @@ module Model =
                     >-> Decisions.exists_
 
                 let internal exists p =
-                    Decision.fromConfiguration (key p, "exists-decision")
+                    Decision.fromConfiguration (key p, "exists")
                         exists_ true
 
             (* Export *)
@@ -1338,7 +1392,7 @@ module Model =
                     { Terminals = Terminals.empty }
 
              and Terminals =
-                { PreconditionFailed: Content.Handler option }
+                { PreconditionFailed: Handler option }
 
                 static member preconditionFailed_ =
                     (fun x -> x.PreconditionFailed), (fun p x -> { x with PreconditionFailed = p })
@@ -1378,7 +1432,7 @@ module Model =
                         >-> Terminals.preconditionFailed_
 
                     let internal preconditionFailed p =
-                        Terminal.fromConfiguration (key p, "precondition-failed-terminal")
+                        Terminal.fromConfiguration (key p, "precondition-failed")
                             preconditionFailed_ Operations.preconditionFailed
 
             (* Common *)
@@ -1404,27 +1458,27 @@ module Model =
                             Request.Headers.ifUnmodifiedSince_
 
                     let rec internal hasIfMatch p s =
-                        Decision.create (key p, "has-if-match-decision")
+                        Decision.create (key p, "has-if-match")
                             (fun _ -> Dynamic (Option.isSome <!> !. ifMatch_))
                             (hasIfUnmodifiedSince p s, ifMatchMatches p s)
 
                     // TODO: Logic
 
                     and internal ifMatchMatches p s =
-                        Decision.create (key p, "if-match-matches-decision")
+                        Decision.create (key p, "if-match-matches")
                             (function | TryGet eTags_ (Dynamic _) -> Static true
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
 
                     and internal hasIfUnmodifiedSince p s =
-                        Decision.create (key p, "has-if-unmodified-since-decision")
+                        Decision.create (key p, "has-if-unmodified-since")
                             (fun _ -> Dynamic (Option.isSome <!> !. ifUnmodifiedSince_))
                             (s, ifUnmodifiedSinceMatches p s)
 
                     // TODO: Logic
 
                     and internal ifUnmodifiedSinceMatches p s =
-                        Decision.create (key p, "if-unmodified-since-matches-decision")
+                        Decision.create (key p, "if-unmodified-since-matches")
                             (function | TryGet lastModified_ (Dynamic _) -> Static true
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
@@ -1456,7 +1510,7 @@ module Model =
                         { Terminals = Terminals.empty }
 
                  and Terminals =
-                    { NotModified: Content.Handler option }
+                    { NotModified: Handler option }
 
                     static member notModified_ =
                         (fun x -> x.NotModified), (fun n x -> { x with NotModified = n })
@@ -1484,7 +1538,7 @@ module Model =
                         >-> Terminals.notModified_
 
                     let internal notModified p =
-                        Terminal.fromConfiguration (key p, "not-modified-terminal")
+                        Terminal.fromConfiguration (key p, "not-modified")
                             notModified_ Operations.notModified
 
                 (* Decisions *)
@@ -1500,26 +1554,26 @@ module Model =
                             Request.Headers.ifModifiedSince_
 
                     let rec internal hasIfNoneMatch p s =
-                        Decision.create (key p, "has-if-none-match-decision")
+                        Decision.create (key p, "has-if-none-match")
                             (fun _ -> Dynamic (Option.isSome <!> !. ifNoneMatch_))
                             (hasIfModifiedSince p s, ifNoneMatchMatches p s)
 
                     // TODO: Logic
 
                     and internal ifNoneMatchMatches p s =
-                        Decision.create (key p, "if-none-match-matches-decision")
+                        Decision.create (key p, "if-none-match-matches")
                             (function | _ -> Static true)
                             (Terminals.notModified p, s)
 
                     and internal hasIfModifiedSince p s =
-                        Decision.create (key p, "has-if-modified-since-decision")
+                        Decision.create (key p, "has-if-modified-since")
                             (fun _ -> Dynamic (Option.isSome <!> !. ifModifiedSince_))
                             (s, ifModifiedSinceMatches p s)
 
                     // TODO: Logic
 
                     and internal ifModifiedSinceMatches p s =
-                        Decision.create (key p, "if-modified-since-matches-decision")
+                        Decision.create (key p, "if-modified-since-matches")
                             (function | _ -> Static true)
                             (Terminals.notModified p, s)
 
@@ -1553,14 +1607,14 @@ module Model =
                     // TODO: Logic
 
                     let rec internal hasIfNoneMatch p s =
-                        Decision.create (key p, "has-if-none-match-decision")
+                        Decision.create (key p, "has-if-none-match")
                             (function | _ -> Static true)
                             (s, ifNoneMatchMatches p s)
 
                     // TODO: Logic
 
                     and internal ifNoneMatchMatches p s =
-                        Decision.create (key p, "if-none-match-matches-decision")
+                        Decision.create (key p, "if-none-match-matches")
                             (function | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
 
@@ -1611,7 +1665,7 @@ module Model =
                     { Conflict = None }
 
              and private Terminals =
-                { Conflict: Content.Handler option }
+                { Conflict: Handler option }
 
                 static member conflict_ =
                     (fun x -> x.Conflict), (fun e x -> { x with Terminals.Conflict = e })
@@ -1639,7 +1693,7 @@ module Model =
                     >-> Terminals.conflict_
 
                 let internal conflict p =
-                    Terminal.fromConfiguration (key p, "conflict-terminal")
+                    Terminal.fromConfiguration (key p, "conflict")
                         conflict_ Operations.conflict
 
             (* Decisions *)
@@ -1657,7 +1711,7 @@ module Model =
                     >-> Decisions.conflict_
 
                 let internal conflict p s =
-                    Decision.fromConfiguration (key p, "conflict-decision")
+                    Decision.fromConfiguration (key p, "conflict")
                         conflict_ true
                         (s, Terminals.conflict p)
 
@@ -1721,8 +1775,8 @@ module Model =
                     { Completed = None }
 
              and private Terminals =
-                { InternalServerError: Content.Handler option
-                  Accepted: Content.Handler option }
+                { InternalServerError: Handler option
+                  Accepted: Handler option }
 
                 static member internalServerError_ =
                     (fun x -> x.InternalServerError), (fun i x -> { x with InternalServerError = i })
@@ -1758,11 +1812,11 @@ module Model =
                     >-> Terminals.accepted_
 
                 let internal internalServerError p =
-                    Terminal.fromConfiguration (key p, "internal-server-error-terminal")
+                    Terminal.fromConfiguration (key p, "internal-server-error")
                         internalServerError_ Operations.internalServerError
 
                 let internal accepted p =
-                    Terminal.fromConfiguration (key p, "accepted-terminal")
+                    Terminal.fromConfiguration (key p, "accepted")
                         accepted_ Operations.accepted
 
             (* Decisions *)
@@ -1789,13 +1843,13 @@ module Model =
                     >-> Decisions.completed_
 
                 let rec internal operation p m s =
-                    Decision.create (key p, "operation-decision")
+                    Decision.create (key p, "operation")
                         (function | Get (operationMethod_ m) (Some f) -> Dynamic (f)
                                   | _ -> Static true)
                         (Terminals.internalServerError p, completed p s)
 
                 and internal completed p s =
-                    Decision.fromConfiguration (key p, "completed-decision")
+                    Decision.fromConfiguration (key p, "completed")
                         completed_ true
                         (s, Terminals.accepted p)
 
@@ -1850,8 +1904,8 @@ module Model =
                         { NoContent = None }
 
                  and private Terminals =
-                    { NoContent: Content.Handler option
-                      Ok: Content.Handler option }
+                    { NoContent: Handler option
+                      Ok: Handler option }
 
                     static member noContent_ =
                         (fun x -> x.NoContent), (fun n x -> { x with Terminals.NoContent = n })
@@ -1887,11 +1941,11 @@ module Model =
                         >-> Terminals.ok_
 
                     let internal noContent p =
-                        Terminal.fromConfiguration (key p, "no-content-terminal")
+                        Terminal.fromConfiguration (key p, "no-content")
                             noContent_ Operations.noContent
 
                     let internal ok p =
-                        Terminal.fromConfiguration (key p, "ok-terminal")
+                        Terminal.fromConfiguration (key p, "ok")
                             ok_ Operations.ok
 
                 (* Decisions *)
@@ -1909,7 +1963,7 @@ module Model =
                         >-> Decisions.noContent_
 
                     let internal noContent p =
-                        Decision.fromConfiguration (key p, "no-content-decision")
+                        Decision.fromConfiguration (key p, "no-content")
                             noContent_ false
                             (Terminals.ok p, Terminals.noContent p)
 
@@ -1954,7 +2008,7 @@ module Model =
                         { Created = None }
 
                  and private Terminals =
-                    { Created: Content.Handler option }
+                    { Created: Handler option }
 
                     static member created_ =
                         (fun x -> x.Created), (fun e x -> { x with Terminals.Created = e })
@@ -1982,7 +2036,7 @@ module Model =
                         >-> Terminals.created_
 
                     let internal created p =
-                        Terminal.fromConfiguration (key p, "created-terminal")
+                        Terminal.fromConfiguration (key p, "created")
                             created_ Operations.created
 
                 (* Decisions *)
@@ -2000,7 +2054,7 @@ module Model =
                         >-> Decisions.created_
 
                     let internal created p s =
-                        Decision.fromConfiguration (key p, "created-decision")
+                        Decision.fromConfiguration (key p, "created")
                             created_ false
                             (s, Terminals.created p)
 
@@ -2031,7 +2085,7 @@ module Model =
                         { Terminals = Terminals.empty }
 
                  and private Terminals =
-                    { NotFound: Content.Handler option }
+                    { NotFound: Handler option }
 
                     static member notFound_ =
                         (fun x -> x.NotFound), (fun n x -> { x with NotFound = n })
@@ -2059,7 +2113,7 @@ module Model =
                         >-> Terminals.notFound_
 
                     let internal notFound p =
-                        Terminal.fromConfiguration (key p, "not-found-terminal")
+                        Terminal.fromConfiguration (key p, "not-found")
                             notFound_ Operations.notFound
 
                 (* Export *)
@@ -2113,9 +2167,9 @@ module Model =
                           MovedPermanently = None }
 
                  and private Terminals =
-                    { Gone: Content.Handler option
-                      TemporaryRedirect: Content.Handler option
-                      MovedPermanently: Content.Handler option }
+                    { Gone: Handler option
+                      TemporaryRedirect: Handler option
+                      MovedPermanently: Handler option }
 
                     static member gone_ =
                         (fun x -> x.Gone), (fun g x -> { x with Terminals.Gone = g })
@@ -2159,15 +2213,15 @@ module Model =
                         >-> Terminals.movedPermanently_
 
                     let internal gone p =
-                        Terminal.fromConfiguration (key p, "gone-terminal")
+                        Terminal.fromConfiguration (key p, "gone")
                             gone_ Operations.gone
 
                     let internal temporaryRedirect p =
-                        Terminal.fromConfiguration (key p, "temporary-redirect-terminal")
+                        Terminal.fromConfiguration (key p, "temporary-redirect")
                             temporaryRedirect_ Operations.temporaryRedirect
 
                     let internal movedPermanently p =
-                        Terminal.fromConfiguration (key p, "moved-permanently-terminal")
+                        Terminal.fromConfiguration (key p, "moved-permanently")
                             movedPermanently_ Operations.movedPermanently
 
                 (* Decisions *)
@@ -2193,17 +2247,17 @@ module Model =
                         >-> Decisions.movedPermanently_
 
                     let rec internal gone p s =
-                        Decision.fromConfiguration (key p, "see-other-decision")
+                        Decision.fromConfiguration (key p, "see-other")
                             gone_ false
                             (movedTemporarily p s, Terminals.gone p)
 
                     and internal movedTemporarily p s =
-                        Decision.fromConfiguration (key p, "found-decision")
+                        Decision.fromConfiguration (key p, "found")
                             movedTemporarily_ false
                             (movedPermanently p s, Terminals.temporaryRedirect p)
 
                     and internal movedPermanently p s =
-                        Decision.fromConfiguration (key p, "see-other-decision")
+                        Decision.fromConfiguration (key p, "see-other")
                             movedPermanently_ false
                             (s, Terminals.movedPermanently p)
 
@@ -2234,7 +2288,7 @@ module Model =
                         { Terminals = Terminals.empty }
 
                  and private Terminals =
-                    { Options: Content.Handler option }
+                    { Options: Handler option }
 
                     static member options_ =
                         (fun x -> x.Options), (fun n x -> { x with Options = n })
@@ -2262,7 +2316,7 @@ module Model =
                         >-> Terminals.options_
 
                     let internal options p =
-                        Terminal.fromConfiguration (key p, "options-terminal")
+                        Terminal.fromConfiguration (key p, "options")
                             options_ Operations.options
 
                 (* Export *)
@@ -2316,9 +2370,9 @@ module Model =
                           MultipleChoices = None }
 
                  and private Terminals =
-                    { SeeOther: Content.Handler option
-                      Found: Content.Handler option
-                      MultipleChoices: Content.Handler option }
+                    { SeeOther: Handler option
+                      Found: Handler option
+                      MultipleChoices: Handler option }
 
                     static member seeOther_ =
                         (fun x -> x.SeeOther), (fun s x -> { x with Terminals.SeeOther = s })
@@ -2362,15 +2416,15 @@ module Model =
                         >-> Terminals.multipleChoices_
 
                     let internal seeOther p =
-                        Terminal.fromConfiguration (key p, "see-other-terminal")
+                        Terminal.fromConfiguration (key p, "see-other")
                             seeOther_ Operations.seeOther
 
                     let internal found p =
-                        Terminal.fromConfiguration (key p, "found-terminal")
+                        Terminal.fromConfiguration (key p, "found")
                             found_ Operations.found
 
                     let internal multipleChoices p =
-                        Terminal.fromConfiguration (key p, "multiple-choices-terminal")
+                        Terminal.fromConfiguration (key p, "multiple-choices")
                             multipleChoices_ Operations.multipleChoices
 
                 (* Decisions *)
@@ -2396,17 +2450,17 @@ module Model =
                         >-> Decisions.multipleChoices_
 
                     let rec internal seeOther p s =
-                        Decision.fromConfiguration (key p, "see-other-decision")
+                        Decision.fromConfiguration (key p, "see-other")
                             seeOther_ false
                             (found p s, Terminals.seeOther p)
 
                     and internal found p s =
-                        Decision.fromConfiguration (key p, "found-decision")
+                        Decision.fromConfiguration (key p, "found")
                             found_ false
                             (multipleChoices p s, Terminals.found p)
 
                     and internal multipleChoices p s =
-                        Decision.fromConfiguration (key p, "see-other-decision")
+                        Decision.fromConfiguration (key p, "see-other")
                             multipleChoices_ false
                             (s, Terminals.multipleChoices p)
 
@@ -2426,7 +2480,7 @@ module Model =
        spliced in to the core component at appropriate points. *)
 
     [<AutoOpen>]
-    module Components =
+    module internal Components =
 
         (* Core *)
 
@@ -2442,13 +2496,13 @@ module Model =
             // TODO: Fix this up!
 
             let private endpointTerminal =
-                Terminal.fromConfiguration (key, "end-terminal")
+                Terminal.fromConfiguration (key, "end")
                     ((fun _ -> None), (fun _ c -> c)) Operations.ok
 
             (* Decisions *)
 
             let private endpointDecision =
-                Decision.create (key, "end-decision")
+                Decision.create (key, "end")
                     (fun _ -> Static true)
                     (Specification.Terminal.empty, endpointTerminal)
 
@@ -2630,7 +2684,7 @@ module Model =
 
     (* Model *)
 
-    let model =
+    let internal model =
         Model.create (
             set [
                 Core.export
@@ -2690,17 +2744,17 @@ module Infer =
         type Defaults =
             | Defaults
 
-            static member inline Handler (x: Content.Specification -> Freya<Content.Representation>) =
+            static member inline Handler (x: Specification -> Freya<Representation>) =
                 x
 
-            static member inline Handler (x: Freya<Content.Representation>) =
-                fun (_: Content.Specification) -> x
+            static member inline Handler (x: Freya<Representation>) =
+                fun (_: Specification) -> x
 
-            static member inline Handler (x: Content.Representation) =
-                fun (_: Content.Specification) -> Freya.init x
+            static member inline Handler (x: Representation) =
+                fun (_: Specification) -> Freya.init x
 
         let inline defaults (a: ^a, _: ^b) =
-                ((^a or ^b) : (static member Handler: ^a -> (Content.Specification -> Freya<Content.Representation>)) a)
+                ((^a or ^b) : (static member Handler: ^a -> (Specification -> Freya<Representation>)) a)
 
         let inline infer (x: 'a) =
             defaults (x, Defaults)
