@@ -230,7 +230,10 @@ module Properties =
 [<RequireQualifiedAccess>]
 module internal Content =
 
-    (* Negotiation *)
+    (* Negotiation
+
+       Specific nogotiation logic for different aspects of an HTTP request,
+       such as charset, etc. *)
 
     [<RequireQualifiedAccess>]
     module Negotiation =
@@ -354,7 +357,11 @@ module internal Content =
                          | TryGet supported_ (Static c) -> Some (negotiate c <!> !. accepted_)
                          | _ -> None
 
-    (* Representation *)
+    (* Representation
+
+       Representation logic for determining the appropriate specification of a
+       resource given the negotiation available, and writing a representation
+       to the response given the data and a description of that data. *)
 
     [<RequireQualifiedAccess>]
     module Representation =
@@ -380,6 +387,9 @@ module internal Content =
         let private contentLanguage_ =
                 Response.Headers.contentLanguage_
 
+        let private method_ =
+                Request.method_
+
         (* Specification*)
 
         let private lift configure =
@@ -401,7 +411,8 @@ module internal Content =
         (* Representation *)
 
         let private body =
-                function | data -> body_ %= (fun x -> x.Write (data, 0, data.Length); x)
+                function | data -> !. method_ >>= function | HEAD -> Freya.empty
+                                                           | _ -> body_ %= (fun x -> x.Write (data, 0, data.Length); x)
 
         let private charset =
                 function | Some (Charset charset) -> charset_ .= Some charset
@@ -608,8 +619,11 @@ module Operations =
 [<RequireQualifiedAccess>]
 module Model =
 
-    (* Prelude *)
- 
+    (* Prelude
+
+       Functions for working with aspects of model construction given the
+       conventions implied by the HTTP machine build in this context. *)
+
     [<AutoOpen>]
     module internal Prelude =
 
@@ -625,7 +639,13 @@ module Model =
             let add x =
                 Optic.map (Lens.ofIsomorphism Key.key_) ((flip List.append) x)
 
-        (* Decisions *)
+        (* Decision
+
+           Construction functions for building Decisions, either with a basic
+           approach, or a more opinionated approach of drawing a possible
+           decision from the configuration (using a supplied lens). In the
+           opionated case, if the decision is not found in configuration, a
+           static decision will be created from the supplied default value. *)
 
         [<RequireQualifiedAccess>]
         module Decision =
@@ -645,6 +665,13 @@ module Model =
                         match Optic.get o c with
                         | Some d -> Decision.map d
                         | _ -> Decision.map (Static def))
+
+        (* Terminal
+
+           Construction functions for building Terminals, given a lens to the
+           expected handler in the configuration, and an operation to apply
+           prior to invoking the found handler (or invoking singly, in the case
+           where a handler is not found in the configuration). *)
 
         [<RequireQualifiedAccess>]
         module Terminal =
@@ -1128,11 +1155,14 @@ module Model =
             let export =
                 Decisions.expectationMet
 
-        // TODO: This
-
         (* Negotiation
 
-           Types and functions for handling content negotiation within HTTP. *)
+           Decisions determing whether a request can be negotiated, given the
+           support for the varying types of negotiable properties either
+           declared through configuration, or set as defaults.
+
+           Failure of these checks will result in a 406 response, signalling a
+           client error. *)
 
         [<RequireQualifiedAccess>]
         module Negotiation =
