@@ -1,12 +1,11 @@
 ﻿module Freya.Machines.Http.Tests
 
-open Aether
-open Aether.Operators
+open Arachne.Http
 open Freya.Core
 open Freya.Optics.Http
 open Freya.Machines.Http
 open Freya.Testing
-open Swensen.Unquote
+open Freya.Testing.Operators
 open Xunit
 
 (* Tests
@@ -15,17 +14,51 @@ open Xunit
    inputs, designed to give test cases aligning to the semantics of the HTTP
    specifications where appropriate. *)
 
-(* Defaults *)
+(* Defaults
 
-let setup =
-    Freya.empty
+   Verification of default behaviour of an unconfigured Freya HTTP machine.
+   Only relatively simple behaviour can be expected, but verification of status
+   codes, reason phrases, etc. can be verified, along with the correct set of
+   responses allowed, etc. *)
 
-let defaults =
-    freyaMachine {
-        return () }
+module Defaults =
 
-[<Fact>]
-let ``machine with only defaults returns 200 for GET request`` () =
-    Testing.verify setup defaults [
-        fun s -> s ^. Response.statusCode_ =! Some 200
-        fun s -> s ^. Response.reasonPhrase_ =! Some "OK" ]
+    let private defaults =
+        freyaMachine {
+            return () }
+
+    [<Fact>]
+    let ``default machine handles GET request appropriately`` () =
+        let setup =
+            Freya.empty
+
+        verify setup defaults [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+    [<Fact>]
+    let ``default machine handles HEAD request appropriately`` () =
+        let setup =
+            Freya.Optic.set Request.method_ HEAD
+
+        verify setup defaults [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+    [<Fact>]
+    let ``default machine handles OPTIONS request appropriately`` () =
+        let setup =
+            Freya.Optic.set Request.method_ OPTIONS
+
+        verify setup defaults [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "Options" ]
+
+    [<Fact>]
+    let ``default machine handles POST request appropriately`` () =
+        let setup =
+            Freya.Optic.set Request.method_ POST
+
+        verify setup defaults [
+            Response.statusCode_ => Some 405
+            Response.reasonPhrase_ => Some "Method Not Allowed" ]
