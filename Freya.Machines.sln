@@ -21,6 +21,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dependencies", "dependencie
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "packages", "packages", "{BD433EC3-9F6C-4A0E-B9DF-A2342AAD75BE}"
+	ProjectSection(SolutionItems) = preProject
+		src\Freya.Machines\Freya.Machines.fsproj.paket.template = src\Freya.Machines\Freya.Machines.fsproj.paket.template
+		src\Freya.Machines.Http\Freya.Machines.Http.fsproj.paket.template = src\Freya.Machines.Http\Freya.Machines.Http.fsproj.paket.template
+	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Freya.Machines", "src\Freya.Machines\Freya.Machines.fsproj", "{AFC409AF-B301-4ECE-B776-AAA8AA9A2298}"
 EndProject
@@ -37,7 +41,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{9BEF39FC-EBA1-453B-BE35-0D1E540F3ED6}"
 	ProjectSection(SolutionItems) = preProject
 		tests\Freya.Machines.Console\Freya.Machines.Console.fsproj.paket.references = tests\Freya.Machines.Console\Freya.Machines.Console.fsproj.paket.references
+		tests\Freya.Machines.Http.Tests\Freya.Machines.Http.Tests.fsproj.paket.references = tests\Freya.Machines.Http.Tests\Freya.Machines.Http.Tests.fsproj.paket.references
 	EndProjectSection
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Freya.Machines.Http.Tests", "tests\Freya.Machines.Http.Tests\Freya.Machines.Http.Tests.fsproj", "{7D3D8020-B758-4985-8169-1D92990E9849}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +64,10 @@ Global
 		{560F8742-32AF-47AC-A976-CF671D445CCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{560F8742-32AF-47AC-A976-CF671D445CCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{560F8742-32AF-47AC-A976-CF671D445CCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D3D8020-B758-4985-8169-1D92990E9849}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D3D8020-B758-4985-8169-1D92990E9849}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D3D8020-B758-4985-8169-1D92990E9849}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D3D8020-B758-4985-8169-1D92990E9849}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -70,5 +81,6 @@ Global
 		{066722EB-3C59-4D61-89F1-60D427770391} = {E455A551-F3E1-4E3E-9304-6AA75AB77AB7}
 		{560F8742-32AF-47AC-A976-CF671D445CCE} = {7D19D227-4D2D-493F-8E49-3433F45BCB4B}
 		{9BEF39FC-EBA1-453B-BE35-0D1E540F3ED6} = {E455A551-F3E1-4E3E-9304-6AA75AB77AB7}
+		{7D3D8020-B758-4985-8169-1D92990E9849} = {7D19D227-4D2D-493F-8E49-3433F45BCB4B}
 	EndGlobalSection
 EndGlobal

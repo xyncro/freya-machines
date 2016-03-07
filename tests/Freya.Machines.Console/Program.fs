@@ -1,6 +1,6 @@
 ﻿open System
 
-// Freya
+// Freya (and Arachne)
 
 open Arachne.Http
 open Arachne.Language

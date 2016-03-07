@@ -1,0 +1,9 @@
+Aether
+Freya.Core
+Freya.Optics.Http
+
+group Test
+
+  Freya.Testing
+  Unquote
+  xunit

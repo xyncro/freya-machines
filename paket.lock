@@ -3,18 +3,18 @@ NUGET
   specs:
     Aether (8.1.2)
     Anat (1.0.0-b001)
-    Arachne.Core (3.0.0-b104)
+    Arachne.Core (3.0.0)
       FParsec (>= 1.0.0 < 2.0.0)
-    Arachne.Http (3.0.0-b104)
-      Arachne.Core (>= 3.0.0-b104)
-      Arachne.Language (>= 3.0.0-b104)
-      Arachne.Uri (>= 3.0.0-b104)
+    Arachne.Http (3.0.0)
+      Arachne.Core (>= 3.0.0)
+      Arachne.Language (>= 3.0.0)
+      Arachne.Uri (>= 3.0.0)
       FParsec (>= 1.0.0 < 2.0.0)
-    Arachne.Language (3.0.0-b104)
-      Arachne.Core (>= 3.0.0-b104)
+    Arachne.Language (3.0.0)
+      Arachne.Core (>= 3.0.0)
       FParsec (>= 1.0.0 < 2.0.0)
-    Arachne.Uri (3.0.0-b104)
-      Arachne.Core (>= 3.0.0-b104)
+    Arachne.Uri (3.0.0)
+      Arachne.Core (>= 3.0.0)
       FParsec (>= 1.0.0 < 2.0.0)
     FParsec (1.0.2)
     Hekate (3.2.0)
@@ -40,16 +40,17 @@ GROUP Build
 NUGET
   remote: http://www.nuget.org/api/v2
   specs:
-    FAKE (4.20.0)
+    FAKE (4.21.4)
 GITHUB
   remote: xyncro/build
   specs:
-    build.fsx (1407924c1087499b7e553ee1270de91844c98c2a)
+    build.fsx (589ed49e68b51d7de9e9de9be1adc30e26ce534d)
 GROUP Test
 FRAMEWORK: >= NET45
 NUGET
   remote: http://www.nuget.org/api/v2
   specs:
+    Aether (8.1.2)
     Microsoft.Owin (3.0.1)
       Owin (>= 1.0)
     Microsoft.Owin.Diagnostics (3.0.1)
@@ -80,3 +81,10 @@ NUGET
     xunit.extensibility.execution (2.1.0)
       xunit.extensibility.core (2.1.0)
     xunit.runner.console (2.1.0)
+  remote: https://www.myget.org/F/freya/api/v2
+  specs:
+    Freya.Core (4.0.0-b006)
+      Aether (>= 8.1.0 < 9.0.0)
+    Freya.Testing (4.0.0-b002)
+      Aether (>= 8.1.0 < 9.0.0)
+      Freya.Core (>= 4.0.0-b < 4.1.0)

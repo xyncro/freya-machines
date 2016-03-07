@@ -1,12 +1,12 @@
 source http://nuget.org/api/v2
 source https://www.myget.org/F/freya/api/v2
 
-nuget Aether               ~> 8.1
-nuget Arachne.Http         ~> 3.0.0-b
-nuget Freya.Core           ~> 4.0.0-b
-nuget Freya.Optics.Http    ~> 4.0.0-b
-nuget Hekate               ~> 3
-nuget Hephaestus           ~> 1.0.0-b
+nuget Aether            ~> 8.1
+nuget Arachne.Http      ~> 3
+nuget Freya.Core        ~> 4.0.0-b
+nuget Freya.Optics.Http ~> 4.0.0-b
+nuget Hekate            ~> 3
+nuget Hephaestus        ~> 1.0.0-b
 
 group Build
 
@@ -19,7 +19,9 @@ group Test
 
   framework: >= net45
   source http://nuget.org/api/v2
+  source https://www.myget.org/F/freya/api/v2
 
+  nuget Freya.Testing           ~> 4.0.0-b
   nuget Microsoft.Owin.SelfHost
   nuget Unquote
   nuget xunit

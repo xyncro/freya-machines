@@ -10,16 +10,9 @@ open Freya.Core.Operators
 open Freya.Optics.Http
 open Hephaestus
 
-// Sunday!
-
-// TODO: Module documentation
 // TODO: Complete operations
-
-// Later...?
-
 // TODO: Determine correct ending for core
 // TODO: Introduce a mechanism for logs, etc. (this might be more Freya.Core?)
-
 
 (* Types
 
@@ -1888,7 +1881,10 @@ module Model =
             let export =
                 Decisions.operation
 
-        (* Responses *)
+        (* Responses
+
+           Decisions and terminals used for common response cases, decomposed
+           to appropriate granularities. *)
 
         [<RequireQualifiedAccess>]
         module Responses =
@@ -1898,7 +1894,10 @@ module Model =
             let private key p =
                 Key.add [ p; "responses" ] key
 
-            (* Common *)
+            (* Common
+
+               Common conclusions of successful requests, handling the case of
+               an OK situation, or a (successful) no content situation. *)
 
             [<RequireQualifiedAccess>]
             module Common =
@@ -2002,7 +2001,10 @@ module Model =
                 let export =
                     Decisions.noContent
 
-            (* Created *)
+            (* Created
+
+               A simple element encapsulating the creation terminal, with no
+               decision-making requirement. *)
 
             [<RequireQualifiedAccess>]
             module Created =
