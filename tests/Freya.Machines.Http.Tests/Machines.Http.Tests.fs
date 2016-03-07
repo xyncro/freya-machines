@@ -2,6 +2,7 @@
 
 open Arachne.Http
 open Freya.Core
+open Freya.Core.Operators
 open Freya.Optics.Http
 open Freya.Machines.Http
 open Freya.Testing
@@ -39,7 +40,7 @@ module Defaults =
     [<Fact>]
     let ``default machine handles HEAD request appropriately`` () =
         let setup =
-            Freya.Optic.set Request.method_ HEAD
+            Request.method_ .= HEAD
 
         verify setup defaults [
             Response.statusCode_ => Some 200
@@ -48,7 +49,7 @@ module Defaults =
     [<Fact>]
     let ``default machine handles OPTIONS request appropriately`` () =
         let setup =
-            Freya.Optic.set Request.method_ OPTIONS
+            Request.method_ .= OPTIONS
 
         verify setup defaults [
             Response.statusCode_ => Some 200
@@ -57,7 +58,7 @@ module Defaults =
     [<Fact>]
     let ``default machine handles POST request appropriately`` () =
         let setup =
-            Freya.Optic.set Request.method_ POST
+            Request.method_ .= POST
 
         verify setup defaults [
             Response.statusCode_ => Some 405
