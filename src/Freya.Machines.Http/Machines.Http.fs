@@ -825,19 +825,33 @@ module Model =
                         serviceAvailable_ true
                         (Terminals.serviceUnavailable p, httpVersionSupported p s)
 
-                // TODO: Decide on public override?
-
                 and internal httpVersionSupported p s =
-                    Decision.fromConfiguration (key p, "http-version-supported")
-                        httpVersionSupported_ true
+                    Decision.create (key p, "http-version-supported")
+                        (function | TryGet httpVersionSupported_ x -> x
+                                  | _ -> Dynamic supported) 
                         (Terminals.httpVersionNotSupported p, methodImplemented p s)
 
-                // TODO: Not Implemented Logic
+                and private supported =
+                        function | HTTP x when x >= 1.1 -> true
+                                 | _ -> false
+                    <!> !. Request.httpVersion_
 
                 and internal methodImplemented p s =
                     Decision.create (key p, "method-implemented")
-                        (fun _ -> Static true)
+                        (function | TryGet Properties.Request.methodsAllowed_ (Dynamic x) -> Dynamic (knownCustom =<< x)
+                                  | TryGet Properties.Request.methodsAllowed_ (Static x) -> Dynamic (knownCustom x)
+                                  | _ -> Dynamic nonCustom)
                         (Terminals.notImplemented p, s)
+
+                and private knownCustom methodsAllowed =
+                        function | Method.Custom x when not (List.contains (Method.Custom x) methodsAllowed) -> false
+                                 | _ -> true
+                    <!> !. Request.method_
+
+                and private nonCustom =
+                        function | Method.Custom _ -> false
+                                 | _ -> true
+                    <!> !. Request.method_
 
             (* Export *)
 
@@ -1101,12 +1115,6 @@ module Model =
                         validation_
                     >-> Validation.decisions_
 
-                let private method_ =
-                        Request.method_
-
-                let private methodsAllowed_ =
-                        Properties.Request.methodsAllowed_
-
                 let expectationMet_ =
                         decisions_
                     >-> Decisions.expectationMet_
@@ -1119,8 +1127,6 @@ module Model =
                         decisions_
                     >-> Decisions.badRequest_
 
-                // TODO: Decide if this is public or not
-
                 let rec internal expectationMet p s =
                     Decision.fromConfiguration (key p, "expectation-met")
                         expectationMet_ true
@@ -1128,10 +1134,15 @@ module Model =
 
                 and internal methodAllowed p s =
                     Decision.create (key p, "method-allowed")
-                        (function | TryGet methodsAllowed_ (Dynamic m) -> Dynamic (List.contains <!> !. method_ <*> m)
-                                  | TryGet methodsAllowed_ (Static m) -> Dynamic (flip List.contains m <!> !. method_)
-                                  | _ -> Dynamic (flip List.contains Defaults.methodsAllowed <!> !. method_))
+                        (function | TryGet Properties.Request.methodsAllowed_ (Dynamic x) -> Dynamic (allowed =<< x)
+                                  | TryGet Properties.Request.methodsAllowed_ (Static x) -> Dynamic (allowed x)
+                                  | _ -> Dynamic (allowed Defaults.methodsAllowed))
                         (Terminals.methodNotAllowed p, uriTooLong p s)
+
+                and private allowed methodsAllowed =
+                        function | m when List.contains m methodsAllowed -> true
+                                 | _ -> false
+                    <!> !. Request.method_
 
                 and internal uriTooLong p s =
                     Decision.fromConfiguration (key p, "uri-too-long")
@@ -3192,19 +3203,19 @@ type HttpMachineBuilder with
 
     (* Decisions *)
 
-    [<CustomOperation ("badRequest", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.BadRequest (m, decision) =
-        HttpMachine.Set (m, Model.Elements.Validation.Decisions.badRequest_, Infer.decision decision)
+    [<CustomOperation ("expectationMet", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.ExpectationMet (m, decision) =
+        HttpMachine.Set (m, Model.Elements.Validation.Decisions.expectationMet_, Infer.decision decision)
 
     [<CustomOperation ("uriTooLong", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.UriTooLong (m, decision) =
         HttpMachine.Set (m, Model.Elements.Validation.Decisions.uriTooLong_, Infer.decision decision)
 
-    (* Terminals *)
+    [<CustomOperation ("badRequest", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.BadRequest (m, decision) =
+        HttpMachine.Set (m, Model.Elements.Validation.Decisions.badRequest_, Infer.decision decision)
 
-    [<CustomOperation ("handleBadRequest", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleBadRequest (m, handler) =
-        HttpMachine.Set (m, Model.Elements.Validation.Terminals.badRequest_, Infer.handler handler)
+    (* Terminals *)
 
     [<CustomOperation ("handleExpectationFailed", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HandleExpectationFailed (m, handler) =
@@ -3217,6 +3228,10 @@ type HttpMachineBuilder with
     [<CustomOperation ("handleUriTooLong", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HandleUriTooLong (m, handler) =
         HttpMachine.Set (m, Model.Elements.Validation.Terminals.uriTooLong_, Infer.handler handler)
+
+    [<CustomOperation ("handleBadRequest", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleBadRequest (m, handler) =
+        HttpMachine.Set (m, Model.Elements.Validation.Terminals.badRequest_, Infer.handler handler)
 
 (* Negotiation *)
 
