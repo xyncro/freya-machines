@@ -68,9 +68,10 @@ type Handler =
 module Defaults =
 
     let methodsAllowed =
-        [ GET
-          HEAD
-          OPTIONS ]
+        set [
+            GET
+            HEAD
+            OPTIONS ]
 
 (* Properties
 
@@ -104,7 +105,7 @@ module Properties =
               Resource = Resource.empty }
 
      and private Request =
-        { MethodsAllowed: Value<Method list> option }
+        { MethodsAllowed: Value<Set<Method>> option }
 
         static member methodsAllowed_ =
             (fun x -> x.MethodsAllowed), (fun m x -> { x with MethodsAllowed = m })
@@ -449,7 +450,8 @@ module internal Content =
 module Operations =
 
     let private allow =
-            Allow
+            Set.toList
+         >> Allow
          >> Some
          >> Freya.Optic.set Response.Headers.allow_
 
@@ -861,7 +863,7 @@ module Model =
                         (Terminals.notImplemented p, s)
 
                 and private knownCustom methodsAllowed =
-                        function | Method.Custom x when not (List.contains (Method.Custom x) methodsAllowed) -> false
+                        function | Method.Custom x when not (Set.contains (Method.Custom x) methodsAllowed) -> false
                                  | _ -> true
                     <!> !. Request.method_
 
@@ -1169,7 +1171,7 @@ module Model =
                         (Terminals.methodNotAllowed p, uriTooLong p s)
 
                 and private allowed methodsAllowed =
-                        function | m when List.contains m methodsAllowed -> true
+                        function | m when Set.contains m methodsAllowed -> true
                                  | _ -> false
                     <!> !. Request.method_
 
@@ -3032,17 +3034,23 @@ module Infer =
         type Defaults =
             | Defaults
 
-            static member Methods (x: Freya<Method list>) =
+            static member Methods (x: Freya<Set<Method>>) =
                 Dynamic x
 
-            static member Methods (x: Method list) =
+            static member Methods (x: Freya<Method list>) =
+                Dynamic (Set.ofList <!> x)
+
+            static member Methods (x: Set<Method>) =
                 Static x
 
+            static member Methods (x: Method list) =
+                Static (Set.ofList x)
+
             static member Methods (x: Method) =
-                Static [ x ]
+                Static (Set.singleton x)
 
         let inline defaults (a: ^a, _: ^b) =
-            ((^a or ^b) : (static member Methods: ^a -> Value<Method list>) a)
+            ((^a or ^b) : (static member Methods: ^a -> Value<Set<Method>>) a)
 
         let inline infer (x: 'a) =
             defaults (x, Defaults)

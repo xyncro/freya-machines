@@ -63,7 +63,7 @@ module Defaults =
         let assertions = [
             Response.statusCode_ => Some 405
             Response.reasonPhrase_ => Some "Method Not Allowed"
-            Response.Headers.allow_ => Some (Allow [ GET; HEAD; OPTIONS ]) ]
+            Response.Headers.allow_ => Some (Allow [ HEAD; GET; OPTIONS ]) ]
 
         verify setup defaultMachine assertions
 
