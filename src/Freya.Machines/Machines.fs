@@ -83,14 +83,21 @@ module Configuration =
         >-> Option.mapIsomorphism box_<'a>
         >-> default_ def
 
-(* Patterns
+    (* Patterns
 
-   Commonly useful active recognizers for working with lens based access to
-   data structures, particularly useful here for making access to configuration
-   more concise. *)
+       Commonly useful active recognizers for working with lens based access to
+       data structures, particularly useful here for making access to configuration
+       more concise. *)
 
-let inline (|Get|) lens =
-    Optic.get lens
+    let inline (|Value|_|) lens =
+            Optic.get lens
 
-let inline (|TryGet|_|) lens =
-    Optic.get lens
+    let inline (|Dynamic|_|) lens =
+            Optic.get lens
+         >> function | Some (Dynamic x) -> Some x 
+                     | _ -> None
+
+    let inline (|Static|_|) lens =
+            Optic.get lens
+         >> function | Some (Static x) -> Some x
+                     | _ -> None

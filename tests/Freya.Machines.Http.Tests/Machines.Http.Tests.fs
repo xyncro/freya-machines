@@ -62,7 +62,8 @@ module Defaults =
 
         let assertions = [
             Response.statusCode_ => Some 405
-            Response.reasonPhrase_ => Some "Method Not Allowed" ]
+            Response.reasonPhrase_ => Some "Method Not Allowed"
+            Response.Headers.allow_ => Some (Allow [ GET; HEAD; OPTIONS ]) ]
 
         verify setup defaultMachine assertions
 
@@ -246,3 +247,122 @@ module Permission =
         verify defaultSetup dynamicMachine [
             Response.statusCode_ => Some 403
             Response.reasonPhrase_ => Some "Forbidden" ]
+
+(* Validation
+
+   Verification that the Validation block behaves as expected given suitable
+   input. *)
+
+module Validation =
+
+    (* Expectation Met *)
+
+    [<Fact>]
+    let ``machine handles expectationMet correctly`` () =
+
+        (* Static *)
+
+        let staticMachine =
+            freyaMachine {
+                expectationMet false }
+
+        verify defaultSetup staticMachine [
+            Response.statusCode_ => Some 417
+            Response.reasonPhrase_ => Some "Expectation Failed" ]
+
+        (* Dynamic *)
+
+        let setupUnmet =
+            Request.path_ .= "/unmet"
+
+        let dynamicMachine =
+            freyaMachine {
+                expectationMet ((fun x -> x <> "/unmet") <!> !. Request.path_) }
+
+        verify setupUnmet dynamicMachine [
+            Response.statusCode_ => Some 417
+            Response.reasonPhrase_ => Some "Expectation Failed" ]
+
+        verify defaultSetup dynamicMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+    (* Method Allowed *)
+
+    [<Fact>]
+    let ``machine handles method allowance correctly`` () =
+
+        (* Static *)
+
+        let staticMachine =
+            freyaMachine {
+                methodsAllowed POST }
+
+        verify defaultSetup staticMachine [
+            Response.statusCode_ => Some 405
+            Response.reasonPhrase_ => Some "Method Not Allowed"
+            Response.Headers.allow_ => Some (Allow [ POST ]) ]
+
+    (* URI Too Long *)
+
+    [<Fact>]
+    let ``machine handles uriTooLong correctly`` () =
+
+        (* Static *)
+
+        let staticMachine =
+            freyaMachine {
+                uriTooLong true }
+
+        verify defaultSetup staticMachine [
+            Response.statusCode_ => Some 414
+            Response.reasonPhrase_ => Some "URI Too Long" ]
+
+        (* Dynamic *)
+
+        let setupUnmet =
+            Request.path_ .= "/uritoolong"
+
+        let dynamicMachine =
+            freyaMachine {
+                uriTooLong ((=) "/uritoolong" <!> !. Request.path_) }
+
+        verify setupUnmet dynamicMachine [
+            Response.statusCode_ => Some 414
+            Response.reasonPhrase_ => Some "URI Too Long" ]
+
+        verify defaultSetup dynamicMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+    (* Bad Request *)
+
+    [<Fact>]
+    let ``machine handles badRequest correctly`` () =
+
+        (* Static *)
+
+        let staticMachine =
+            freyaMachine {
+                badRequest true }
+
+        verify defaultSetup staticMachine [
+            Response.statusCode_ => Some 400
+            Response.reasonPhrase_ => Some "Bad Request" ]
+
+        (* Dynamic *)
+
+        let setupUnmet =
+            Request.path_ .= "/badrequest"
+
+        let dynamicMachine =
+            freyaMachine {
+                badRequest ((=) "/badrequest" <!> !. Request.path_) }
+
+        verify setupUnmet dynamicMachine [
+            Response.statusCode_ => Some 400
+            Response.reasonPhrase_ => Some "Bad Request" ]
+
+        verify defaultSetup dynamicMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]

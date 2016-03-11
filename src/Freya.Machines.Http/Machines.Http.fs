@@ -265,8 +265,8 @@ module internal Content =
             (* Configuration *)
 
             let configure =
-                function | TryGet supported_ (Dynamic c) -> Some (negotiate <!> c <*> !. accepted_)
-                         | TryGet supported_ (Static c) -> Some (negotiate c <!> !. accepted_)
+                function | Configuration.Dynamic supported_ x -> Some (negotiate <!> x <*> !. accepted_)
+                         | Configuration.Static supported_ x -> Some (negotiate x <!> !. accepted_)
                          | _ -> None
 
         (* ContentCoding *)
@@ -292,8 +292,8 @@ module internal Content =
             (* Configuration *)
 
             let configure =
-                function | TryGet supported_ (Dynamic c) -> Some (negotiate <!> c <*> !. accepted_)
-                         | TryGet supported_ (Static c) -> Some (negotiate c <!> !. accepted_)
+                function | Configuration.Dynamic supported_ x -> Some (negotiate <!> x <*> !. accepted_)
+                         | Configuration.Static supported_ x -> Some (negotiate x <!> !. accepted_)
                          | _ -> None
 
         (* Language *)
@@ -319,8 +319,8 @@ module internal Content =
             (* Configuration *)
 
             let configure =
-                function | TryGet supported_ (Dynamic c) -> Some (negotiate <!> c <*> !. accepted_)
-                         | TryGet supported_ (Static c) -> Some (negotiate c <!> !. accepted_)
+                function | Configuration.Dynamic supported_ x -> Some (negotiate <!> x <*> !. accepted_)
+                         | Configuration.Static supported_ x -> Some (negotiate x <!> !. accepted_)
                          | _ -> None
 
         (* MediaType *)
@@ -346,8 +346,8 @@ module internal Content =
             (* Configuration *)
 
             let configure =
-                function | TryGet supported_ (Dynamic c) -> Some (negotiate <!> c <*> !. accepted_)
-                         | TryGet supported_ (Static c) -> Some (negotiate c <!> !. accepted_)
+                function | Configuration.Dynamic supported_ x -> Some (negotiate <!> x <*> !. accepted_)
+                         | Configuration.Static supported_ x -> Some (negotiate x <!> !. accepted_)
                          | _ -> None
 
     (* Representation
@@ -448,6 +448,11 @@ module internal Content =
 [<RequireQualifiedAccess>]
 module Operations =
 
+    let private allow =
+            Allow
+         >> Some
+         >> Freya.Optic.set Response.Headers.allow_
+
     let private date =
             Date.Date
          >> Some
@@ -542,10 +547,11 @@ module Operations =
          *> phrase "Not Found"
          *> date
 
-    let methodNotAllowed =
+    let methodNotAllowed allowed =
             status 405
          *> phrase "Method Not Allowed"
          *> date
+         *> allow allowed
 
     let notAcceptable =
             status 406
@@ -671,6 +677,14 @@ module Model =
 
             let private append =
                 sprintf "%s-terminal"
+
+            let create (key, name) o configurator =
+                Specification.Terminal.create
+                    (Key.add [ append name ] key)
+                    (fun c ->
+                        match Optic.get o c with
+                        | Some h -> configurator c *> Content.Representation.represent c h
+                        | _ -> configurator c)
 
             let fromConfiguration (key, name) o operation =
                 Specification.Terminal.create
@@ -812,6 +826,9 @@ module Model =
                         assertion_
                     >-> Assertion.decisions_
 
+                let private methodsAllowed_ =
+                        Properties.Request.methodsAllowed_
+
                 let serviceAvailable_ =
                         decisions_
                     >-> Decisions.serviceAvailable_
@@ -827,7 +844,7 @@ module Model =
 
                 and internal httpVersionSupported p s =
                     Decision.create (key p, "http-version-supported")
-                        (function | TryGet httpVersionSupported_ x -> x
+                        (function | Configuration.Value httpVersionSupported_ x -> x
                                   | _ -> Dynamic supported) 
                         (Terminals.httpVersionNotSupported p, methodImplemented p s)
 
@@ -838,8 +855,8 @@ module Model =
 
                 and internal methodImplemented p s =
                     Decision.create (key p, "method-implemented")
-                        (function | TryGet Properties.Request.methodsAllowed_ (Dynamic x) -> Dynamic (knownCustom =<< x)
-                                  | TryGet Properties.Request.methodsAllowed_ (Static x) -> Dynamic (knownCustom x)
+                        (function | Configuration.Dynamic methodsAllowed_ x -> Dynamic (knownCustom =<< x)
+                                  | Configuration.Static methodsAllowed_ x -> Dynamic (knownCustom x)
                                   | _ -> Dynamic nonCustom)
                         (Terminals.notImplemented p, s)
 
@@ -1073,6 +1090,9 @@ module Model =
                         validation_
                     >-> Validation.terminals_
 
+                let private methodsAllowed_ =
+                        Properties.Request.methodsAllowed_
+
                 let expectationFailed_ =
                         terminals_
                     >-> Terminals.expectationFailed_
@@ -1093,9 +1113,15 @@ module Model =
                     Terminal.fromConfiguration (key p, "expectation-failed")
                         expectationFailed_ Operations.expectationFailed
 
-                let internal methodNotAllowed p =
-                    Terminal.fromConfiguration (key p, "method-not-allowed")
-                        methodNotAllowed_ Operations.methodNotAllowed
+                let rec internal methodNotAllowed p =
+                    Terminal.create (key p, "method-not-allowed")
+                        methodNotAllowed_
+                        (function | Configuration.Dynamic methodsAllowed_ x -> notAllowed =<< x
+                                  | Configuration.Static methodsAllowed_ x -> notAllowed x
+                                  | _ -> notAllowed Defaults.methodsAllowed)
+
+                and private notAllowed =
+                    Operations.methodNotAllowed
 
                 let internal uriTooLong p =
                     Terminal.fromConfiguration (key p, "uri-too-long")
@@ -1114,6 +1140,9 @@ module Model =
                 let private decisions_ =
                         validation_
                     >-> Validation.decisions_
+
+                let private methodsAllowed_ =
+                        Properties.Request.methodsAllowed_
 
                 let expectationMet_ =
                         decisions_
@@ -1134,8 +1163,8 @@ module Model =
 
                 and internal methodAllowed p s =
                     Decision.create (key p, "method-allowed")
-                        (function | TryGet Properties.Request.methodsAllowed_ (Dynamic x) -> Dynamic (allowed =<< x)
-                                  | TryGet Properties.Request.methodsAllowed_ (Static x) -> Dynamic (allowed x)
+                        (function | Configuration.Dynamic methodsAllowed_ x -> Dynamic (allowed =<< x)
+                                  | Configuration.Static methodsAllowed_ x -> Dynamic (allowed x)
                                   | _ -> Dynamic (allowed Defaults.methodsAllowed))
                         (Terminals.methodNotAllowed p, uriTooLong p s)
 
@@ -1322,8 +1351,8 @@ module Model =
 
                 let internal methodMatches p ms =
                     Decision.create (key p, "method-matches")
-                        (function | TryGet methodsAllowed_ (Static ms') when Seq.disjoint ms ms' -> Static false
-                                  | TryGet methodsAllowed_ _ -> Dynamic (flip List.contains ms <!> !. method_)
+                        (function | Configuration.Static methodsAllowed_ ms' when Seq.disjoint ms ms' -> Static false
+                                  | Configuration.Value methodsAllowed_ _ -> Dynamic (flip List.contains ms <!> !. method_)
                                   | _ when Seq.disjoint ms Defaults.methodsAllowed -> Static false
                                   | _ -> Dynamic (flip List.contains ms <!> !. method_))
 
@@ -1500,7 +1529,7 @@ module Model =
 
                     and internal ifMatchMatches p s =
                         Decision.create (key p, "if-match-matches")
-                            (function | TryGet eTags_ (Dynamic _) -> Static true
+                            (function | Configuration.Dynamic eTags_ _ -> Static true
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
 
@@ -1513,7 +1542,7 @@ module Model =
 
                     and internal ifUnmodifiedSinceMatches p s =
                         Decision.create (key p, "if-unmodified-since-matches")
-                            (function | TryGet lastModified_ (Dynamic _) -> Static true
+                            (function | Configuration.Dynamic lastModified_ _ -> Static true
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
 
@@ -1878,7 +1907,7 @@ module Model =
 
                 let rec internal operation p m s =
                     Decision.create (key p, "operation")
-                        (function | Get (operationMethod_ m) (Some f) -> Dynamic (f)
+                        (function | Configuration.Value (operationMethod_ m) f -> Dynamic (f)
                                   | _ -> Static true)
                         (Terminals.internalServerError p, completed p s)
 
@@ -3048,12 +3077,6 @@ type HttpMachine =
             (), snd (f (snd (m c))))
 
     (* Custom *)
-
-    static member Map (m: HttpMachine, f: Configuration -> Configuration) : HttpMachine =
-        HttpMachine (fun c ->
-            let (HttpMachine m) = m
-
-            (), f (snd (m c)))
 
     static member inline Set (m: HttpMachine, o, v) =
         HttpMachine (fun c ->
