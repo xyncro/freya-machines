@@ -1534,32 +1534,41 @@ module Model =
 
                     and internal ifMatchMatches p s =
                         Decision.create (key p, "if-match-matches")
-                            (function | Configuration.Dynamic eTag_ x -> Dynamic (etagMatches =<< x)
-                                      | Configuration.Static eTag_  x -> Dynamic (etagMatches x)
+                            (function | Configuration.Dynamic eTag_ x -> Dynamic (matches =<< x)
+                                      | Configuration.Static eTag_ x -> Dynamic (matches x)
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
 
-                    and private etagMatches etag =
-                            function | Some (IfMatch (IfMatchChoice.EntityTags x)) when strong etag x -> true
+                    and private matches etag =
+                            function | Some (IfMatch (IfMatchChoice.EntityTags x)) when exists etag x -> true
+                                     | Some (IfMatch (IfMatchChoice.Any)) -> true
                                      | _ -> false
                         <!> !. ifMatch_
 
-                    and private strong =
-                            function | Strong x -> List.exists (function | Strong y when x = y -> true | _ -> false)
+                    and private exists =
+                            function | Strong x -> List.exists (strong x)
                                      | _ -> fun _ -> false
+
+                    and private strong x =
+                            function | Strong y when x = y -> true
+                                     | _ -> false
 
                     and internal hasIfUnmodifiedSince p s =
                         Decision.create (key p, "has-if-unmodified-since")
                             (fun _ -> Dynamic (Option.isSome <!> !. ifUnmodifiedSince_))
                             (s, ifUnmodifiedSinceMatches p s)
 
-                    // TODO: Logic
-
                     and internal ifUnmodifiedSinceMatches p s =
                         Decision.create (key p, "if-unmodified-since-matches")
-                            (function | Configuration.Dynamic lastModified_ _ -> Static true
+                            (function | Configuration.Dynamic lastModified_ x -> Dynamic (earlier =<< x)
+                                      | Configuration.Static lastModified_ x -> Dynamic (earlier x)
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
+
+                    and private earlier date =
+                            function | Some (IfUnmodifiedSince x) when date <= x -> true
+                                     | _ -> false
+                        <!> !. ifUnmodifiedSince_
 
                 (* Export *)
 
@@ -3166,8 +3175,8 @@ type HttpMachineBuilder with
 
 type HttpMachineBuilder with
 
-    [<CustomOperation ("eTags", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.ETags (m, a) =
+    [<CustomOperation ("eTag", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.ETag (m, a) =
         HttpMachine.Set (m, Properties.Resource.eTag_, Infer.eTag a)
 
     [<CustomOperation ("lastModified", MaintainsVariableSpaceUsingBind = true)>]

@@ -1,5 +1,6 @@
 ﻿module Freya.Machines.Http.Tests
 
+open System
 open Arachne.Http
 open Arachne.Language
 open Freya.Core
@@ -572,6 +573,9 @@ module Preconditions =
         [<Fact>]
         let ``machine handles if-match correctly`` () =
 
+            let anySetup =
+                Request.Headers.ifMatch_ .= Some (IfMatch (IfMatchChoice.Any))
+
             let matchedSetup =
                 Request.Headers.ifMatch_ .= Some (IfMatch (IfMatchChoice.EntityTags [ Strong "foo" ]))
 
@@ -580,11 +584,39 @@ module Preconditions =
 
             let machine =
                 freyaMachine {
-                    eTags (Strong "foo") }
+                    eTag (Strong "foo") }
+
+            verify anySetup machine [
+                Response.statusCode_ => Some 200
+                Response.reasonPhrase_ => Some "OK" ]
 
             verify matchedSetup machine [
                 Response.statusCode_ => Some 200
                 Response.reasonPhrase_ => Some "OK" ]
 
             verify unmatchedSetup machine [
-                Response.statusCode_ => Some 412 ]
+                Response.statusCode_ => Some 412
+                Response.reasonPhrase_ => Some "Precondition Failed" ]
+
+        (* If-Unmodified-Since *)
+
+        [<Fact>]
+        let ``machine handles if-unmodified-since correctly`` () =
+
+            let newSetup =
+                Request.Headers.ifUnmodifiedSince_ .= Some (IfUnmodifiedSince (DateTime.UtcNow))
+
+            let oldSetup =
+                Request.Headers.ifUnmodifiedSince_ .= Some (IfUnmodifiedSince (DateTime.UtcNow.AddDays (-2.)))
+
+            let machine =
+                freyaMachine {
+                    lastModified (DateTime.UtcNow.AddDays (-1.)) }
+
+            verify newSetup machine [
+                Response.statusCode_ => Some 200
+                Response.reasonPhrase_ => Some "OK" ]
+
+            verify oldSetup machine [
+                Response.statusCode_ => Some 412
+                Response.reasonPhrase_ => Some "Precondition Failed" ]
