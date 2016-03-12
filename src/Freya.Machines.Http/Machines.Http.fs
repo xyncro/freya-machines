@@ -139,17 +139,17 @@ module Properties =
               ContentCodingsSupported = None }
 
      and private Resource =
-        { ETags: Value<ETag list> option
+        { ETag: Value<EntityTag> option
           LastModified: Value<DateTime> option }
 
-        static member eTags_ =
-            (fun x -> x.ETags), (fun e x -> { x with ETags = e })
+        static member eTag_ =
+            (fun x -> x.ETag), (fun e x -> { x with ETag = e })
 
         static member lastModified_ =
             (fun x -> x.LastModified), (fun l x -> { x with LastModified = l })
 
         static member empty =
-            { ETags = None
+            { ETag = None
               LastModified = None }
 
     (* Optics *)
@@ -207,9 +207,9 @@ module Properties =
                 properties_
             >-> Properties.resource_
 
-        let eTags_ =
+        let eTag_ =
                 resource_
-            >-> Resource.eTags_
+            >-> Resource.eTag_
 
         let lastModified_ =
                 resource_
@@ -829,6 +829,9 @@ module Model =
                         assertion_
                     >-> Assertion.decisions_
 
+                let private method_ =
+                        Request.method_
+
                 let private methodsAllowed_ =
                         Properties.Request.methodsAllowed_
 
@@ -866,12 +869,12 @@ module Model =
                 and private knownCustom methodsAllowed =
                         function | Method.Custom x when not (Set.contains (Method.Custom x) methodsAllowed) -> false
                                  | _ -> true
-                    <!> !. Request.method_
+                    <!> !. method_
 
                 and private nonCustom =
                         function | Method.Custom _ -> false
                                  | _ -> true
-                    <!> !. Request.method_
+                    <!> !. method_
 
             (* Export *)
 
@@ -1119,12 +1122,9 @@ module Model =
                 let rec internal methodNotAllowed p =
                     Terminal.create (key p, "method-not-allowed")
                         methodNotAllowed_
-                        (function | Configuration.Dynamic methodsAllowed_ x -> notAllowed =<< x
-                                  | Configuration.Static methodsAllowed_ x -> notAllowed x
-                                  | _ -> notAllowed Defaults.methodsAllowed)
-
-                and private notAllowed =
-                    Operations.methodNotAllowed
+                        (function | Configuration.Dynamic methodsAllowed_ x -> Operations.methodNotAllowed =<< x
+                                  | Configuration.Static methodsAllowed_ x -> Operations.methodNotAllowed x
+                                  | _ -> Operations.methodNotAllowed Defaults.methodsAllowed)
 
                 let internal uriTooLong p =
                     Terminal.fromConfiguration (key p, "uri-too-long")
@@ -1143,6 +1143,9 @@ module Model =
                 let private decisions_ =
                         validation_
                     >-> Validation.decisions_
+
+                let private method_ =
+                        Request.method_
 
                 let private methodsAllowed_ =
                         Properties.Request.methodsAllowed_
@@ -1174,7 +1177,7 @@ module Model =
                 and private allowed s =
                         function | x when Set.contains x s -> true
                                  | _ -> false
-                    <!> !. Request.method_
+                    <!> !. method_
 
                 and internal uriTooLong p s =
                     Decision.fromConfiguration (key p, "uri-too-long")
@@ -1343,6 +1346,9 @@ module Model =
                 let private methodsAllowed_ =
                         Properties.Request.methodsAllowed_
 
+                let private method_ =
+                        Request.method_
+
                 let rec internal methodMatches p methods =
                     Decision.create (key p, "method-matches")
                         (function | Configuration.Static methodsAllowed_ x when disjoint methods x -> Static false
@@ -1353,7 +1359,7 @@ module Model =
                 and private matches s =
                         function | x when Set.contains x s -> true
                                  | _ -> false
-                    <!> !. Request.method_
+                    <!> !. method_
 
                 and private disjoint s =
                         Set.intersect s
@@ -1471,8 +1477,8 @@ module Model =
             let private preconditions_ =
                 Configuration.element_ Preconditions.empty "preconditions"
 
-            let private eTags_ =
-                  Properties.Resource.eTags_
+            let private eTag_ =
+                  Properties.Resource.eTag_
 
             let private lastModified_ =
                   Properties.Resource.lastModified_
@@ -1490,8 +1496,6 @@ module Model =
                     let private terminals_ =
                             preconditions_
                         >-> Preconditions.terminals_
-
-                    // TODO: Make sure this has syntax
 
                     let preconditionFailed_ =
                             terminals_
@@ -1528,13 +1532,21 @@ module Model =
                             (fun _ -> Dynamic (Option.isSome <!> !. ifMatch_))
                             (hasIfUnmodifiedSince p s, ifMatchMatches p s)
 
-                    // TODO: Logic
-
                     and internal ifMatchMatches p s =
                         Decision.create (key p, "if-match-matches")
-                            (function | Configuration.Dynamic eTags_ _ -> Static true
+                            (function | Configuration.Dynamic eTag_ x -> Dynamic (etagMatches =<< x)
+                                      | Configuration.Static eTag_  x -> Dynamic (etagMatches x)
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
+
+                    and private etagMatches etag =
+                            function | Some (IfMatch (IfMatchChoice.EntityTags x)) when strong etag x -> true
+                                     | _ -> false
+                        <!> !. ifMatch_
+
+                    and private strong =
+                            function | Strong x -> List.exists (function | Strong y when x = y -> true | _ -> false)
+                                     | _ -> fun _ -> false
 
                     and internal hasIfUnmodifiedSince p s =
                         Decision.create (key p, "has-if-unmodified-since")
@@ -1667,8 +1679,8 @@ module Model =
                     let private ifNoneMatch_ =
                             Request.Headers.ifNoneMatch_
 
-                    let private eTags_ =
-                            Properties.Resource.eTags_
+                    let private eTag_ =
+                            Properties.Resource.eTag_
 
                     // TODO: Logic
 
@@ -2953,30 +2965,27 @@ module Infer =
     let inline dateTime v =
         DateTime.infer v
 
-    (* ETag list *)
+    (* ETag *)
 
-    module ETags =
+    module ETag =
 
         type Defaults =
             | Defaults
 
-            static member ETags (x: Freya<ETag list>) =
+            static member ETag (x: Freya<EntityTag>) =
                 Dynamic x
 
-            static member ETags (x: ETag list) =
+            static member ETag (x: EntityTag) =
                 Static x
 
-            static member ETags (x: ETag) =
-                Static [ x ]
-
         let inline defaults (a: ^a, _: ^b) =
-            ((^a or ^b) : (static member ETags: ^a -> Value<ETag list>) a)
+            ((^a or ^b) : (static member ETag: ^a -> Value<EntityTag>) a)
 
         let inline infer (x: 'a) =
             defaults (x, Defaults)
 
-    let inline eTags v =
-        ETags.infer v
+    let inline eTag v =
+        ETag.infer v
 
     (* LanguageTag list *)
 
@@ -3159,7 +3168,7 @@ type HttpMachineBuilder with
 
     [<CustomOperation ("eTags", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.ETags (m, a) =
-        HttpMachine.Set (m, Properties.Resource.eTags_, Infer.eTags a)
+        HttpMachine.Set (m, Properties.Resource.eTag_, Infer.eTag a)
 
     [<CustomOperation ("lastModified", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.LastModified (m, a) =

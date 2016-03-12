@@ -558,3 +558,33 @@ module Existence =
         verify defaultSetup dynamicMachine [
             Response.statusCode_ => Some 404
             Response.reasonPhrase_ => Some "Not Found" ]
+
+(* Preconditions
+
+   Verification that the various preconditions blocks behave as expected. *)
+
+module Preconditions =
+
+    module Common =
+
+        (* If-Match *)
+
+        [<Fact>]
+        let ``machine handles if-match correctly`` () =
+
+            let matchedSetup =
+                Request.Headers.ifMatch_ .= Some (IfMatch (IfMatchChoice.EntityTags [ Strong "foo" ]))
+
+            let unmatchedSetup =
+                Request.Headers.ifMatch_ .= Some (IfMatch (IfMatchChoice.EntityTags [ Strong "bar" ]))
+
+            let machine =
+                freyaMachine {
+                    eTags (Strong "foo") }
+
+            verify matchedSetup machine [
+                Response.statusCode_ => Some 200
+                Response.reasonPhrase_ => Some "OK" ]
+
+            verify unmatchedSetup machine [
+                Response.statusCode_ => Some 412 ]
