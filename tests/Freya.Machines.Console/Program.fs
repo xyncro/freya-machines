@@ -20,7 +20,7 @@ let ok =
 
 let machine =
     freyaMachine {
-        handleOk ok }
+        exists false }
 
 let app =
     OwinAppFunc.ofFreya machine

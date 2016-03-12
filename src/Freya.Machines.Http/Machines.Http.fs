@@ -10,6 +10,7 @@ open Freya.Core.Operators
 open Freya.Optics.Http
 open Hephaestus
 
+// TODO: 415 Support
 // TODO: Complete operations
 // TODO: Determine correct ending for core
 // TODO: Introduce a mechanism for logs, etc. (this might be more Freya.Core?)
@@ -1170,8 +1171,8 @@ module Model =
                                   | _ -> Dynamic (allowed Defaults.methodsAllowed))
                         (Terminals.methodNotAllowed p, uriTooLong p s)
 
-                and private allowed methodsAllowed =
-                        function | m when Set.contains m methodsAllowed -> true
+                and private allowed s =
+                        function | x when Set.contains x s -> true
                                  | _ -> false
                     <!> !. Request.method_
 
@@ -1264,7 +1265,7 @@ module Model =
                 and internal acceptMatches p s =
                     Decision.create (key p, "accept-matches")
                         (Content.Negotiation.MediaType.configure 
-                         >> function | Some f -> Dynamic (Content.Negotiation.negotiable <!> f)
+                         >> function | Some x -> Dynamic (Content.Negotiation.negotiable <!> x)
                                      | _ -> Static true)
                         (Terminals.notAcceptable p, hasAcceptLanguage p s)
 
@@ -1276,7 +1277,7 @@ module Model =
                 and internal acceptLanguageMatches p s =
                     Decision.create (key p, "accept-language-matches")
                         (Content.Negotiation.Language.configure
-                         >> function | Some f -> Dynamic (Content.Negotiation.negotiable <!> f)
+                         >> function | Some x -> Dynamic (Content.Negotiation.negotiable <!> x)
                                      | _ -> Static true)
                         (Terminals.notAcceptable p, hasAcceptCharset p s)
 
@@ -1288,7 +1289,7 @@ module Model =
                 and internal acceptCharsetMatches p s =
                     Decision.create (key p, "accept-charset-matches")
                         (Content.Negotiation.Charset.configure
-                         >> function | Some f -> Dynamic (Content.Negotiation.negotiable <!> f)
+                         >> function | Some x -> Dynamic (Content.Negotiation.negotiable <!> x)
                                      | _ -> Static true)
                         (Terminals.notAcceptable p, hasAcceptEncoding p s)
 
@@ -1300,7 +1301,7 @@ module Model =
                 and internal acceptEncodingMatches p s =
                     Decision.create (key p, "accept-encoding-matches")
                         (Content.Negotiation.ContentCoding.configure
-                         >> function | Some f -> Dynamic (Content.Negotiation.negotiable <!> f)
+                         >> function | Some x -> Dynamic (Content.Negotiation.negotiable <!> x)
                                      | _ -> Static true)
                         (Terminals.notAcceptable p, s)
 
@@ -1328,12 +1329,6 @@ module Model =
         [<RequireQualifiedAccess>]
         module Method =
 
-            [<RequireQualifiedAccess>]
-            module private Seq =
-
-                let disjoint l1 l2 =
-                    Set.isEmpty (Set.intersect (set l1) (set l2))
-
             (* Key *)
 
             let private key p =
@@ -1345,18 +1340,24 @@ module Model =
             [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
             module Decisions =
 
-                let private method_ =
-                        Request.method_
-
                 let private methodsAllowed_ =
                         Properties.Request.methodsAllowed_
 
-                let internal methodMatches p ms =
+                let rec internal methodMatches p methods =
                     Decision.create (key p, "method-matches")
-                        (function | Configuration.Static methodsAllowed_ ms' when Seq.disjoint ms ms' -> Static false
-                                  | Configuration.Value methodsAllowed_ _ -> Dynamic (flip List.contains ms <!> !. method_)
-                                  | _ when Seq.disjoint ms Defaults.methodsAllowed -> Static false
-                                  | _ -> Dynamic (flip List.contains ms <!> !. method_))
+                        (function | Configuration.Static methodsAllowed_ x when disjoint methods x -> Static false
+                                  | Configuration.Value methodsAllowed_ _ -> Dynamic (matches methods)
+                                  | _ when disjoint methods Defaults.methodsAllowed -> Static false
+                                  | _ -> Dynamic (matches methods))
+
+                and private matches s =
+                        function | x when Set.contains x s -> true
+                                 | _ -> false
+                    <!> !. Request.method_
+
+                and private disjoint s =
+                        Set.intersect s
+                     >> Set.isEmpty
 
             (* Export *)
 
@@ -2203,7 +2204,7 @@ module Model =
                 (* Key *)
 
                 let private key p =
-                    Key.add [ "other" ] (key p)
+                    Key.add [ "moved" ] (key p)
 
                 (* Types *)
 
@@ -2610,7 +2611,7 @@ module Model =
             (* Export *)
 
             let private getOrHead s =
-                Method.export GetOrHead [ GET; HEAD ] (
+                Method.export GetOrHead (Set.ofList [ GET; HEAD ]) (
                     s, Existence.export GetOrHead (
                         Responses.Moved.export GetOrHead (
                             Responses.Missing.export GetOrHead),
@@ -2641,7 +2642,7 @@ module Model =
             (* Export *)
 
             let private options s =
-                Method.export Options [ OPTIONS ] (
+                Method.export Options (Set.ofList [ OPTIONS ]) (
                     s, Responses.Options.export Options)
 
             let export =
@@ -2666,7 +2667,7 @@ module Model =
             (* Export *)
 
             let private post s =
-                Method.export Post [ POST ] (
+                Method.export Post (Set.ofList [ POST ]) (
                     s, Existence.export Post (
                         Responses.Moved.export Post (
                             Responses.Missing.export Post),
@@ -2700,7 +2701,7 @@ module Model =
             (* Export *)
 
             let rec private put s =
-                Method.export Put [ PUT ] (
+                Method.export Put (Set.ofList [ PUT ]) (
                     s, Existence.export Put (
                         Responses.Moved.export Put (
                             continuation),
@@ -2737,7 +2738,7 @@ module Model =
             (* Export *)
 
             let private delete s =
-                Method.export Delete [ DELETE ] (
+                Method.export Delete (Set.ofList [ DELETE ]) (
                     s, Existence.export Delete (
                         Responses.Moved.export Delete (
                             Responses.Missing.export Delete),
@@ -3034,14 +3035,8 @@ module Infer =
         type Defaults =
             | Defaults
 
-            static member Methods (x: Freya<Set<Method>>) =
-                Dynamic x
-
             static member Methods (x: Freya<Method list>) =
                 Dynamic (Set.ofList <!> x)
-
-            static member Methods (x: Set<Method>) =
-                Static x
 
             static member Methods (x: Method list) =
                 Static (Set.ofList x)

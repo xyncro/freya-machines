@@ -1,10 +1,11 @@
 ﻿module Freya.Machines.Http.Tests
 
 open Arachne.Http
+open Arachne.Language
 open Freya.Core
 open Freya.Core.Operators
-open Freya.Optics.Http
 open Freya.Machines.Http
+open Freya.Optics.Http
 open Freya.Testing
 open Freya.Testing.Operators
 open Xunit
@@ -33,12 +34,14 @@ module Defaults =
 
     [<Fact>]
     let ``default machine handles GET request appropriately`` () =
+
         verify defaultSetup defaultMachine [
             Response.statusCode_ => Some 200
             Response.reasonPhrase_ => Some "OK" ]
 
     [<Fact>]
     let ``default machine handles HEAD request appropriately`` () =
+
         let setup =
             Request.method_ .= HEAD
 
@@ -48,6 +51,7 @@ module Defaults =
 
     [<Fact>]
     let ``default machine handles OPTIONS request appropriately`` () =
+
         let setup =
             Request.method_ .= OPTIONS
 
@@ -57,15 +61,14 @@ module Defaults =
 
     [<Fact>]
     let ``default machine handles POST request appropriately`` () =
+
         let setup =
             Request.method_ .= POST
 
-        let assertions = [
+        verify setup defaultMachine [
             Response.statusCode_ => Some 405
             Response.reasonPhrase_ => Some "Method Not Allowed"
             Response.Headers.allow_ => Some (Allow [ HEAD; GET; OPTIONS ]) ]
-
-        verify setup defaultMachine assertions
 
 (* Assertion
 
@@ -91,14 +94,14 @@ module Assertion =
 
         (* Dynamic *)
 
-        let setupAvailable =
+        let setup =
             Request.path_ .= "/available"
 
         let dynamicMachine =
             freyaMachine {
                 serviceAvailable ((=) "/available" <!> !. Request.path_) }
 
-        verify setupAvailable dynamicMachine [
+        verify setup dynamicMachine [
             Response.statusCode_ => Some 200
             Response.reasonPhrase_ => Some "OK" ]
 
@@ -113,30 +116,27 @@ module Assertion =
 
         (* Static *)
 
-        let setup =
-            Freya.empty
-
         let staticMachine =
             freyaMachine {
                 httpVersionSupported false }
 
-        verify setup staticMachine [
+        verify defaultSetup staticMachine [
             Response.statusCode_ => Some 505
             Response.reasonPhrase_ => Some "HTTP Version Not Supported" ]
 
         (* Default *)
 
-        let setupSupported =
+        let supportedSetup =
             Request.httpVersion_ .= HTTP 1.1
 
-        let setupUnsupported =
+        let unsupportedSetup =
             Request.httpVersion_ .= HTTP 1.0
 
-        verify setupSupported defaultMachine [
+        verify supportedSetup defaultMachine [
             Response.statusCode_ => Some 200
             Response.reasonPhrase_ => Some "OK" ]
 
-        verify setupUnsupported defaultMachine [
+        verify unsupportedSetup defaultMachine [
             Response.statusCode_ => Some 505
             Response.reasonPhrase_ => Some "HTTP Version Not Supported" ]
 
@@ -147,33 +147,33 @@ module Assertion =
 
         (* Inferred *)
 
-        let setupAllowed =
+        let allowedSetup =
             Request.method_ .= Method.Custom "FOO"
 
-        let setupNotAllowed =
+        let notAllowedSetup =
             Request.method_ .= Method.Custom "BAR"
 
         let machine =
             freyaMachine {
                 methodsAllowed [ Method.Custom "FOO" ] }
 
-        verify setupAllowed machine [
+        verify allowedSetup machine [
             Response.statusCode_ => Some 200 ]
 
-        verify setupNotAllowed machine [
+        verify notAllowedSetup machine [
             Response.statusCode_ => Some 501
             Response.reasonPhrase_ => Some "Not Implemented" ]
 
         (* Default *)
 
-        let setupNotImplemented =
+        let notImplementedSetup =
             Request.method_ .= Method.Custom "FOO"
 
         verify defaultSetup defaultMachine [
             Response.statusCode_ => Some 200
             Response.reasonPhrase_ => Some "OK" ]
 
-        verify setupNotImplemented defaultMachine [
+        verify notImplementedSetup defaultMachine [
             Response.statusCode_ => Some 501
             Response.reasonPhrase_ => Some "Not Implemented" ]
 
@@ -201,14 +201,14 @@ module Permission =
 
         (* Dynamic *)
 
-        let setupAuthorized =
+        let setup =
             Request.path_ .= "/authorized"
 
         let dynamicMachine =
             freyaMachine {
                 authorized ((=) "/authorized" <!> !. Request.path_) }
 
-        verify setupAuthorized dynamicMachine [
+        verify setup dynamicMachine [
             Response.statusCode_ => Some 200
             Response.reasonPhrase_ => Some "OK" ]
 
@@ -233,14 +233,14 @@ module Permission =
 
         (* Dynamic *)
 
-        let setupAuthorized =
+        let setup =
             Request.path_ .= "/allowed"
 
         let dynamicMachine =
             freyaMachine {
                 allowed ((=) "/allowed" <!> !. Request.path_) }
 
-        verify setupAuthorized dynamicMachine [
+        verify setup dynamicMachine [
             Response.statusCode_ => Some 200
             Response.reasonPhrase_ => Some "OK" ]
 
@@ -272,14 +272,14 @@ module Validation =
 
         (* Dynamic *)
 
-        let setupUnmet =
+        let setup =
             Request.path_ .= "/unmet"
 
         let dynamicMachine =
             freyaMachine {
                 expectationMet ((fun x -> x <> "/unmet") <!> !. Request.path_) }
 
-        verify setupUnmet dynamicMachine [
+        verify setup dynamicMachine [
             Response.statusCode_ => Some 417
             Response.reasonPhrase_ => Some "Expectation Failed" ]
 
@@ -320,14 +320,14 @@ module Validation =
 
         (* Dynamic *)
 
-        let setupUnmet =
+        let setup =
             Request.path_ .= "/uritoolong"
 
         let dynamicMachine =
             freyaMachine {
                 uriTooLong ((=) "/uritoolong" <!> !. Request.path_) }
 
-        verify setupUnmet dynamicMachine [
+        verify setup dynamicMachine [
             Response.statusCode_ => Some 414
             Response.reasonPhrase_ => Some "URI Too Long" ]
 
@@ -352,17 +352,209 @@ module Validation =
 
         (* Dynamic *)
 
-        let setupUnmet =
+        let setup =
             Request.path_ .= "/badrequest"
 
         let dynamicMachine =
             freyaMachine {
                 badRequest ((=) "/badrequest" <!> !. Request.path_) }
 
-        verify setupUnmet dynamicMachine [
+        verify setup dynamicMachine [
             Response.statusCode_ => Some 400
             Response.reasonPhrase_ => Some "Bad Request" ]
 
         verify defaultSetup dynamicMachine [
             Response.statusCode_ => Some 200
             Response.reasonPhrase_ => Some "OK" ]
+
+(* Negotiation
+
+   Verification that the Negotiation block behaves as expected given suitable
+   input. The neogtiation block may return 412 for any failure to negotiate. *)
+
+module Negotiation =
+
+    (* Accept *)
+
+    [<Fact>]
+    let ``machine handles accept negotiation correctly`` () =
+
+        let mediaRange =
+            Closed (Type "text", SubType "plain", Parameters Map.empty)
+
+        let acceptParameters =
+            AcceptParameters (Weight 1., Extensions Map.empty)
+
+        let accept =
+            Accept [ AcceptableMedia (mediaRange, Some acceptParameters) ]
+
+        let setup =
+            Request.Headers.accept_ .= Some accept
+
+        (* Unconfigured *)
+
+        verify setup defaultMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+        (* Configured *)
+
+        let matchedMachine =
+            freyaMachine {
+                mediaTypesSupported (MediaType (Type "text", SubType "plain", Parameters Map.empty)) }
+
+        verify setup matchedMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+        let unmatchedMachine =
+            freyaMachine {
+                mediaTypesSupported (MediaType (Type "application", SubType "json", Parameters Map.empty)) }
+
+        verify setup unmatchedMachine [
+            Response.statusCode_ => Some 406
+            Response.reasonPhrase_ => Some "Not Acceptable" ]
+
+    (* Accept-Language *)
+
+    [<Fact>]
+    let ``machine handles accept-language negotiation correctly`` () =
+
+        let acceptLanguage =
+            AcceptLanguage [ AcceptableLanguage (Range [ "en" ], None) ]
+
+        let setup =
+            Request.Headers.acceptLanguage_ .= Some acceptLanguage
+
+        (* Unconfigured *)
+
+        verify setup defaultMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+        (* Configured *)
+
+        let matchedMachine =
+            freyaMachine {
+                languagesSupported (LanguageTag (Language ("en", None), None, None, Variant [])) }
+
+        verify setup matchedMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+        let unmatchedMachine =
+            freyaMachine {
+                languagesSupported (LanguageTag (Language ("de", None), None, None, Variant [])) }
+
+        verify setup unmatchedMachine [
+            Response.statusCode_ => Some 406
+            Response.reasonPhrase_ => Some "Not Acceptable" ]
+
+    (* Accept-Charset *)
+
+    [<Fact>]
+    let ``machine handles accept-charset negotiation correctly`` () =
+
+        let acceptCharset =
+            AcceptCharset [ AcceptableCharset (CharsetRange.Charset (Charset "utf-8"), None) ]
+
+        let setup =
+            Request.Headers.acceptCharset_ .= Some acceptCharset
+
+        (* Unconfigured *)
+
+        verify setup defaultMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+        (* Configured *)
+
+        let matchedMachine =
+            freyaMachine {
+                charsetsSupported (Charset "utf-8") }
+
+        verify setup matchedMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+        let unmatchedMachine =
+            freyaMachine {
+                charsetsSupported (Charset "iso-8859-1") }
+
+        verify setup unmatchedMachine [
+            Response.statusCode_ => Some 406
+            Response.reasonPhrase_ => Some "Not Acceptable" ]
+
+    (* Accept-Encoding *)
+
+    [<Fact>]
+    let ``machine handles accept-encoding negotiation correctly`` () =
+
+        let acceptEncoding =
+            AcceptEncoding [ AcceptableEncoding (Coding (ContentCoding "gzip"), None) ]
+
+        let setup =
+            Request.Headers.acceptEncoding_ .= Some acceptEncoding
+
+        (* Unconfigured *)
+
+        verify setup defaultMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+        (* Configured *)
+
+        let matchedMachine =
+            freyaMachine {
+                contentCodingsSupported (ContentCoding "gzip") }
+
+        verify setup matchedMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+        let unmatchedMachine =
+            freyaMachine {
+                contentCodingsSupported (ContentCoding "compress") }
+
+        verify setup unmatchedMachine [
+            Response.statusCode_ => Some 406
+            Response.reasonPhrase_ => Some "Not Acceptable" ]
+
+(* Existence
+
+   Verification that the Existence block behaves as expected given suitable
+   input. *)
+
+module Existence =
+
+    (* Exists *)
+
+    [<Fact>]
+    let ``machine handles exists decision correctly`` () =
+
+        (* Static *)
+
+        let staticMachine =
+            freyaMachine {
+                exists true }
+
+        verify defaultSetup staticMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+        (* Dynamic *)
+
+        let setup =
+            Request.path_ .= "/exists"
+
+        let dynamicMachine =
+            freyaMachine {
+                exists ((=) "/exists" <!> !. Request.path_) }
+
+        verify setup dynamicMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+        verify defaultSetup dynamicMachine [
+            Response.statusCode_ => Some 404
+            Response.reasonPhrase_ => Some "Not Found" ]
