@@ -566,6 +566,8 @@ module Existence =
 
 module Preconditions =
 
+    (* Common *)
+
     module Common =
 
         (* If-Match *)
@@ -620,3 +622,98 @@ module Preconditions =
             verify oldSetup machine [
                 Response.statusCode_ => Some 412
                 Response.reasonPhrase_ => Some "Precondition Failed" ]
+
+    (* Safe *)
+
+    module Safe =
+
+        (* If-None-Match *)
+
+        [<Fact>]
+        let ``machine handles if-none-match correctly`` () =
+
+            let anySetup =
+                Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (IfNoneMatchChoice.Any))
+
+            let matchedSetup =
+                Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (IfNoneMatchChoice.EntityTags [ Weak "foo" ]))
+
+            let unmatchedSetup =
+                Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (IfNoneMatchChoice.EntityTags [ Weak "bar" ]))
+
+            let machine =
+                freyaMachine {
+                    eTag (Strong "foo") }
+
+            verify anySetup machine [
+                Response.statusCode_ => Some 200
+                Response.reasonPhrase_ => Some "OK" ]
+
+            verify matchedSetup machine [
+                Response.statusCode_ => Some 304
+                Response.reasonPhrase_ => Some "Not Modified" ]
+
+            verify unmatchedSetup machine [
+                Response.statusCode_ => Some 200
+                Response.reasonPhrase_ => Some "OK" ]
+
+        (* If-Modified-Since *)
+
+        [<Fact>]
+        let ``machine handles if-modified-since correctly`` () =
+
+            let newSetup =
+                Request.Headers.ifModifiedSince_ .= Some (IfModifiedSince (DateTime.UtcNow))
+
+            let oldSetup =
+                Request.Headers.ifModifiedSince_ .= Some (IfModifiedSince (DateTime.UtcNow.AddDays (-2.)))
+
+            let machine =
+                freyaMachine {
+                    lastModified (DateTime.UtcNow.AddDays (-1.)) }
+
+            verify newSetup machine [
+                Response.statusCode_ => Some 304
+                Response.reasonPhrase_ => Some "Not Modified" ]
+
+            verify oldSetup machine [
+                Response.statusCode_ => Some 200
+                Response.reasonPhrase_ => Some "OK" ]
+
+    (* Unsafe *)
+
+    module Unsafe =
+
+        (* If-None-Match *)
+
+        [<Fact>]
+        let ``machine handles if-none-match correctly`` () =
+
+            let anySetup =
+                    (Request.method_ .= POST)
+                 *> (Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (IfNoneMatchChoice.Any)))
+
+            let matchedSetup =
+                    (Request.method_ .= POST)
+                 *> (Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (EntityTags [ Weak "foo" ])))
+
+            let unmatchedSetup =
+                    (Request.method_ .= POST)
+                 *> (Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (EntityTags [ Weak "bar" ])))
+
+            let machine =
+                freyaMachine {
+                    methodsAllowed POST
+                    eTag (Strong "foo") }
+
+            verify anySetup machine [
+                Response.statusCode_ => Some 200
+                Response.reasonPhrase_ => Some "OK" ]
+
+            verify matchedSetup machine [
+                Response.statusCode_ => Some 412
+                Response.reasonPhrase_ => Some "Precondition Failed" ]
+
+            verify unmatchedSetup machine [
+                Response.statusCode_ => Some 200
+                Response.reasonPhrase_ => Some "OK" ]

@@ -1645,24 +1645,43 @@ module Model =
                             (fun _ -> Dynamic (Option.isSome <!> !. ifNoneMatch_))
                             (hasIfModifiedSince p s, ifNoneMatchMatches p s)
 
-                    // TODO: Logic
-
                     and internal ifNoneMatchMatches p s =
                         Decision.create (key p, "if-none-match-matches")
-                            (function | _ -> Static true)
+                            (function | Configuration.Dynamic eTag_ x -> Dynamic (matches =<< x)
+                                      | Configuration.Static eTag_ x -> Dynamic (matches x)
+                                      | _ -> Static true)
                             (Terminals.notModified p, s)
+
+                    and private matches etag =
+                            function | Some (IfNoneMatch (EntityTags x)) when not (exists etag x) -> true
+                                     | Some (IfNoneMatch (IfNoneMatchChoice.Any)) -> true
+                                     | _ -> false
+                        <!> !. ifNoneMatch_
+
+                    and private exists =
+                            function | Strong x 
+                                     | Weak x -> List.exists (weak x)
+
+                    and private weak x =
+                            function | Strong y 
+                                     | Weak y -> x = y 
 
                     and internal hasIfModifiedSince p s =
                         Decision.create (key p, "has-if-modified-since")
                             (fun _ -> Dynamic (Option.isSome <!> !. ifModifiedSince_))
                             (s, ifModifiedSinceMatches p s)
 
-                    // TODO: Logic
-
                     and internal ifModifiedSinceMatches p s =
                         Decision.create (key p, "if-modified-since-matches")
-                            (function | _ -> Static true)
+                            (function | Configuration.Dynamic lastModified_ x -> Dynamic (later =<< x)
+                                      | Configuration.Static lastModified_ x -> Dynamic (later x)
+                                      | _ -> Static true)
                             (Terminals.notModified p, s)
+
+                    and private later date =
+                            function | Some (IfModifiedSince x) when date > x -> true
+                                     | _ -> false
+                        <!> !. ifModifiedSince_
 
                 (* Export *)
 
@@ -1691,19 +1710,31 @@ module Model =
                     let private eTag_ =
                             Properties.Resource.eTag_
 
-                    // TODO: Logic
-
                     let rec internal hasIfNoneMatch p s =
                         Decision.create (key p, "has-if-none-match")
-                            (function | _ -> Static true)
+                            (function | _ -> Dynamic (Option.isSome <!> !. ifNoneMatch_))
                             (s, ifNoneMatchMatches p s)
-
-                    // TODO: Logic
 
                     and internal ifNoneMatchMatches p s =
                         Decision.create (key p, "if-none-match-matches")
-                            (function | _ -> Static true)
+                            (function | Configuration.Dynamic eTag_ x -> Dynamic (matches =<< x)
+                                      | Configuration.Static eTag_ x -> Dynamic (matches x)
+                                      | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
+
+                    and private matches etag =
+                            function | Some (IfNoneMatch (EntityTags x)) when not (exists etag x) -> true
+                                     | Some (IfNoneMatch (IfNoneMatchChoice.Any)) -> true
+                                     | _ -> false
+                        <!> !. ifNoneMatch_
+
+                    and private exists =
+                            function | Strong x 
+                                     | Weak x -> List.exists (weak x)
+
+                    and private weak x =
+                            function | Strong y 
+                                     | Weak y -> x = y 
 
                 (* Export *)
 
@@ -1799,7 +1830,7 @@ module Model =
 
                 let internal conflict p s =
                     Decision.fromConfiguration (key p, "conflict")
-                        conflict_ true
+                        conflict_ false
                         (s, Terminals.conflict p)
 
             (* Export *)
@@ -1938,7 +1969,7 @@ module Model =
                 and internal completed p s =
                     Decision.fromConfiguration (key p, "completed")
                         completed_ true
-                        (s, Terminals.accepted p)
+                        (Terminals.accepted p, s)
 
             (* Export *)
 
@@ -2588,8 +2619,6 @@ module Model =
                 "core"
 
             (* Terminals *)
-
-            // TODO: Fix this up!
 
             let private endpointTerminal =
                 Terminal.fromConfiguration (key, "end")
