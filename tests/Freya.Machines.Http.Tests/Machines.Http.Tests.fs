@@ -156,7 +156,7 @@ module Assertion =
 
         let machine =
             freyaMachine {
-                methodsAllowed [ Method.Custom "FOO" ] }
+                methods [ Method.Custom "FOO" ] }
 
         verify allowedSetup machine [
             Response.statusCode_ => Some 200 ]
@@ -297,7 +297,7 @@ module Validation =
 
         let staticMachine =
             freyaMachine {
-                methodsAllowed POST }
+                methods POST }
 
         verify defaultSetup staticMachine [
             Response.statusCode_ => Some 405
@@ -586,38 +586,50 @@ module Preconditions =
 
             let machine =
                 freyaMachine {
-                    eTag (Strong "foo") }
+                    entityTag (Strong "foo") }
+
+            verify anySetup defaultMachine [
+                Response.statusCode_ => Some 200
+                Response.reasonPhrase_ => Some "OK"
+                Response.Headers.eTag_ => None ]
 
             verify anySetup machine [
                 Response.statusCode_ => Some 200
-                Response.reasonPhrase_ => Some "OK" ]
+                Response.reasonPhrase_ => Some "OK"
+                Response.Headers.eTag_ => Some (ETag (Strong "foo")) ]
 
             verify matchedSetup machine [
                 Response.statusCode_ => Some 200
-                Response.reasonPhrase_ => Some "OK" ]
+                Response.reasonPhrase_ => Some "OK"
+                Response.Headers.eTag_ => Some (ETag (Strong "foo")) ]
 
             verify unmatchedSetup machine [
                 Response.statusCode_ => Some 412
-                Response.reasonPhrase_ => Some "Precondition Failed" ]
+                Response.reasonPhrase_ => Some "Precondition Failed"
+                Response.Headers.eTag_ => None ]
 
         (* If-Unmodified-Since *)
 
         [<Fact>]
         let ``machine handles if-unmodified-since correctly`` () =
 
+            let baseDate =
+                DateTime (2000, 1, 1)
+
             let newSetup =
-                Request.Headers.ifUnmodifiedSince_ .= Some (IfUnmodifiedSince (DateTime.UtcNow))
+                Request.Headers.ifUnmodifiedSince_ .= Some (IfUnmodifiedSince (baseDate))
 
             let oldSetup =
-                Request.Headers.ifUnmodifiedSince_ .= Some (IfUnmodifiedSince (DateTime.UtcNow.AddDays (-2.)))
+                Request.Headers.ifUnmodifiedSince_ .= Some (IfUnmodifiedSince (baseDate.AddDays (-2.)))
 
             let machine =
                 freyaMachine {
-                    lastModified (DateTime.UtcNow.AddDays (-1.)) }
+                    lastModified (baseDate.AddDays (-1.)) }
 
             verify newSetup machine [
                 Response.statusCode_ => Some 200
-                Response.reasonPhrase_ => Some "OK" ]
+                Response.reasonPhrase_ => Some "OK"
+                Response.Headers.lastModified_ => Some (LastModified (baseDate.AddDays (-1.))) ]
 
             verify oldSetup machine [
                 Response.statusCode_ => Some 412
@@ -643,19 +655,27 @@ module Preconditions =
 
             let machine =
                 freyaMachine {
-                    eTag (Strong "foo") }
+                    entityTag (Strong "foo") }
+
+            verify anySetup defaultMachine [
+                Response.statusCode_ => Some 200
+                Response.reasonPhrase_ => Some "OK"
+                Response.Headers.eTag_ => None ]
 
             verify anySetup machine [
                 Response.statusCode_ => Some 200
-                Response.reasonPhrase_ => Some "OK" ]
+                Response.reasonPhrase_ => Some "OK"
+                Response.Headers.eTag_ => Some (ETag (Strong "foo")) ]
 
             verify matchedSetup machine [
                 Response.statusCode_ => Some 304
-                Response.reasonPhrase_ => Some "Not Modified" ]
+                Response.reasonPhrase_ => Some "Not Modified"
+                Response.Headers.eTag_ => None ]
 
             verify unmatchedSetup machine [
                 Response.statusCode_ => Some 200
-                Response.reasonPhrase_ => Some "OK" ]
+                Response.reasonPhrase_ => Some "OK"
+                Response.Headers.eTag_ => Some (ETag (Strong "foo")) ]
 
         (* If-Modified-Since *)
 
@@ -703,8 +723,8 @@ module Preconditions =
 
             let machine =
                 freyaMachine {
-                    methodsAllowed POST
-                    eTag (Strong "foo") }
+                    methods POST
+                    entityTag (Strong "foo") }
 
             verify anySetup machine [
                 Response.statusCode_ => Some 200

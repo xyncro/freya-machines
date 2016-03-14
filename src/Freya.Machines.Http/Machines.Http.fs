@@ -68,7 +68,7 @@ type Handler =
 [<RequireQualifiedAccess>]
 module Defaults =
 
-    let methodsAllowed =
+    let methods =
         set [
             GET
             HEAD
@@ -106,13 +106,13 @@ module Properties =
               Resource = Resource.empty }
 
      and private Request =
-        { MethodsAllowed: Value<Set<Method>> option }
+        { Methods: Value<Set<Method>> option }
 
-        static member methodsAllowed_ =
-            (fun x -> x.MethodsAllowed), (fun m x -> { x with MethodsAllowed = m })
+        static member methods_ =
+            (fun x -> x.Methods), (fun m x -> { x with Methods = m })
 
         static member empty =
-            { MethodsAllowed = None }
+            { Methods = None }
 
      and private Representation =
         { MediaTypesSupported: Value<MediaType list> option
@@ -139,17 +139,17 @@ module Properties =
               ContentCodingsSupported = None }
 
      and private Resource =
-        { ETag: Value<EntityTag> option
+        { EntityTag: Value<EntityTag> option
           LastModified: Value<DateTime> option }
 
-        static member eTag_ =
-            (fun x -> x.ETag), (fun e x -> { x with ETag = e })
+        static member entityTag_ =
+            (fun x -> x.EntityTag), (fun e x -> { x with EntityTag = e })
 
         static member lastModified_ =
             (fun x -> x.LastModified), (fun l x -> { x with LastModified = l })
 
         static member empty =
-            { ETag = None
+            { EntityTag = None
               LastModified = None }
 
     (* Optics *)
@@ -167,9 +167,9 @@ module Properties =
                 properties_
             >-> Properties.request_
 
-        let methodsAllowed_ =
+        let methods_ =
                 request_
-            >-> Request.methodsAllowed_
+            >-> Request.methods_
 
     (* Representation *)
 
@@ -207,9 +207,9 @@ module Properties =
                 properties_
             >-> Properties.resource_
 
-        let eTag_ =
+        let entityTag_ =
                 resource_
-            >-> Resource.eTag_
+            >-> Resource.entityTag_
 
         let lastModified_ =
                 resource_
@@ -267,8 +267,8 @@ module internal Content =
             (* Configuration *)
 
             let configure =
-                function | Configuration.Dynamic supported_ x -> Some (negotiate <!> x <*> !. accepted_)
-                         | Configuration.Static supported_ x -> Some (negotiate x <!> !. accepted_)
+                function | TryGet supported_ (Dynamic x) -> Some (negotiate <!> x <*> !. accepted_)
+                         | TryGet supported_ (Static x) -> Some (negotiate x <!> !. accepted_)
                          | _ -> None
 
         (* ContentCoding *)
@@ -294,8 +294,8 @@ module internal Content =
             (* Configuration *)
 
             let configure =
-                function | Configuration.Dynamic supported_ x -> Some (negotiate <!> x <*> !. accepted_)
-                         | Configuration.Static supported_ x -> Some (negotiate x <!> !. accepted_)
+                function | TryGet supported_ (Dynamic x) -> Some (negotiate <!> x <*> !. accepted_)
+                         | TryGet supported_ (Static x) -> Some (negotiate x <!> !. accepted_)
                          | _ -> None
 
         (* Language *)
@@ -321,8 +321,8 @@ module internal Content =
             (* Configuration *)
 
             let configure =
-                function | Configuration.Dynamic supported_ x -> Some (negotiate <!> x <*> !. accepted_)
-                         | Configuration.Static supported_ x -> Some (negotiate x <!> !. accepted_)
+                function | TryGet supported_ (Dynamic x) -> Some (negotiate <!> x <*> !. accepted_)
+                         | TryGet supported_ (Static x) -> Some (negotiate x <!> !. accepted_)
                          | _ -> None
 
         (* MediaType *)
@@ -348,8 +348,8 @@ module internal Content =
             (* Configuration *)
 
             let configure =
-                function | Configuration.Dynamic supported_ x -> Some (negotiate <!> x <*> !. accepted_)
-                         | Configuration.Static supported_ x -> Some (negotiate x <!> !. accepted_)
+                function | TryGet supported_ (Dynamic x) -> Some (negotiate <!> x <*> !. accepted_)
+                         | TryGet supported_ (Static x) -> Some (negotiate x <!> !. accepted_)
                          | _ -> None
 
     (* Representation
@@ -363,27 +363,12 @@ module internal Content =
 
         (* Optics *)
 
-        let private body_ =
-                Response.body_
-
         let private charset_ =
                 Response.Headers.contentType_
             >-> Option.mapIsomorphism ContentType.mediaType_
             >-> Option.mapLens MediaType.parameters_
             >?> Parameters.parameters_
             >?> Map.value_ "charset"
-
-        let private contentType_ =
-                Response.Headers.contentType_
-
-        let private contentEncoding_ =
-                Response.Headers.contentEncoding_
-
-        let private contentLanguage_ =
-                Response.Headers.contentLanguage_
-
-        let private method_ =
-                Request.method_
 
         (* Specification*)
 
@@ -406,28 +391,29 @@ module internal Content =
         (* Representation *)
 
         let private body =
-                function | data -> !. method_ >>= function | HEAD -> Freya.empty
-                                                           | _ -> body_ %= (fun x -> x.Write (data, 0, data.Length); x)
+                function | data -> !. Request.method_
+                                  >>= function | HEAD -> Freya.empty
+                                               | _ -> Response.body_ %= (fun x -> x.Write (data, 0, data.Length); x)
 
         let private charset =
                 function | Some (Charset charset) -> charset_ .= Some charset
                          | _ -> Freya.empty
 
         let private encodings =
-                function | Some encodings -> contentEncoding_ .= Some (ContentEncoding encodings)
+                function | Some encodings -> Response.Headers.contentEncoding_ .= Some (ContentEncoding encodings)
                          | _ -> Freya.empty
 
         let private languages =
-                function | Some languages -> contentLanguage_ .= Some (ContentLanguage languages)
+                function | Some languages -> Response.Headers.contentLanguage_ .= Some (ContentLanguage languages)
                          | _ -> Freya.empty
 
         let private mediaType =
-                function | Some mediaType -> contentType_ .= Some (ContentType mediaType)
+                function | Some mediaType -> Response.Headers.contentType_ .= Some (ContentType mediaType)
                          | _ -> Freya.empty
 
         let private write (r: Representation) =
                 mediaType r.Description.MediaType
-             *> charset   r.Description.Charset
+             *> charset r.Description.Charset
              *> encodings r.Description.Encodings
              *> languages r.Description.Languages
              *> body r.Data
@@ -450,163 +436,244 @@ module internal Content =
 [<RequireQualifiedAccess>]
 module Operations =
 
+    (* Setters *)
+
     let private allow =
-            Set.toList
-         >> Allow
-         >> Some
-         >> Freya.Optic.set Response.Headers.allow_
+        function | methods -> Response.Headers.allow_ .= Some (Allow (Set.toList methods))
 
     let private date =
-            Date.Date
-         >> Some
-         >> Freya.Optic.set Response.Headers.date_ <| DateTime.UtcNow
+        function | () -> Response.Headers.date_ .= Some (Date.Date (DateTime.UtcNow))
+
+    let private eTag =
+        function | Some entityTag -> Response.Headers.eTag_ .= Some (ETag entityTag)
+                 | _ -> Freya.empty
+
+    let private lastModified =
+        function | Some dateTime -> Response.Headers.lastModified_ .= Some (LastModified dateTime)
+                 | _ -> Freya.empty
 
     let private phrase =
-            Some
-         >> Freya.Optic.set Response.reasonPhrase_
+        function | phrase -> Response.reasonPhrase_ .= Some phrase
 
     let private status =
-            Some
-         >> Freya.Optic.set Response.statusCode_
+        function | status -> Response.statusCode_ .= Some status
 
     (* 2xx *)
 
-    let ok =
+    let ok entityTag modified =
             status 200
          *> phrase "OK"
-         *> date
+         *> eTag entityTag
+         *> lastModified modified
+         *> date ()
+
 
     let options =
             status 200
          *> phrase "Options"
-         *> date
+         *> date ()
 
     let created =
             status 201
          *> phrase "Created"
-         *> date
+         *> date ()
 
     let accepted =
             status 202
          *> phrase "Accepted"
-         *> date
+         *> date ()
 
     let noContent =
             status 204
          *> phrase "No Content"
-         *> date
+         *> date ()
 
     (* 3xx *)
 
     let multipleChoices =
             status 300
          *> phrase "Multiple Choices"
-         *> date
+         *> date ()
 
     let movedPermanently =
             status 301
          *> phrase "Moved Permanently"
-         *> date
+         *> date ()
 
     let found =
             status 302
          *> phrase "Found"
-         *> date
+         *> date ()
 
     let seeOther =
             status 303
          *> phrase "See Other"
-         *> date
+         *> date ()
 
     let notModified =
             status 304
          *> phrase "Not Modified"
-         *> date
+         *> date ()
 
     let temporaryRedirect =
             status 307
          *> phrase "Temporary Redirect"
-         *> date
+         *> date ()
 
     (* 4xx *)
 
     let badRequest =
             status 400
          *> phrase "Bad Request"
-         *> date
+         *> date ()
 
     let unauthorized =
             status 401
          *> phrase "Unauthorized"
-         *> date
+         *> date ()
 
     let forbidden =
             status 403
          *> phrase "Forbidden"
-         *> date
+         *> date ()
 
     let notFound =
             status 404
          *> phrase "Not Found"
-         *> date
+         *> date ()
 
     let methodNotAllowed allowed =
             status 405
          *> phrase "Method Not Allowed"
-         *> date
+         *> date ()
          *> allow allowed
 
     let notAcceptable =
             status 406
          *> phrase "Not Acceptable"
-         *> date
+         *> date ()
 
     let conflict =
             status 409
          *> phrase "Conflict"
-         *> date
+         *> date ()
 
     let gone =
             status 410
          *> phrase "Gone"
-         *> date
+         *> date ()
 
     let preconditionFailed =
             status 412
          *> phrase "Precondition Failed"
-         *> date
+         *> date ()
 
     let uriTooLong =
             status 414
          *> phrase "URI Too Long"
-         *> date
+         *> date ()
 
     let expectationFailed =
             status 417
          *> phrase "Expectation Failed"
-         *> date
+         *> date ()
 
     (* 5xx *)
 
     let internalServerError =
             status 500
          *> phrase "Internal Server Error"
-         *> date
+         *> date ()
 
     let notImplemented =
             status 501
          *> phrase "Not Implemented"
-         *> date
+         *> date ()
 
     let serviceUnavailable =
             status 503
          *> phrase "Service Unavailable"
-         *> date
+         *> date ()
 
     let httpVersionNotSupported =
             status 505
          *> phrase "HTTP Version Not Supported"
-         *> date
+         *> date ()
+
+(* Build
+
+   Functions for working with aspects of model construction given the
+   conventions implied by the HTTP machine build in this context. *)
+
+[<AutoOpen>]
+module internal Build =
+
+    (* Key
+
+       Functions for working with Hephaestus Keys, making defining and using
+       keys slightly more pleasant. *)
+
+    [<RequireQualifiedAccess>]
+    module Key =
+
+        let add x =
+            Optic.map (Lens.ofIsomorphism Key.key_) ((flip List.append) x)
+
+    (* Decision
+
+       Construction functions for building Decisions, either with a basic
+       approach, or a more opinionated approach of drawing a possible
+       decision from the configuration (using a supplied lens). In the
+       opionated case, if the decision is not found in configuration, a
+       static decision will be created from the supplied default value. *)
+
+    [<RequireQualifiedAccess>]
+    module Decision =
+
+        let private append =
+            sprintf "%s-decision"
+
+        let create (key, name) configurator =
+            Specification.Decision.create
+                (Key.add [ append name ] key)
+                (configurator >> Decision.map)
+
+        let fromConfiguration (key, name) o def =
+            Specification.Decision.create
+                (Key.add [ append name ] key)
+                (fun c ->
+                    match Optic.get o c with
+                    | Some d -> Decision.map d
+                    | _ -> Decision.map (Static def))
+
+    (* Terminal
+
+       Construction functions for building Terminals, given a lens to the
+       expected handler in the configuration, and an operation to apply
+       prior to invoking the found handler (or invoking singly, in the case
+       where a handler is not found in the configuration). *)
+
+    [<RequireQualifiedAccess>]
+    module Terminal =
+
+        let private append =
+            sprintf "%s-terminal"
+
+        let create (key, name) o configurator =
+            Specification.Terminal.create
+                (Key.add [ append name ] key)
+                (fun c ->
+                    match Optic.get o c with
+                    | Some h -> configurator c *> Content.Representation.represent c h
+                    | _ -> configurator c)
+
+        let fromConfiguration (key, name) o operation =
+            Specification.Terminal.create
+                (Key.add [ append name ] key)
+                (fun c ->
+                    match Optic.get o c with
+                    | Some h -> operation *> Content.Representation.represent c h
+                    | _ -> operation)
 
 (* Model
 
@@ -620,82 +687,6 @@ module Operations =
 
 [<RequireQualifiedAccess>]
 module Model =
-
-    (* Prelude
-
-       Functions for working with aspects of model construction given the
-       conventions implied by the HTTP machine build in this context. *)
-
-    [<AutoOpen>]
-    module internal Prelude =
-
-        (* Key
-
-           Functions for working with Hephaestus Keys, making defining and using
-           keys slightly more pleasant. The default empty key is included here
-           for consistency at the various levels. *)
-
-        [<RequireQualifiedAccess>]
-        module Key =
-
-            let add x =
-                Optic.map (Lens.ofIsomorphism Key.key_) ((flip List.append) x)
-
-        (* Decision
-
-           Construction functions for building Decisions, either with a basic
-           approach, or a more opinionated approach of drawing a possible
-           decision from the configuration (using a supplied lens). In the
-           opionated case, if the decision is not found in configuration, a
-           static decision will be created from the supplied default value. *)
-
-        [<RequireQualifiedAccess>]
-        module Decision =
-
-            let private append =
-                sprintf "%s-decision"
-
-            let create (key, name) configurator =
-                Specification.Decision.create
-                    (Key.add [ append name ] key)
-                    (configurator >> Decision.map)
-
-            let fromConfiguration (key, name) o def =
-                Specification.Decision.create
-                    (Key.add [ append name ] key)
-                    (fun c ->
-                        match Optic.get o c with
-                        | Some d -> Decision.map d
-                        | _ -> Decision.map (Static def))
-
-        (* Terminal
-
-           Construction functions for building Terminals, given a lens to the
-           expected handler in the configuration, and an operation to apply
-           prior to invoking the found handler (or invoking singly, in the case
-           where a handler is not found in the configuration). *)
-
-        [<RequireQualifiedAccess>]
-        module Terminal =
-
-            let private append =
-                sprintf "%s-terminal"
-
-            let create (key, name) o configurator =
-                Specification.Terminal.create
-                    (Key.add [ append name ] key)
-                    (fun c ->
-                        match Optic.get o c with
-                        | Some h -> configurator c *> Content.Representation.represent c h
-                        | _ -> configurator c)
-
-            let fromConfiguration (key, name) o operation =
-                Specification.Terminal.create
-                    (Key.add [ append name ] key)
-                    (fun c ->
-                        match Optic.get o c with
-                        | Some h -> operation *> Content.Representation.represent c h
-                        | _ -> operation)
 
     (* Key
 
@@ -829,12 +820,6 @@ module Model =
                         assertion_
                     >-> Assertion.decisions_
 
-                let private method_ =
-                        Request.method_
-
-                let private methodsAllowed_ =
-                        Properties.Request.methodsAllowed_
-
                 let serviceAvailable_ =
                         decisions_
                     >-> Decisions.serviceAvailable_
@@ -850,8 +835,8 @@ module Model =
 
                 and internal httpVersionSupported p s =
                     Decision.create (key p, "http-version-supported")
-                        (function | Configuration.Value httpVersionSupported_ x -> x
-                                  | _ -> Dynamic supported) 
+                        (function | TryGet httpVersionSupported_ x -> x
+                                  | _ -> Dynamic supported)
                         (Terminals.httpVersionNotSupported p, methodImplemented p s)
 
                 and private supported =
@@ -861,20 +846,19 @@ module Model =
 
                 and internal methodImplemented p s =
                     Decision.create (key p, "method-implemented")
-                        (function | Configuration.Dynamic methodsAllowed_ x -> Dynamic (knownCustom =<< x)
-                                  | Configuration.Static methodsAllowed_ x -> Dynamic (knownCustom x)
+                        (function | TryGet Properties.Request.methods_ x -> Value.apply knownCustom x
                                   | _ -> Dynamic nonCustom)
                         (Terminals.notImplemented p, s)
 
                 and private knownCustom methodsAllowed =
                         function | Method.Custom x when not (Set.contains (Method.Custom x) methodsAllowed) -> false
                                  | _ -> true
-                    <!> !. method_
+                    <!> !. Request.method_
 
                 and private nonCustom =
                         function | Method.Custom _ -> false
                                  | _ -> true
-                    <!> !. method_
+                    <!> !. Request.method_
 
             (* Export *)
 
@@ -1096,9 +1080,6 @@ module Model =
                         validation_
                     >-> Validation.terminals_
 
-                let private methodsAllowed_ =
-                        Properties.Request.methodsAllowed_
-
                 let expectationFailed_ =
                         terminals_
                     >-> Terminals.expectationFailed_
@@ -1122,9 +1103,9 @@ module Model =
                 let rec internal methodNotAllowed p =
                     Terminal.create (key p, "method-not-allowed")
                         methodNotAllowed_
-                        (function | Configuration.Dynamic methodsAllowed_ x -> Operations.methodNotAllowed =<< x
-                                  | Configuration.Static methodsAllowed_ x -> Operations.methodNotAllowed x
-                                  | _ -> Operations.methodNotAllowed Defaults.methodsAllowed)
+                        (function | Get Properties.Request.methods_ m ->
+                                            Value.liftOptionOrElse Defaults.methods m
+                                        >>= Operations.methodNotAllowed)
 
                 let internal uriTooLong p =
                     Terminal.fromConfiguration (key p, "uri-too-long")
@@ -1143,12 +1124,6 @@ module Model =
                 let private decisions_ =
                         validation_
                     >-> Validation.decisions_
-
-                let private method_ =
-                        Request.method_
-
-                let private methodsAllowed_ =
-                        Properties.Request.methodsAllowed_
 
                 let expectationMet_ =
                         decisions_
@@ -1169,15 +1144,14 @@ module Model =
 
                 and internal methodAllowed p s =
                     Decision.create (key p, "method-allowed")
-                        (function | Configuration.Dynamic methodsAllowed_ x -> Dynamic (allowed =<< x)
-                                  | Configuration.Static methodsAllowed_ x -> Dynamic (allowed x)
-                                  | _ -> Dynamic (allowed Defaults.methodsAllowed))
+                        (function | TryGet Properties.Request.methods_ x -> Value.apply allowed x
+                                  | _ -> Dynamic (allowed Defaults.methods))
                         (Terminals.methodNotAllowed p, uriTooLong p s)
 
                 and private allowed s =
                         function | x when Set.contains x s -> true
                                  | _ -> false
-                    <!> !. method_
+                    <!> !. Request.method_
 
                 and internal uriTooLong p s =
                     Decision.fromConfiguration (key p, "uri-too-long")
@@ -1326,7 +1300,7 @@ module Model =
            become a Static value of false if the method to be matched is not
            an allowed method for this resource. This aids significantly in
            graph optimization, but does imply that a method validation check
-           should be put of the workflow (i.e. that it should correctly be
+           should be part of the workflow (i.e. that it should correctly be
            preceded by a Validation element). *)
 
         [<RequireQualifiedAccess>]
@@ -1343,27 +1317,21 @@ module Model =
             [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
             module Decisions =
 
-                let private methodsAllowed_ =
-                        Properties.Request.methodsAllowed_
-
-                let private method_ =
-                        Request.method_
-
                 let rec internal methodMatches p methods =
                     Decision.create (key p, "method-matches")
-                        (function | Configuration.Static methodsAllowed_ x when disjoint methods x -> Static false
-                                  | Configuration.Value methodsAllowed_ _ -> Dynamic (matches methods)
-                                  | _ when disjoint methods Defaults.methodsAllowed -> Static false
+                        (function | TryGet Properties.Request.methods_ (Static x) when disjoint methods x -> Static false
+                                  | TryGet Properties.Request.methods_ _ -> Dynamic (matches methods)
+                                  | _ when disjoint methods Defaults.methods -> Static false
                                   | _ -> Dynamic (matches methods))
-
-                and private matches s =
-                        function | x when Set.contains x s -> true
-                                 | _ -> false
-                    <!> !. method_
 
                 and private disjoint s =
                         Set.intersect s
                      >> Set.isEmpty
+
+                and private matches s =
+                        function | x when Set.contains x s -> true
+                                 | _ -> false
+                    <!> !. Request.method_
 
             (* Export *)
 
@@ -1477,12 +1445,6 @@ module Model =
             let private preconditions_ =
                 Configuration.element_ Preconditions.empty "preconditions"
 
-            let private eTag_ =
-                  Properties.Resource.eTag_
-
-            let private lastModified_ =
-                  Properties.Resource.lastModified_
-
             (* Shared *)
 
             [<RequireQualifiedAccess>]
@@ -1521,29 +1483,22 @@ module Model =
                 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
                 module Decisions =
 
-                    let private ifMatch_ =
-                            Request.Headers.ifMatch_
-
-                    let private ifUnmodifiedSince_ =
-                            Request.Headers.ifUnmodifiedSince_
-
                     let rec internal hasIfMatch p s =
                         Decision.create (key p, "has-if-match")
-                            (fun _ -> Dynamic (Option.isSome <!> !. ifMatch_))
+                            (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifMatch_))
                             (hasIfUnmodifiedSince p s, ifMatchMatches p s)
 
                     and internal ifMatchMatches p s =
                         Decision.create (key p, "if-match-matches")
-                            (function | Configuration.Dynamic eTag_ x -> Dynamic (matches =<< x)
-                                      | Configuration.Static eTag_ x -> Dynamic (matches x)
+                            (function | TryGet Properties.Resource.entityTag_ x -> Value.apply matches x
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
 
-                    and private matches etag =
-                            function | Some (IfMatch (IfMatchChoice.EntityTags x)) when exists etag x -> true
+                    and private matches entityTag =
+                            function | Some (IfMatch (IfMatchChoice.EntityTags x)) when exists entityTag x -> true
                                      | Some (IfMatch (IfMatchChoice.Any)) -> true
                                      | _ -> false
-                        <!> !. ifMatch_
+                        <!> !. Request.Headers.ifMatch_
 
                     and private exists =
                             function | Strong x -> List.exists (strong x)
@@ -1555,20 +1510,19 @@ module Model =
 
                     and internal hasIfUnmodifiedSince p s =
                         Decision.create (key p, "has-if-unmodified-since")
-                            (fun _ -> Dynamic (Option.isSome <!> !. ifUnmodifiedSince_))
+                            (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifUnmodifiedSince_))
                             (s, ifUnmodifiedSinceMatches p s)
 
                     and internal ifUnmodifiedSinceMatches p s =
                         Decision.create (key p, "if-unmodified-since-matches")
-                            (function | Configuration.Dynamic lastModified_ x -> Dynamic (earlier =<< x)
-                                      | Configuration.Static lastModified_ x -> Dynamic (earlier x)
+                            (function | TryGet Properties.Resource.lastModified_ x -> Value.apply earlier x
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
 
                     and private earlier date =
                             function | Some (IfUnmodifiedSince x) when date <= x -> true
                                      | _ -> false
-                        <!> !. ifUnmodifiedSince_
+                        <!> !. Request.Headers.ifUnmodifiedSince_
 
                 (* Export *)
 
@@ -1634,29 +1588,22 @@ module Model =
                 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
                 module Decisions =
 
-                    let private ifNoneMatch_ =
-                            Request.Headers.ifNoneMatch_
-
-                    let private ifModifiedSince_ =
-                            Request.Headers.ifModifiedSince_
-
                     let rec internal hasIfNoneMatch p s =
                         Decision.create (key p, "has-if-none-match")
-                            (fun _ -> Dynamic (Option.isSome <!> !. ifNoneMatch_))
+                            (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifNoneMatch_))
                             (hasIfModifiedSince p s, ifNoneMatchMatches p s)
 
                     and internal ifNoneMatchMatches p s =
                         Decision.create (key p, "if-none-match-matches")
-                            (function | Configuration.Dynamic eTag_ x -> Dynamic (matches =<< x)
-                                      | Configuration.Static eTag_ x -> Dynamic (matches x)
+                            (function | TryGet Properties.Resource.entityTag_ x -> Value.apply matches x
                                       | _ -> Static true)
                             (Terminals.notModified p, s)
 
-                    and private matches etag =
-                            function | Some (IfNoneMatch (EntityTags x)) when not (exists etag x) -> true
+                    and private matches entityTag =
+                            function | Some (IfNoneMatch (EntityTags x)) when not (exists entityTag x) -> true
                                      | Some (IfNoneMatch (IfNoneMatchChoice.Any)) -> true
                                      | _ -> false
-                        <!> !. ifNoneMatch_
+                        <!> !. Request.Headers.ifNoneMatch_
 
                     and private exists =
                             function | Strong x 
@@ -1668,20 +1615,19 @@ module Model =
 
                     and internal hasIfModifiedSince p s =
                         Decision.create (key p, "has-if-modified-since")
-                            (fun _ -> Dynamic (Option.isSome <!> !. ifModifiedSince_))
+                            (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifModifiedSince_))
                             (s, ifModifiedSinceMatches p s)
 
                     and internal ifModifiedSinceMatches p s =
                         Decision.create (key p, "if-modified-since-matches")
-                            (function | Configuration.Dynamic lastModified_ x -> Dynamic (later =<< x)
-                                      | Configuration.Static lastModified_ x -> Dynamic (later x)
+                            (function | TryGet Properties.Resource.lastModified_ x -> Value.apply later x
                                       | _ -> Static true)
                             (Terminals.notModified p, s)
 
                     and private later date =
                             function | Some (IfModifiedSince x) when date > x -> true
                                      | _ -> false
-                        <!> !. ifModifiedSince_
+                        <!> !. Request.Headers.ifModifiedSince_
 
                 (* Export *)
 
@@ -1704,29 +1650,22 @@ module Model =
                 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
                 module Decisions =
 
-                    let private ifNoneMatch_ =
-                            Request.Headers.ifNoneMatch_
-
-                    let private eTag_ =
-                            Properties.Resource.eTag_
-
                     let rec internal hasIfNoneMatch p s =
                         Decision.create (key p, "has-if-none-match")
-                            (function | _ -> Dynamic (Option.isSome <!> !. ifNoneMatch_))
+                            (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifNoneMatch_))
                             (s, ifNoneMatchMatches p s)
 
                     and internal ifNoneMatchMatches p s =
                         Decision.create (key p, "if-none-match-matches")
-                            (function | Configuration.Dynamic eTag_ x -> Dynamic (matches =<< x)
-                                      | Configuration.Static eTag_ x -> Dynamic (matches x)
+                            (function | TryGet Properties.Resource.entityTag_ x -> Value.apply matches x
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
 
-                    and private matches etag =
-                            function | Some (IfNoneMatch (EntityTags x)) when not (exists etag x) -> true
+                    and private matches entityTag =
+                            function | Some (IfNoneMatch (EntityTags x)) when not (exists entityTag x) -> true
                                      | Some (IfNoneMatch (IfNoneMatchChoice.Any)) -> true
                                      | _ -> false
-                        <!> !. ifNoneMatch_
+                        <!> !. Request.Headers.ifNoneMatch_
 
                     and private exists =
                             function | Strong x 
@@ -1962,7 +1901,7 @@ module Model =
 
                 let rec internal operation p m s =
                     Decision.create (key p, "operation")
-                        (function | Configuration.Value (operationMethod_ m) f -> Dynamic (f)
+                        (function | TryGet (operationMethod_ m) f -> Dynamic (f)
                                   | _ -> Static true)
                         (Terminals.internalServerError p, completed p s)
 
@@ -2069,8 +2008,12 @@ module Model =
                             noContent_ Operations.noContent
 
                     let internal ok p =
-                        Terminal.fromConfiguration (key p, "ok")
-                            ok_ Operations.ok
+                        Terminal.create (key p, "ok")
+                            ok_
+                            (function |   Get Properties.Resource.entityTag_ e
+                                        & Get Properties.Resource.lastModified_ l ->
+                                                Value.liftOption e
+                                            >>= fun e -> Value.liftOption l >>= Operations.ok e)
 
                 (* Decisions *)
 
@@ -2622,7 +2565,7 @@ module Model =
 
             let private endpointTerminal =
                 Terminal.fromConfiguration (key, "end")
-                    ((fun _ -> None), (fun _ c -> c)) Operations.ok
+                    ((fun _ -> None), (fun _ c -> c)) (Operations.ok None None)
 
             (* Decisions *)
 
@@ -3176,9 +3119,9 @@ type HttpMachineBuilder () =
 
 type HttpMachineBuilder with
 
-    [<CustomOperation ("methodsAllowed", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.MethodsAllowed (m, a) =
-        HttpMachine.Set (m, Properties.Request.methodsAllowed_, Infer.methods a)
+    [<CustomOperation ("methods", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.Methods (m, a) =
+        HttpMachine.Set (m, Properties.Request.methods_, Infer.methods a)
 
 (* Representation *)
 
@@ -3204,9 +3147,9 @@ type HttpMachineBuilder with
 
 type HttpMachineBuilder with
 
-    [<CustomOperation ("eTag", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.ETag (m, a) =
-        HttpMachine.Set (m, Properties.Resource.eTag_, Infer.eTag a)
+    [<CustomOperation ("entityTag", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.EntityTag (m, a) =
+        HttpMachine.Set (m, Properties.Resource.entityTag_, Infer.eTag a)
 
     [<CustomOperation ("lastModified", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.LastModified (m, a) =

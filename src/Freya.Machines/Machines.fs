@@ -44,6 +44,29 @@ type Configuration =
     static member empty =
         Configuration (Map.empty)
 
+(* Value
+
+   Functions for applying and lifting (where needed) optional Value<'a> values.
+   Lifting gives a reliable Freya<'a option> or Freya<'a> for a case where a
+   default value is supplied. *)
+
+[<RequireQualifiedAccess>]
+module Value =
+
+    let apply f =
+        function | Dynamic x -> Dynamic (f =<< x)
+                 | Static x -> Dynamic (f x)
+
+    let liftOption =
+        function | Some (Dynamic x) -> Some <!> x
+                 | Some (Static x) -> Freya.init (Some x)
+                 | _ -> Freya.init None
+
+    let liftOptionOrElse def =
+        function | Some (Dynamic x) -> x
+                 | Some (Static x) -> Freya.init x
+                 | _ -> Freya.init def
+
 (* Decisions
 
    Simple mapping from a Freya Decision to a stateful Hephaestus Decision,
@@ -83,21 +106,14 @@ module Configuration =
         >-> Option.mapIsomorphism box_<'a>
         >-> default_ def
 
-    (* Patterns
+(* Patterns
 
-       Commonly useful active recognizers for working with lens based access to
-       data structures, particularly useful here for making access to configuration
-       more concise. *)
+   Commonly useful active recognizers for working with lens based access to
+   data structures, particularly useful here for making access to configuration
+   more concise. *)
 
-    let inline (|Value|_|) lens =
-            Optic.get lens
+let inline (|Get|) optic =
+        Optic.get optic
 
-    let inline (|Dynamic|_|) lens =
-            Optic.get lens
-         >> function | Some (Dynamic x) -> Some x 
-                     | _ -> None
-
-    let inline (|Static|_|) lens =
-            Optic.get lens
-         >> function | Some (Static x) -> Some x
-                     | _ -> None
+let inline (|TryGet|_|) optic =
+        Optic.get optic
