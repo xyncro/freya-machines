@@ -46,26 +46,43 @@ type Configuration =
 
 (* Value
 
-   Functions for applying and lifting (where needed) optional Value<'a> values.
-   Lifting gives a reliable Freya<'a option> or Freya<'a> for a case where a
-   default value is supplied. *)
+   Functions for working with Freya values, binding a Freya value (function)
+   inside a Value, mapping the dynamic or static Value function to the Freya
+   function. *)
 
 [<RequireQualifiedAccess>]
 module Value =
 
-    let apply f =
-        function | Dynamic x -> Dynamic (f =<< x)
-                 | Static x -> Dynamic (f x)
+    [<RequireQualifiedAccess>]
+    module Freya =
 
-    let liftOption =
-        function | Some (Dynamic x) -> Some <!> x
-                 | Some (Static x) -> Freya.init (Some x)
-                 | _ -> Freya.init None
+        let bind f =
+            function | Dynamic x -> Dynamic (f =<< x)
+                     | Static x -> Dynamic (f x)
 
-    let liftOptionOrElse def =
-        function | Some (Dynamic x) -> x
-                 | Some (Static x) -> Freya.init x
-                 | _ -> Freya.init def
+(* Freya
+
+   Functions for working with Values, applying them to Freya functions, and
+   lifting the contained values to Freya functions where required (for both
+   simple and optional values). *)
+
+[<RequireQualifiedAccess>]
+module Freya =
+
+    [<RequireQualifiedAccess>]
+    module Value =
+
+        let apply f =
+            function | Dynamic x -> f =<< x
+                     | Static x -> f x
+
+        let lift =
+            function | Dynamic x -> x
+                     | Static x -> Freya.init x
+
+        let liftOption =
+            function | Some v -> Some <!> lift v
+                     | _ -> Freya.init None
 
 (* Decisions
 
@@ -113,7 +130,7 @@ module Configuration =
    more concise. *)
 
 let inline (|Get|) optic =
-        Optic.get optic
+    Optic.get optic
 
 let inline (|TryGet|_|) optic =
-        Optic.get optic
+    Optic.get optic

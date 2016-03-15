@@ -278,7 +278,7 @@ module Validation =
 
         let dynamicMachine =
             freyaMachine {
-                expectationMet ((fun x -> x <> "/unmet") <!> !. Request.path_) }
+                expectationMet ((<>) "/unmet" <!> !. Request.path_) }
 
         verify setup dynamicMachine [
             Response.statusCode_ => Some 417
@@ -682,15 +682,18 @@ module Preconditions =
         [<Fact>]
         let ``machine handles if-modified-since correctly`` () =
 
+            let baseDate =
+                DateTime (2000, 1, 1)
+
             let newSetup =
-                Request.Headers.ifModifiedSince_ .= Some (IfModifiedSince (DateTime.UtcNow))
+                Request.Headers.ifModifiedSince_ .= Some (IfModifiedSince (baseDate))
 
             let oldSetup =
-                Request.Headers.ifModifiedSince_ .= Some (IfModifiedSince (DateTime.UtcNow.AddDays (-2.)))
+                Request.Headers.ifModifiedSince_ .= Some (IfModifiedSince (baseDate.AddDays (-2.)))
 
             let machine =
                 freyaMachine {
-                    lastModified (DateTime.UtcNow.AddDays (-1.)) }
+                    lastModified (baseDate.AddDays (-1.)) }
 
             verify newSetup machine [
                 Response.statusCode_ => Some 304
@@ -698,7 +701,8 @@ module Preconditions =
 
             verify oldSetup machine [
                 Response.statusCode_ => Some 200
-                Response.reasonPhrase_ => Some "OK" ]
+                Response.reasonPhrase_ => Some "OK"
+                Response.Headers.lastModified_ => Some (LastModified (baseDate.AddDays (-1.))) ]
 
     (* Unsafe *)
 
@@ -728,7 +732,8 @@ module Preconditions =
 
             verify anySetup machine [
                 Response.statusCode_ => Some 200
-                Response.reasonPhrase_ => Some "OK" ]
+                Response.reasonPhrase_ => Some "OK"
+                Response.Headers.eTag_ => Some (ETag (Strong "foo")) ]
 
             verify matchedSetup machine [
                 Response.statusCode_ => Some 412
@@ -736,4 +741,5 @@ module Preconditions =
 
             verify unmatchedSetup machine [
                 Response.statusCode_ => Some 200
-                Response.reasonPhrase_ => Some "OK" ]
+                Response.reasonPhrase_ => Some "OK"
+                Response.Headers.eTag_ => Some (ETag (Strong "foo")) ]

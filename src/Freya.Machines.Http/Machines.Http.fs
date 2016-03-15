@@ -249,14 +249,6 @@ module internal Content =
         [<RequireQualifiedAccess>]
         module Charset =
 
-            (* Optics *)
-
-            let accepted_ =
-                Request.Headers.acceptCharset_
-
-            let supported_ =
-                Properties.Representation.charsetsSupported_
-
             (* Negotiation *)
 
             let negotiate supported accepted =
@@ -266,23 +258,19 @@ module internal Content =
 
             (* Configuration *)
 
-            let configure =
-                function | TryGet supported_ (Dynamic x) -> Some (negotiate <!> x <*> !. accepted_)
-                         | TryGet supported_ (Static x) -> Some (negotiate x <!> !. accepted_)
+            let rec configure =
+                function | TryGet Properties.Representation.charsetsSupported_ x -> Some (apply x)
                          | _ -> None
+
+            and private apply x =
+                    negotiate
+                <!> Freya.Value.lift x
+                <*> !. Request.Headers.acceptCharset_
 
         (* ContentCoding *)
 
         [<RequireQualifiedAccess>]
         module ContentCoding =
-
-            (* Optics *)
-
-            let accepted_ =
-                Request.Headers.acceptEncoding_
-
-            let supported_ =
-                Properties.Representation.contentCodingsSupported_
 
             (* Negotiation *)
 
@@ -293,23 +281,19 @@ module internal Content =
 
             (* Configuration *)
 
-            let configure =
-                function | TryGet supported_ (Dynamic x) -> Some (negotiate <!> x <*> !. accepted_)
-                         | TryGet supported_ (Static x) -> Some (negotiate x <!> !. accepted_)
+            let rec configure =
+                function | TryGet Properties.Representation.contentCodingsSupported_ x -> Some (apply x)
                          | _ -> None
+
+            and private apply x =
+                    negotiate
+                <!> Freya.Value.lift x
+                <*> !. Request.Headers.acceptEncoding_
 
         (* Language *)
 
         [<RequireQualifiedAccess>]
         module Language =
-
-            (* Optics *)
-
-            let accepted_ =
-                Request.Headers.acceptLanguage_
-
-            let supported_ =
-                Properties.Representation.languagesSupported_
 
             (* Negotiation *)
 
@@ -320,23 +304,19 @@ module internal Content =
 
             (* Configuration *)
 
-            let configure =
-                function | TryGet supported_ (Dynamic x) -> Some (negotiate <!> x <*> !. accepted_)
-                         | TryGet supported_ (Static x) -> Some (negotiate x <!> !. accepted_)
+            let rec configure =
+                function | TryGet Properties.Representation.languagesSupported_ x -> Some (apply x)
                          | _ -> None
+
+            and private apply x =
+                    negotiate
+                <!> Freya.Value.lift x
+                <*> !. Request.Headers.acceptLanguage_
 
         (* MediaType *)
 
         [<RequireQualifiedAccess>]
         module MediaType =
-
-            (* Optics *)
-
-            let accepted_ =
-                Request.Headers.accept_
-
-            let supported_ =
-                Properties.Representation.mediaTypesSupported_
 
             (* Negotiation *)
 
@@ -347,10 +327,14 @@ module internal Content =
 
             (* Configuration *)
 
-            let configure =
-                function | TryGet supported_ (Dynamic x) -> Some (negotiate <!> x <*> !. accepted_)
-                         | TryGet supported_ (Static x) -> Some (negotiate x <!> !. accepted_)
+            let rec configure =
+                function | TryGet Properties.Representation.mediaTypesSupported_ x-> Some (apply x)
                          | _ -> None
+
+            and private apply x =
+                    negotiate
+                <!> Freya.Value.lift x
+                <*> !. Request.Headers.accept_
 
     (* Representation
 
@@ -846,7 +830,7 @@ module Model =
 
                 and internal methodImplemented p s =
                     Decision.create (key p, "method-implemented")
-                        (function | TryGet Properties.Request.methods_ x -> Value.apply knownCustom x
+                        (function | TryGet Properties.Request.methods_ x -> Value.Freya.bind knownCustom x
                                   | _ -> Dynamic nonCustom)
                         (Terminals.notImplemented p, s)
 
@@ -1100,12 +1084,11 @@ module Model =
                     Terminal.fromConfiguration (key p, "expectation-failed")
                         expectationFailed_ Operations.expectationFailed
 
-                let rec internal methodNotAllowed p =
+                let internal methodNotAllowed p =
                     Terminal.create (key p, "method-not-allowed")
                         methodNotAllowed_
-                        (function | Get Properties.Request.methods_ m ->
-                                            Value.liftOptionOrElse Defaults.methods m
-                                        >>= Operations.methodNotAllowed)
+                        (function | TryGet Properties.Request.methods_ m -> Freya.Value.apply Operations.methodNotAllowed m
+                                  | _ -> Operations.methodNotAllowed Defaults.methods)
 
                 let internal uriTooLong p =
                     Terminal.fromConfiguration (key p, "uri-too-long")
@@ -1144,7 +1127,7 @@ module Model =
 
                 and internal methodAllowed p s =
                     Decision.create (key p, "method-allowed")
-                        (function | TryGet Properties.Request.methods_ x -> Value.apply allowed x
+                        (function | TryGet Properties.Request.methods_ x -> Value.Freya.bind allowed x
                                   | _ -> Dynamic (allowed Defaults.methods))
                         (Terminals.methodNotAllowed p, uriTooLong p s)
 
@@ -1236,7 +1219,7 @@ module Model =
 
                 let rec internal hasAccept p s =
                     Decision.create (key p, "has-accept")
-                        (fun _ -> Dynamic (Option.isSome <!> !. Content.Negotiation.MediaType.accepted_))
+                        (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.accept_))
                         (hasAcceptLanguage p s, acceptMatches p s)
 
                 and internal acceptMatches p s =
@@ -1248,7 +1231,7 @@ module Model =
 
                 and internal hasAcceptLanguage p s =
                     Decision.create (key p, "has-accept-language")
-                        (fun _ -> Dynamic (Option.isSome <!> !. Content.Negotiation.Language.accepted_))
+                        (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.acceptLanguage_))
                         (hasAcceptCharset p s, acceptLanguageMatches p s)
 
                 and internal acceptLanguageMatches p s =
@@ -1260,7 +1243,7 @@ module Model =
 
                 and internal hasAcceptCharset p s =
                     Decision.create (key p, "has-accept-charset")
-                        (fun _ -> Dynamic (Option.isSome <!> !. Content.Negotiation.Charset.accepted_))
+                        (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.acceptCharset_))
                         (hasAcceptEncoding p s, acceptCharsetMatches p s)
 
                 and internal acceptCharsetMatches p s =
@@ -1272,7 +1255,7 @@ module Model =
 
                 and internal hasAcceptEncoding p s =
                     Decision.create (key p, "has-accept-encoding")
-                        (fun _ -> Dynamic (Option.isSome <!> !. Content.Negotiation.ContentCoding.accepted_))
+                        (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.acceptEncoding_))
                         (s, acceptEncodingMatches p s)
 
                 and internal acceptEncodingMatches p s =
@@ -1490,7 +1473,7 @@ module Model =
 
                     and internal ifMatchMatches p s =
                         Decision.create (key p, "if-match-matches")
-                            (function | TryGet Properties.Resource.entityTag_ x -> Value.apply matches x
+                            (function | TryGet Properties.Resource.entityTag_ x -> Value.Freya.bind matches x
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
 
@@ -1515,7 +1498,7 @@ module Model =
 
                     and internal ifUnmodifiedSinceMatches p s =
                         Decision.create (key p, "if-unmodified-since-matches")
-                            (function | TryGet Properties.Resource.lastModified_ x -> Value.apply earlier x
+                            (function | TryGet Properties.Resource.lastModified_ x -> Value.Freya.bind earlier x
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
 
@@ -1595,7 +1578,7 @@ module Model =
 
                     and internal ifNoneMatchMatches p s =
                         Decision.create (key p, "if-none-match-matches")
-                            (function | TryGet Properties.Resource.entityTag_ x -> Value.apply matches x
+                            (function | TryGet Properties.Resource.entityTag_ x -> Value.Freya.bind matches x
                                       | _ -> Static true)
                             (Terminals.notModified p, s)
 
@@ -1620,7 +1603,7 @@ module Model =
 
                     and internal ifModifiedSinceMatches p s =
                         Decision.create (key p, "if-modified-since-matches")
-                            (function | TryGet Properties.Resource.lastModified_ x -> Value.apply later x
+                            (function | TryGet Properties.Resource.lastModified_ x -> Value.Freya.bind later x
                                       | _ -> Static true)
                             (Terminals.notModified p, s)
 
@@ -1657,7 +1640,7 @@ module Model =
 
                     and internal ifNoneMatchMatches p s =
                         Decision.create (key p, "if-none-match-matches")
-                            (function | TryGet Properties.Resource.entityTag_ x -> Value.apply matches x
+                            (function | TryGet Properties.Resource.entityTag_ x -> Value.Freya.bind matches x
                                       | _ -> Static true)
                             (Shared.Terminals.preconditionFailed p, s)
 
@@ -2012,8 +1995,8 @@ module Model =
                             ok_
                             (function |   Get Properties.Resource.entityTag_ e
                                         & Get Properties.Resource.lastModified_ l ->
-                                                Value.liftOption e
-                                            >>= fun e -> Value.liftOption l >>= Operations.ok e)
+                                                Freya.Value.liftOption e
+                                            >>= fun e -> Freya.Value.liftOption l >>= Operations.ok e)
 
                 (* Decisions *)
 
