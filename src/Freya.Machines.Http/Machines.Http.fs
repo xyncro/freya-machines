@@ -2931,7 +2931,7 @@ module Infer =
 
     (* ETag *)
 
-    module ETag =
+    module EntityTag =
 
         type Defaults =
             | Defaults
@@ -2948,8 +2948,8 @@ module Infer =
         let inline infer (x: 'a) =
             defaults (x, Defaults)
 
-    let inline eTag v =
-        ETag.infer v
+    let inline entityTag v =
+        EntityTag.infer v
 
     (* LanguageTag list *)
 
@@ -3132,7 +3132,7 @@ type HttpMachineBuilder with
 
     [<CustomOperation ("entityTag", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.EntityTag (m, a) =
-        HttpMachine.Set (m, Properties.Resource.entityTag_, Infer.eTag a)
+        HttpMachine.Set (m, Properties.Resource.entityTag_, Infer.entityTag a)
 
     [<CustomOperation ("lastModified", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.LastModified (m, a) =

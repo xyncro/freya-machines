@@ -73,7 +73,7 @@ module Defaults =
 
 (* Assertion
 
-   Verification that the Assertion block behaves as expected given suitable
+   Verification that the Assertion element behaves as expected given suitable
    input. *)
 
 module Assertion =
@@ -180,7 +180,7 @@ module Assertion =
 
 (* Permission
 
-   Verification that the Permission block behaves as expected given suitable
+   Verification that the Permission element behaves as expected given suitable
    input. *)
 
 module Permission =
@@ -251,7 +251,7 @@ module Permission =
 
 (* Validation
 
-   Verification that the Validation block behaves as expected given suitable
+   Verification that the Validation element behaves as expected given suitable
    input. *)
 
 module Validation =
@@ -370,7 +370,7 @@ module Validation =
 
 (* Negotiation
 
-   Verification that the Negotiation block behaves as expected given suitable
+   Verification that the Negotiation element behaves as expected given suitable
    input. The neogtiation block may return 412 for any failure to negotiate. *)
 
 module Negotiation =
@@ -523,7 +523,7 @@ module Negotiation =
 
 (* Existence
 
-   Verification that the Existence block behaves as expected given suitable
+   Verification that the Existence element behaves as expected given suitable
    input. *)
 
 module Existence =
@@ -562,7 +562,7 @@ module Existence =
 
 (* Preconditions
 
-   Verification that the various preconditions blocks behave as expected. *)
+   Verification that the various preconditions elements behave as expected. *)
 
 module Preconditions =
 
@@ -743,3 +743,48 @@ module Preconditions =
                 Response.statusCode_ => Some 200
                 Response.reasonPhrase_ => Some "OK"
                 Response.Headers.eTag_ => Some (ETag (Strong "foo")) ]
+
+(* Conflict
+
+   Verification that the Conflict element behaves as expected given suitable
+   input. *)
+
+module Conflict =
+
+    (* Conflict *)
+
+    [<Fact>]
+    let ``machine handles conflict correctly`` () =
+
+        let nonConflictSetup =
+                (Request.method_ .= POST)
+
+        let conflictSetup =
+                (Request.path_ .= "/conflict")
+             *> (Request.method_ .= POST)
+
+        (* Static *)
+
+        let staticMachine =
+            freyaMachine {
+                conflict true
+                methods POST }
+
+        verify nonConflictSetup staticMachine [
+            Response.statusCode_ => Some 409
+            Response.reasonPhrase_ => Some "Conflict" ]
+
+        (* Dynamic *)
+
+        let dynamicMachine =
+            freyaMachine {
+                conflict ((=) "/conflict" <!> !. Request.path_)
+                methods POST }
+
+        verify nonConflictSetup dynamicMachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
+
+        verify conflictSetup dynamicMachine [
+            Response.statusCode_ => Some 409
+            Response.reasonPhrase_ => Some "Conflict" ]
