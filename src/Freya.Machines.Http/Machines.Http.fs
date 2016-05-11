@@ -3316,7 +3316,17 @@ type HttpMachineBuilder with
 
 type HttpMachineBuilder with
 
+    (* Decisions *)
+
+    [<CustomOperation ("noContent", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.NoContent (m, decision) =
+        HttpMachine.Set (m, Model.Elements.Responses.Common.Decisions.noContent_, Infer.decision decision)
+
     (* Terminals *)
+
+    [<CustomOperation ("handleNoContent", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleNoContent (m, handler) =
+        HttpMachine.Set (m, Model.Elements.Responses.Common.Terminals.noContent_, Infer.handler handler)
 
     [<CustomOperation ("handleOk", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.HandleOk (m, handler) =

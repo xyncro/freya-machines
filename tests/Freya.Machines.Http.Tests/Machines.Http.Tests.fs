@@ -17,6 +17,11 @@ open Xunit
    inputs, designed to give test cases aligning to the semantics of the HTTP
    specifications where appropriate. *)
 
+let defaultHandler message =
+    freya {
+        do! Freya.Optic.set (State.value_ "test") (Some message)
+        return Representation.empty }
+
 let defaultSetup =
     Freya.empty
 
@@ -87,11 +92,13 @@ module Assertion =
 
         let staticMachine =
             freyaMachine {
-                serviceAvailable false }
+                serviceAvailable false
+                handleServiceUnavailable (defaultHandler "Service Unavailable") }
 
         verify defaultSetup staticMachine [
             Response.statusCode_ => Some 503
-            Response.reasonPhrase_ => Some "Service Unavailable" ]
+            Response.reasonPhrase_ => Some "Service Unavailable"
+            State.value_ "test" => Some "Service Unavailable" ]
 
         (* Dynamic *)
 
@@ -100,15 +107,19 @@ module Assertion =
 
         let dynamicMachine =
             freyaMachine {
-                serviceAvailable ((=) "/available" <!> !. Request.path_) }
+                serviceAvailable ((=) "/available" <!> !. Request.path_)
+                handleOk (defaultHandler "OK")
+                handleServiceUnavailable (defaultHandler "Service Unavailable") }
 
         verify setup dynamicMachine [
             Response.statusCode_ => Some 200
-            Response.reasonPhrase_ => Some "OK" ]
+            Response.reasonPhrase_ => Some "OK"
+            State.value_ "test" => Some "OK" ]
 
         verify defaultSetup dynamicMachine [
             Response.statusCode_ => Some 503
-            Response.reasonPhrase_ => Some "Service Unavailable" ]
+            Response.reasonPhrase_ => Some "Service Unavailable"
+            State.value_ "test" => Some "Service Unavailable" ]
 
     (* Http Version Supported *)
 
@@ -119,11 +130,13 @@ module Assertion =
 
         let staticMachine =
             freyaMachine {
-                httpVersionSupported false }
+                httpVersionSupported false
+                handleNotSupported (defaultHandler "HTTP Version Not Supported") }
 
         verify defaultSetup staticMachine [
             Response.statusCode_ => Some 505
-            Response.reasonPhrase_ => Some "HTTP Version Not Supported" ]
+            Response.reasonPhrase_ => Some "HTTP Version Not Supported"
+            State.value_ "test" => Some "HTTP Version Not Supported" ]
 
         (* Default *)
 
@@ -154,16 +167,21 @@ module Assertion =
         let notAllowedSetup =
             Request.method_ .= Method.Custom "BAR"
 
+        // TODO: How should we handle custom methods!
+
         let machine =
             freyaMachine {
-                methods [ Method.Custom "FOO" ] }
+                methods [ Method.Custom "FOO" ]
+                handleNotImplemented (defaultHandler "Not Implemented") }
 
         verify allowedSetup machine [
-            Response.statusCode_ => Some 200 ]
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK" ]
 
         verify notAllowedSetup machine [
             Response.statusCode_ => Some 501
-            Response.reasonPhrase_ => Some "Not Implemented" ]
+            Response.reasonPhrase_ => Some "Not Implemented"
+            State.value_ "test" => Some "Not Implemented" ]
 
         (* Default *)
 
@@ -562,7 +580,7 @@ module Existence =
 
 (* Preconditions
 
-   Verification that the various preconditions elements behave as expected. *)
+   Verification that the various Preconditions elements behave as expected. *)
 
 module Preconditions =
 
@@ -869,3 +887,43 @@ module Operation =
         verify setup uncompletedMachine [
             Response.statusCode_ => Some 202
             Response.reasonPhrase_ => Some "Accepted" ]
+
+(* Responses
+
+   Verification that the various Responses elements behave as expected. *)
+
+module Responses =
+
+    module Common =
+
+        (* No Content *)
+
+        [<Fact>]
+        let ``machine handles nocontent correctly`` () =
+
+            (* Static *)
+
+            let staticMachine =
+                freyaMachine {
+                    noContent true }
+
+            verify defaultSetup staticMachine [
+                Response.statusCode_ => Some 204
+                Response.reasonPhrase_ => Some "No Content" ]
+
+            (* Dynamic *)
+
+            let setup =
+                Request.path_ .= "/nocontent"
+
+            let dynamicMachine =
+                freyaMachine {
+                    noContent ((=) "/nocontent" <!> !. Request.path_) }
+
+            verify defaultSetup dynamicMachine [
+                Response.statusCode_ => Some 200
+                Response.reasonPhrase_ => Some "OK" ]
+
+            verify setup dynamicMachine [
+                Response.statusCode_ => Some 204
+                Response.reasonPhrase_ => Some "No Content" ]
