@@ -1,6 +1,6 @@
 ﻿open System
 
-// Freya (and Arachne)
+// Freya (with Arachne)
 
 open Arachne.Http
 open Arachne.Language
@@ -20,7 +20,7 @@ let ok =
 
 let machine =
     freyaMachine {
-        exists false }
+        handleOk ok }
 
 let app =
     OwinAppFunc.ofFreya machine

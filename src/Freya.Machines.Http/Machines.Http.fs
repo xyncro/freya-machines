@@ -2759,8 +2759,10 @@ module internal Machine =
     [<RequireQualifiedAccess>]
     module Execution =
 
-        let execute machine =
-            Machine.execute machine
+        let execute machine state =
+            async.Bind (Machine.executeLogged machine state,
+                fun ((v, l), s) ->
+                    async.Return (v, s))
 
     (* Reification *)
 
