@@ -3083,7 +3083,7 @@ type HttpMachine =
 
 type HttpMachineBuilder () =
 
-    inherit Configuration.Builder<HttpMachine>
+    inherit ConfigurationBuilder<HttpMachine>
         { Init = HttpMachine.Init
           Bind = HttpMachine.Bind }
 

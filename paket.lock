@@ -25,16 +25,16 @@ NUGET
       Hekate (>= 3.2 < 4.0)
   remote: https://www.myget.org/F/freya/api/v2
   specs:
-    Freya.Core (4.0.0-b006)
+    Freya.Core (4.0.0-b010)
       Aether (>= 8.1 < 9.0)
-    Freya.Optics (4.0.0-b001)
+    Freya.Optics (4.0.0-b004)
       Aether (>= 8.1 < 9.0)
-    Freya.Optics.Http (4.0.0-b001)
+    Freya.Optics.Http (4.0.0-b004)
       Aether (>= 8.1 < 9.0)
       Arachne.Http (>= 3.0.0-b < 3.1)
       Arachne.Uri (>= 3.0.0-b < 3.1)
       Freya.Core (>= 4.0.0-b < 4.1)
-      Freya.Optics (>= 4.0.0-b001)
+      Freya.Optics (>= 4.0.0-b004)
 
 GROUP Build
 NUGET
@@ -83,9 +83,9 @@ NUGET
     xunit.runner.console (2.1)
   remote: https://www.myget.org/F/freya/api/v2
   specs:
-    Freya.Core (4.0.0-b006)
+    Freya.Core (4.0.0-b010)
       Aether (>= 8.1 < 9.0)
-    Freya.Testing (4.0.0-b005)
+    Freya.Testing (4.0.0-b006)
       Aether (>= 8.1 < 9.0)
       Freya.Core (>= 4.0.0-b < 4.1)
       Unquote
