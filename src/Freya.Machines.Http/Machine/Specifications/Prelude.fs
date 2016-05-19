@@ -1,11 +1,12 @@
-﻿namespace Freya.Machines.Http.Implementation.Specifications
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Aether
 open Aether.Operators
+open Arachne.Http
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
-open Freya.Machines.Http.Implementation.Configuration
+open Freya.Machines.Http.Machine.Configuration
 open Freya.Machines.Http.Semantics
 open Hephaestus
 
@@ -15,6 +16,41 @@ open Hephaestus
 
 type Handler =
     Acceptable -> Freya<Representation>
+
+(* Aliases *)
+
+[<AutoOpen>]
+module internal Aliases =
+
+    (* Monadic *)
+
+    let apply =
+        Freya.Value.apply
+
+    let bind =
+        Value.Freya.bind
+
+    let lift =
+        Freya.Value.lift
+
+    let map =
+        Value.Freya.map
+
+    (* Content *)
+
+    let negotiable =
+        Negotiation.negotiable
+
+(* Defaults *)
+
+[<RequireQualifiedAccess>]
+module internal Defaults =
+
+    let methods =
+        set [
+            GET
+            HEAD
+            OPTIONS ]
 
 (* Key
 
@@ -58,6 +94,25 @@ module internal Resource =
         <*> mediaTypes c
         <*> languages c
 
+(* Decision
+
+    Construction functions for building Decisions, either with a basic
+    approach, or a more opinionated approach of drawing a possible
+    decision from the configuration (using a supplied lens). In the
+    opionated case, if the decision is not found in configuration, a
+    static decision will be created from the supplied default value. *)
+
+[<RequireQualifiedAccess>]
+module internal Decision =
+
+    let private suffix =
+        sprintf "%s-decision"
+
+    let create (key, name) decision =
+        Specification.Decision.create
+            (Key.add [ suffix name ] key)
+            (decision >> Decision.map)
+
 (* Terminal
 
    Construction functions for building Terminals, given a lens to the expected
@@ -68,13 +123,17 @@ module internal Resource =
 [<RequireQualifiedAccess>]
 module internal Terminal =
 
-    let private append =
+    let private suffix =
         sprintf "%s-terminal"
 
-    let create (key, name) handler operation =
+    let create (key, name) operation handler =
         Specification.Terminal.create
-            (Key.add [ append name ] key)
+            (Key.add [ suffix name ] key)
             (fun configuration ->
+
+                let operation =
+                    operation configuration
+
                 let handler =
                     match handler configuration with
                     | Some handler -> Representation.represent (Resource.available configuration) handler

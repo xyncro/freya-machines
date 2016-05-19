@@ -49,6 +49,10 @@ module Value =
             function | Dynamic x -> Dynamic (f =<< x)
                      | Static x -> Dynamic (f x)
 
+        let map f =
+            function | Dynamic x -> Dynamic (f <!> x)
+                     | Static x -> Static (f x)
+
 (* Freya
 
    Functions for working with Values, applying them to Freya functions, and

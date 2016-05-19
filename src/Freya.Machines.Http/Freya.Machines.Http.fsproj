@@ -60,9 +60,18 @@
     <Compile Include="Semantics\Negotiation.fs" />
     <Compile Include="Semantics\Representation.fs" />
     <Compile Include="Semantics\Operation.fs" />
-    <Compile Include="Implementation\Configuration\Properties.fs" />
-    <Compile Include="Implementation\Specifications\Prelude.fs" />
-    <Compile Include="Implementation\Specifications\Assertion.fs" />
+    <Compile Include="Machine\Configuration\Properties.fs" />
+    <Compile Include="Machine\Specifications\Prelude.fs" />
+    <Compile Include="Machine\Specifications\Assertions.fs" />
+    <Compile Include="Machine\Specifications\Permissions.fs" />
+    <Compile Include="Machine\Specifications\Validations.fs" />
+    <Compile Include="Machine\Specifications\Negotiations.fs" />
+    <Compile Include="Machine\Specifications\Method.fs" />
+    <Compile Include="Machine\Specifications\Existence.fs" />
+    <Compile Include="Machine\Specifications\Preconditions.fs" />
+    <Compile Include="Machine\Components\Core.fs" />
+    <Compile Include="Machine\Components\GetOrHead.fs" />
+    <Compile Include="Machine\Models\Http.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
