@@ -5,8 +5,8 @@ open Aether.Operators
 open Arachne.Http
 open Freya.Core.Operators
 open Freya.Machines
+open Freya.Machines.Http
 open Freya.Machines.Http.Machine.Configuration
-open Freya.Machines.Http.Semantics
 open Freya.Optics.Http
 
 (* Assertions

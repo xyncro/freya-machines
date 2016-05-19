@@ -7,47 +7,7 @@ open Arachne.Language
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
-open Freya.Machines.Http.Semantics
-
-(* Types
-
-   The base type of an HTTP Machine, representing the user facing type defined
-   through the use of the following computation expression.
-
-   The function itself is defined as a single case discriminated union so that
-   it can have static members, allowing it to take part in the static inference
-   approaches of the basic Freya function, and Pipelines (allowing the pseudo
-   typeclass approach which Freya uses in various places for concise APIs). *)
-
-type HttpMachine =
-    | HttpMachine of (Configuration -> unit * Configuration)
-
-(* HttpMachine *)
-
-[<RequireQualifiedAccess>]
-[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
-module HttpMachine =
-
-    (* Common *)
-
-    let init _ : HttpMachine =
-        HttpMachine (fun c ->
-            (), c)
-
-    let bind (m: HttpMachine, f: unit -> HttpMachine) : HttpMachine =
-        HttpMachine (fun c ->
-            let (HttpMachine m) = m
-            let (HttpMachine f) = f ()
-
-            (), snd (f (snd (m c))))
-
-    (* Custom *)
-
-    let inline set (m: HttpMachine, o, v) =
-        HttpMachine (fun c ->
-            let (HttpMachine m) = m
-
-            (), Optic.set o (Some v) (snd (m c)))
+open Freya.Machines.Http
 
 (* Inference
 
@@ -299,32 +259,6 @@ module Methods =
 
         let inline defaults (a: ^a, _: ^b) =
             ((^a or ^b) : (static member Methods: ^a -> Value<Set<Method>>) a)
-
-        let inline infer (x: 'a) =
-            defaults (x, Defaults)
-
-    let inline infer v =
-        Inference.infer v
-
-[<RequireQualifiedAccess>]
-module Operation =
-
-    (* Inference *)
-
-    [<RequireQualifiedAccess>]
-    module Inference =
-
-        type Defaults =
-            | Defaults
-
-            static member Operation (x: Freya<bool>) =
-                x
-
-            static member Operation (x: Freya<unit>) =
-                Freya.map (x, fun _ -> true)
-
-        let inline defaults (a: ^a, _: ^b) =
-            ((^a or ^b) : (static member Operation: ^a -> Freya<bool>) a)
 
         let inline infer (x: 'a) =
             defaults (x, Defaults)

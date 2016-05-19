@@ -3,8 +3,8 @@
 #nowarn "46"
 
 open Freya.Machines
+open Freya.Machines.Http
 open Freya.Machines.Http.Machine.Specifications
-open Freya.Machines.Http.Semantics
 open Hephaestus
 
 (* Core *)

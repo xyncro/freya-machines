@@ -1,4 +1,4 @@
-﻿namespace Freya.Machines.Http.Semantics
+﻿namespace Freya.Machines.Http
 
 open Arachne.Http
 open Freya.Core

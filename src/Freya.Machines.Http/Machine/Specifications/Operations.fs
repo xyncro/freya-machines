@@ -5,7 +5,7 @@ open Aether.Operators
 open Arachne.Http
 open Freya.Core
 open Freya.Machines
-open Freya.Machines.Http.Semantics
+open Freya.Machines.Http
 
 (* Operation
 

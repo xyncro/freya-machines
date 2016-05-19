@@ -1,4 +1,4 @@
-﻿namespace Freya.Machines.Http.Semantics
+﻿namespace Freya.Machines.Http
 
 open System
 open Arachne.Http
@@ -18,6 +18,29 @@ open Freya.Optics.Http
 
 [<RequireQualifiedAccess>]
 module Operation =
+
+    (* Inference *)
+
+    [<RequireQualifiedAccess>]
+    module Inference =
+
+        type Defaults =
+            | Defaults
+
+            static member Operation (x: Freya<bool>) =
+                x
+
+            static member Operation (x: Freya<unit>) =
+                Freya.map (x, fun _ -> true)
+
+        let inline defaults (a: ^a, _: ^b) =
+            ((^a or ^b) : (static member Operation: ^a -> Freya<bool>) a)
+
+        let inline infer (x: 'a) =
+            defaults (x, Defaults)
+
+    let inline infer v =
+        Inference.infer v
 
     (* Setters *)
 
