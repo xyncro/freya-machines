@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="Program.fs" />
     <None Include="App.config" />
+    <Compile Include="Machines.Http.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Freya.Machines.Http\Freya.Machines.Http.fsproj">

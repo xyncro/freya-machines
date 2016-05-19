@@ -57,7 +57,9 @@
   </Target>
   -->
   <ItemGroup>
-    <Compile Include="Machines.fs" />
+    <Compile Include="Prelude.fs" />
+    <Compile Include="Configuration.fs" />
+    <Compile Include="Values.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
