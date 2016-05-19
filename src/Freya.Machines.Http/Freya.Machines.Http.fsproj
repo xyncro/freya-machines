@@ -79,6 +79,9 @@
     <Compile Include="Machine\Components\Post.fs" />
     <Compile Include="Machine\Components\Put.fs" />
     <Compile Include="Machine\Models\Http.fs" />
+    <Compile Include="Machine.fs" />
+    <Compile Include="Extension.fs" />
+    <Compile Include="Expression.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

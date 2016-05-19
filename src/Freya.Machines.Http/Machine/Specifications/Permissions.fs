@@ -14,7 +14,7 @@ open Freya.Machines.Http.Semantics
    signalling a client error. *)
 
 [<RequireQualifiedAccess>]
-module internal Permissions =
+module Permissions =
 
     (* Types *)
 
@@ -88,12 +88,12 @@ module internal Permissions =
                 terminals_
             >-> Terminals.forbidden_
 
-        let unauthorized p =
+        let internal unauthorized p =
             Terminal.create (key p, "unauthorized")
                 (function | _ -> Operation.unauthorized)
                 (function | Get unauthorized_ x -> x)
 
-        let forbidden p =
+        let internal forbidden p =
             Terminal.create (key p, "forbidden")
                 (function | _ -> Operation.forbidden)
                 (function | Get forbidden_ x -> x)
@@ -116,13 +116,13 @@ module internal Permissions =
                 decisions_
             >-> Decisions.allowed_
 
-        let rec authorized p s =
+        let rec internal authorized p s =
             Decision.create (key p, "authorized")
                 (function | TryGet authorized_ x -> x
                           | _ -> Static true)
                 (Terminals.unauthorized p, allowed p s)
 
-        and allowed p s =
+        and internal allowed p s =
             Decision.create (key p, "allowed")
                 (function | TryGet allowed_ x -> x
                           | _ -> Static true)
@@ -130,5 +130,5 @@ module internal Permissions =
 
     (* Specification *)
 
-    let specification =
+    let internal specification =
         Decisions.authorized

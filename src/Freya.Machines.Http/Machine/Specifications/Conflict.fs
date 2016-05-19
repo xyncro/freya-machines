@@ -14,7 +14,7 @@ open Freya.Machines.Http.Semantics
    signalling a client error. *)
 
 [<RequireQualifiedAccess>]
-module internal Conflict =
+module Conflict =
 
     (* Key *)
 
@@ -101,5 +101,5 @@ module internal Conflict =
 
     (* Specification *)
 
-    let specification =
+    let internal specification =
         Decisions.conflict

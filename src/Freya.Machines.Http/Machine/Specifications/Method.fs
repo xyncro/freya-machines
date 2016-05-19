@@ -22,7 +22,7 @@ open Freya.Optics.Http
    preceded by a Validation element). *)
 
 [<RequireQualifiedAccess>]
-module internal Method =
+module Method =
 
     (* Key *)
 
@@ -34,7 +34,7 @@ module internal Method =
     [<RequireQualifiedAccess>]
     module Decisions =
 
-        let rec methodMatches p methods =
+        let rec internal methodMatches p methods =
             Decision.create (key p, "method-matches")
                 (function | TryGet Properties.Request.methods_ (Static x) when disjoint methods x -> Static false
                           | TryGet Properties.Request.methods_ _ -> Dynamic (matches methods)
@@ -52,5 +52,5 @@ module internal Method =
 
     (* Specification *)
 
-    let specification =
+    let internal specification =
         Decisions.methodMatches

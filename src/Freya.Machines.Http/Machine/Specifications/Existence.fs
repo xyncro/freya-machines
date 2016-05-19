@@ -14,7 +14,7 @@ open Freya.Machines
    cases (no terminals are implied). *)
 
 [<RequireQualifiedAccess>]
-module internal Existence =
+module Existence =
 
     let private key p =
         Key.add [ p; "existence" ] Key.root
@@ -58,12 +58,12 @@ module internal Existence =
                 decisions_
             >-> Decisions.exists_
 
-        let exists p =
+        let internal exists p =
             Decision.create (key p, "exists")
                 (function | TryGet exists_ x -> x
                           | _ -> Static true)
 
     (* Specification *)
 
-    let specification =
+    let internal specification =
         Decisions.exists

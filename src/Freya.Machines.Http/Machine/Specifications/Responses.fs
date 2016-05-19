@@ -6,14 +6,14 @@ open Freya.Core.Operators
 open Freya.Machines
 open Freya.Machines.Http.Machine.Configuration
 open Freya.Machines.Http.Semantics
-open Freya.Optics.Http
+
 (* Responses
 
    Decisions and terminals used for common response cases, decomposed
    to appropriate granularities. *)
 
 [<RequireQualifiedAccess>]
-module internal Responses =
+module Responses =
 
     (* Key *)
 
@@ -95,12 +95,12 @@ module internal Responses =
                     terminals_
                 >-> Terminals.ok_
 
-            let noContent p =
+            let internal noContent p =
                 Terminal.create (key p, "no-content")
                     (function | _ -> Operation.noContent)
                     (function | Get noContent_ x -> x)
 
-            let ok p =
+            let internal ok p =
                 Terminal.create (key p, "ok")
                     (function |   Get Properties.Resource.entityTag_ e
                                 & Get Properties.Resource.lastModified_ l ->
@@ -124,7 +124,7 @@ module internal Responses =
                     decisions_
                 >-> Decisions.noContent_
 
-            let noContent p =
+            let internal noContent p =
                 Decision.create (key p, "no-content")
                     (function | TryGet noContent_ x -> x
                               | _ -> Static false)
@@ -132,7 +132,7 @@ module internal Responses =
 
         (* Specification *)
 
-        let specification =
+        let internal specification =
             Decisions.noContent
 
     (* Created
@@ -201,7 +201,7 @@ module internal Responses =
                     terminals_
                 >-> Terminals.created_
 
-            let created p =
+            let internal created p =
                 Terminal.create (key p, "created")
                     (function | _ -> Operation.created)
                     (function | Get created_ x -> x)
@@ -220,7 +220,7 @@ module internal Responses =
                     decisions_
                 >-> Decisions.created_
 
-            let created p s =
+            let internal created p s =
                 Decision.create (key p, "created")
                     (function | TryGet created_ x -> x
                               | _ -> Static false)
@@ -228,7 +228,7 @@ module internal Responses =
 
         (* Specification *)
 
-        let specification =
+        let internal specification =
             Decisions.created
 
     (* Missing *)
@@ -280,14 +280,14 @@ module internal Responses =
                     terminals_
                 >-> Terminals.notFound_
 
-            let notFound p =
+            let internal notFound p =
                 Terminal.create (key p, "not-found")
                     (function | _ -> Operation.notFound)
                     (function | Get notFound_ x -> x)
 
         (* Specification *)
 
-        let specification =
+        let internal specification =
             Terminals.notFound
 
     (* Moved *)
@@ -381,17 +381,17 @@ module internal Responses =
                     terminals_
                 >-> Terminals.movedPermanently_
 
-            let gone p =
+            let internal gone p =
                 Terminal.create (key p, "gone")
                     (function | _ -> Operation.gone)
                     (function | Get gone_ x -> x)
 
-            let temporaryRedirect p =
+            let internal temporaryRedirect p =
                 Terminal.create (key p, "temporary-redirect")
                     (function | _ -> Operation.temporaryRedirect)
                     (function | Get temporaryRedirect_ x -> x) 
 
-            let movedPermanently p =
+            let internal movedPermanently p =
                 Terminal.create (key p, "moved-permanently")
                     (function | _ -> Operation.movedPermanently)
                     (function | Get movedPermanently_ x -> x)
@@ -418,19 +418,19 @@ module internal Responses =
                     decisions_
                 >-> Decisions.movedPermanently_
 
-            let rec gone p s =
+            let rec internal gone p s =
                 Decision.create (key p, "see-other")
                     (function | TryGet gone_ x -> x
                               | _ -> Static false)
                     (movedTemporarily p s, Terminals.gone p)
 
-            and movedTemporarily p s =
+            and internal movedTemporarily p s =
                 Decision.create (key p, "found")
                     (function | TryGet movedTemporarily_ x -> x
                               | _ -> Static false)
                     (movedPermanently p s, Terminals.temporaryRedirect p)
 
-            and movedPermanently p s =
+            and internal movedPermanently p s =
                 Decision.create (key p, "see-other")
                     (function | TryGet movedPermanently_ x -> x
                               | _ -> Static false)
@@ -438,7 +438,7 @@ module internal Responses =
 
         (* Specification *)
 
-        let specification =
+        let internal specification =
             Decisions.gone
 
     (* Options *)
@@ -490,14 +490,14 @@ module internal Responses =
                     terminals_
                 >-> Terminals.options_
 
-            let options p =
+            let internal options p =
                 Terminal.create (key p, "options")
                     (function | _ -> Operation.options)
                     (function | Get options_ x -> x)
 
         (* Specification *)
 
-        let specification =
+        let internal specification =
             Terminals.options
 
     (* Other *)
@@ -591,17 +591,17 @@ module internal Responses =
                     terminals_
                 >-> Terminals.multipleChoices_
 
-            let seeOther p =
+            let internal seeOther p =
                 Terminal.create (key p, "see-other")
                     (function | _ -> Operation.seeOther)
                     (function | Get seeOther_ x -> x) 
 
-            let found p =
+            let internal found p =
                 Terminal.create (key p, "found")
                     (function | _ -> Operation.found)
                     (function | Get found_ x -> x)
 
-            let multipleChoices p =
+            let internal multipleChoices p =
                 Terminal.create (key p, "multiple-choices")
                     (function | _ -> Operation.multipleChoices)
                     (function | Get multipleChoices_ x -> x)
@@ -628,19 +628,19 @@ module internal Responses =
                     decisions_
                 >-> Decisions.multipleChoices_
 
-            let rec seeOther p s =
+            let rec internal seeOther p s =
                 Decision.create (key p, "see-other")
                     (function | TryGet seeOther_ x -> x
                               | _ -> Static false)
                     (found p s, Terminals.seeOther p)
 
-            and found p s =
+            and internal found p s =
                 Decision.create (key p, "found")
                     (function | TryGet found_ x -> x
                               | _ -> Static false)
                     (multipleChoices p s, Terminals.found p)
 
-            and multipleChoices p s =
+            and internal multipleChoices p s =
                 Decision.create (key p, "see-other")
                     (function | TryGet multipleChoices_ x -> x
                               | _ -> Static false)
@@ -648,5 +648,5 @@ module internal Responses =
 
         (* Specification *)
 
-        let specification =
+        let internal specification =
             Decisions.seeOther

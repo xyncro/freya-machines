@@ -20,7 +20,7 @@ open Freya.Optics.Http
    Preconditions failing results in a 412 response. *)
 
 [<RequireQualifiedAccess>]
-module internal Preconditions =
+module Preconditions =
 
     (* Key *)
 
@@ -70,7 +70,7 @@ module internal Preconditions =
                     terminals_
                 >-> Terminals.preconditionFailed_
 
-            let preconditionFailed p =
+            let internal preconditionFailed p =
                 Terminal.create (key p, "precondition-failed")
                     (function | _ -> Operation.preconditionFailed)
                     (function | Get preconditionFailed_ x -> x)
@@ -91,12 +91,12 @@ module internal Preconditions =
         [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
         module Decisions =
 
-            let rec hasIfMatch p s =
+            let rec internal hasIfMatch p s =
                 Decision.create (key p, "has-if-match")
                     (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifMatch_))
                     (hasIfUnmodifiedSince p s, ifMatchMatches p s)
 
-            and ifMatchMatches p s =
+            and internal ifMatchMatches p s =
                 Decision.create (key p, "if-match-matches")
                     (function | TryGet Properties.Resource.entityTag_ x -> bind matches x
                               | _ -> Static true)
@@ -116,12 +116,12 @@ module internal Preconditions =
                     function | Strong y when x = y -> true
                              | _ -> false
 
-            and hasIfUnmodifiedSince p s =
+            and internal hasIfUnmodifiedSince p s =
                 Decision.create (key p, "has-if-unmodified-since")
                     (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifUnmodifiedSince_))
                     (s, ifUnmodifiedSinceMatches p s)
 
-            and ifUnmodifiedSinceMatches p s =
+            and internal ifUnmodifiedSinceMatches p s =
                 Decision.create (key p, "if-unmodified-since-matches")
                     (function | TryGet Properties.Resource.lastModified_ x -> bind earlier x
                               | _ -> Static true)
@@ -134,7 +134,7 @@ module internal Preconditions =
 
         (* Specification *)
 
-        let specification =
+        let internal specification =
             Decisions.hasIfMatch
 
     (* Safe *)
@@ -186,7 +186,7 @@ module internal Preconditions =
                     terminals_
                 >-> Terminals.notModified_
 
-            let notModified p =
+            let internal notModified p =
                 Terminal.create (key p, "not-modified")
                     (function | _ -> Operation.notModified)
                     (function | Get notModified_ x -> x)
@@ -197,12 +197,12 @@ module internal Preconditions =
         [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
         module Decisions =
 
-            let rec hasIfNoneMatch p s =
+            let rec internal hasIfNoneMatch p s =
                 Decision.create (key p, "has-if-none-match")
                     (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifNoneMatch_))
                     (hasIfModifiedSince p s, ifNoneMatchMatches p s)
 
-            and ifNoneMatchMatches p s =
+            and internal ifNoneMatchMatches p s =
                 Decision.create (key p, "if-none-match-matches")
                     (function | TryGet Properties.Resource.entityTag_ x -> bind matches x
                               | _ -> Static true)
@@ -222,12 +222,12 @@ module internal Preconditions =
                     function | Strong y 
                              | Weak y -> x = y 
 
-            and hasIfModifiedSince p s =
+            and internal hasIfModifiedSince p s =
                 Decision.create (key p, "has-if-modified-since")
                     (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifModifiedSince_))
                     (s, ifModifiedSinceMatches p s)
 
-            and ifModifiedSinceMatches p s =
+            and internal ifModifiedSinceMatches p s =
                 Decision.create (key p, "if-modified-since-matches")
                     (function | TryGet Properties.Resource.lastModified_ x -> bind later x
                               | _ -> Static true)
@@ -240,7 +240,7 @@ module internal Preconditions =
 
         (* Specification *)
 
-        let specification =
+        let internal specification =
             Decisions.hasIfNoneMatch
 
     (* Unsafe *)
@@ -259,12 +259,12 @@ module internal Preconditions =
         [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
         module Decisions =
 
-            let rec hasIfNoneMatch p s =
+            let rec internal hasIfNoneMatch p s =
                 Decision.create (key p, "has-if-none-match")
                     (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifNoneMatch_))
                     (s, ifNoneMatchMatches p s)
 
-            and ifNoneMatchMatches p s =
+            and internal ifNoneMatchMatches p s =
                 Decision.create (key p, "if-none-match-matches")
                     (function | TryGet Properties.Resource.entityTag_ x -> bind matches x
                               | _ -> Static true)
@@ -286,5 +286,5 @@ module internal Preconditions =
 
         (* Specification *)
 
-        let specification =
+        let internal specification =
             Decisions.hasIfNoneMatch

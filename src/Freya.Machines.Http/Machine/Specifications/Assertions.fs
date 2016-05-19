@@ -18,7 +18,7 @@ open Freya.Optics.Http
    in 5xx error responses, signalling a server error of some type. *)
 
 [<RequireQualifiedAccess>]
-module internal Assertions =
+module Assertions =
 
     (* Types *)
 
@@ -101,17 +101,17 @@ module internal Assertions =
                 terminals_
             >-> Terminals.notImplemented_
 
-        let serviceUnavailable p =
+        let internal serviceUnavailable p =
             Terminal.create (key p, "service-unavailable")
                 (function | _ -> Operation.serviceUnavailable)
                 (function | Get serviceUnavailable_ x -> x) 
 
-        let httpVersionNotSupported p =
+        let internal httpVersionNotSupported p =
             Terminal.create (key p, "http-version-not-supported")
                 (function | _ -> Operation.httpVersionNotSupported)
                 (function | Get httpVersionNotSupported_ x -> x)
 
-        let notImplemented p =
+        let internal notImplemented p =
             Terminal.create (key p, "not-implemented")
                 (function | _ -> Operation.notImplemented)
                 (function | Get notImplemented_ x -> x)
@@ -134,13 +134,13 @@ module internal Assertions =
                 decisions_
             >-> Decisions.httpVersionSupported_
 
-        let rec serviceAvailable p s =
+        let rec internal serviceAvailable p s =
             Decision.create (key p, "service-available")
                 (function | TryGet serviceAvailable_ x -> x
                           | _ -> Static true)
                 (Terminals.serviceUnavailable p, httpVersionSupported p s)
 
-        and httpVersionSupported p s =
+        and internal httpVersionSupported p s =
             Decision.create (key p, "http-version-supported")
                 (function | TryGet httpVersionSupported_ x -> x
                           | _ -> Dynamic supported)
@@ -151,7 +151,7 @@ module internal Assertions =
                          | _ -> false
             <!> !. Request.httpVersion_
 
-        and methodImplemented p s =
+        and internal methodImplemented p s =
             Decision.create (key p, "method-implemented")
                 (function | TryGet Properties.Request.methods_ x -> bind knownCustom x
                           | _ -> Dynamic nonCustom)
@@ -169,5 +169,5 @@ module internal Assertions =
 
     (* Specification *)
 
-    let specification =
+    let internal specification =
         Decisions.serviceAvailable

@@ -21,7 +21,7 @@ open Freya.Optics.Http
 (* Validation *)
 
 [<RequireQualifiedAccess>]
-module internal Validations =
+module Validations =
 
     (* Types *)
 
@@ -118,23 +118,23 @@ module internal Validations =
                 terminals_
             >-> Terminals.badRequest_
 
-        let expectationFailed p =
+        let internal expectationFailed p =
             Terminal.create (key p, "expectation-failed")
                 (function | _ -> Operation.expectationFailed)
                 (function | Get expectationFailed_ x -> x)
 
-        let methodNotAllowed p =
+        let internal methodNotAllowed p =
             Terminal.create (key p, "method-not-allowed")
                 (function | TryGet Properties.Request.methods_ x -> apply Operation.methodNotAllowed x
                           | _ -> Operation.methodNotAllowed Defaults.methods)
                 (function | Get methodNotAllowed_ x -> x)
 
-        let uriTooLong p =
+        let internal uriTooLong p =
             Terminal.create (key p, "uri-too-long")
                 (function | _ -> Operation.uriTooLong)
                 (function | Get uriTooLong_ x -> x)
 
-        let badRequest p =
+        let internal badRequest p =
             Terminal.create (key p, "bad-request")
                 (function | _ -> Operation.badRequest)
                 (function | Get badRequest_ x -> x)
@@ -161,13 +161,13 @@ module internal Validations =
                 decisions_
             >-> Decisions.badRequest_
 
-        let rec expectationMet p s =
+        let rec internal expectationMet p s =
             Decision.create (key p, "expectation-met")
                 (function | TryGet expectationMet_ x -> x
                           | _ -> Static true)
                 (Terminals.expectationFailed p, methodAllowed p s)
 
-        and methodAllowed p s =
+        and internal methodAllowed p s =
             Decision.create (key p, "method-allowed")
                 (function | TryGet Properties.Request.methods_ x -> bind allowed x
                           | _ -> Dynamic (allowed Defaults.methods))
@@ -178,13 +178,13 @@ module internal Validations =
                          | _ -> false
             <!> !. Request.method_
 
-        and uriTooLong p s =
+        and internal uriTooLong p s =
             Decision.create (key p, "uri-too-long")
                 (function | TryGet uriTooLong_ x -> x
                           | _ -> Static false)
                 (badRequest p s, Terminals.uriTooLong p)
 
-        and badRequest p s =
+        and internal badRequest p s =
             Decision.create (key p, "bad-request")
                 (function | TryGet badRequest_ x -> x
                           | _ -> Static false)
@@ -192,5 +192,5 @@ module internal Validations =
 
     (* Specification *)
 
-    let specification =
+    let internal specification =
         Decisions.expectationMet

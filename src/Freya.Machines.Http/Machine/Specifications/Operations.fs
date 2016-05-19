@@ -15,7 +15,7 @@ open Freya.Machines.Http.Semantics
    remain dynamic throughout optimization (if present). *)
 
 [<RequireQualifiedAccess>]
-module internal Operations =
+module Operations =
 
     (* Key *)
 
@@ -89,12 +89,12 @@ module internal Operations =
                 terminals_
             >-> Terminals.accepted_
 
-        let internalServerError p =
+        let internal internalServerError p =
             Terminal.create (key p, "internal-server-error")
                 (function | _ -> Operation.internalServerError)
                 (function | Get internalServerError_ x -> x)
 
-        let accepted p =
+        let internal accepted p =
             Terminal.create (key p, "accepted")
                 (function | _ -> Operation.accepted)
                 (function | Get accepted_ x -> x)
@@ -118,13 +118,13 @@ module internal Operations =
             >-> Operations.operations_
             >-> Map.value_ m
 
-        let rec operation p m s =
+        let rec internal operation p m s =
             Decision.create (key p, "operation")
                 (function | TryGet (operationMethod_ m) f -> Dynamic (f)
                           | _ -> Static true)
                 (Terminals.internalServerError p, completed p s)
 
-        and completed p s =
+        and internal completed p s =
             Decision.create (key p, "completed")
                 (function | TryGet completed_ x -> x
                           | _ -> Static true)
@@ -132,5 +132,5 @@ module internal Operations =
 
     (* Specification *)
 
-    let specification =
+    let internal specification =
         Decisions.operation

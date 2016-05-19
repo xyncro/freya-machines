@@ -12,81 +12,78 @@ open Freya.Machines
    distinct set of types as these may be used/shared by any of the many
    elements defined as part of an HTTP machine. *)
 
-(* Types *)
-
-type private Properties =
-    { Request: Request
-      Representation: Representation
-      Resource: Resource }
-
-    static member request_ =
-        (fun x -> x.Request), (fun r x -> { x with Request = r })
-
-    static member representation_ =
-        (fun x -> x.Representation), (fun r x -> { x with Representation = r })
-
-    static member resource_ =
-        (fun x -> x.Resource), (fun r x -> { x with Resource = r })
-
-    static member empty =
-        { Request = Request.empty
-          Representation = Representation.empty
-          Resource = Resource.empty }
-
- and private Request =
-    { Methods: Value<Set<Method>> option }
-
-    static member methods_ =
-        (fun x -> x.Methods), (fun m x -> { x with Methods = m })
-
-    static member empty =
-        { Methods = None }
-
- and private Representation =
-    { MediaTypesSupported: Value<MediaType list> option
-      LanguagesSupported: Value<LanguageTag list> option
-      CharsetsSupported: Value<Charset list> option
-      ContentCodingsSupported: Value<ContentCoding list> option }
-
-    static member mediaTypesSupported_ =
-        (fun x -> x.MediaTypesSupported), (fun m x -> { x with MediaTypesSupported = m })
-
-    static member languagesSupported_ =
-        (fun x -> x.LanguagesSupported), (fun l x -> { x with LanguagesSupported = l })
-
-    static member charsetsSupported_ =
-        (fun x -> x.CharsetsSupported), (fun c x -> { x with CharsetsSupported = c })
-
-    static member contentCodingsSupported_ =
-        (fun x -> x.ContentCodingsSupported), (fun c x -> { x with ContentCodingsSupported = c })
-
-    static member empty =
-        { MediaTypesSupported = None
-          LanguagesSupported = None
-          CharsetsSupported = None
-          ContentCodingsSupported = None }
-
- and private Resource =
-    { EntityTag: Value<EntityTag> option
-      LastModified: Value<DateTime> option }
-
-    static member entityTag_ =
-        (fun x -> x.EntityTag), (fun e x -> { x with EntityTag = e })
-
-    static member lastModified_ =
-        (fun x -> x.LastModified), (fun l x -> { x with LastModified = l })
-
-    static member empty =
-        { EntityTag = None
-          LastModified = None }
-
-(* Optics *)
-
 [<RequireQualifiedAccess>]
-[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
-module internal Properties =
+module Properties =
 
-    (* Properties *)
+    (* Types *)
+
+    type private Properties =
+        { Request: Request
+          Representation: Representation
+          Resource: Resource }
+
+        static member request_ =
+            (fun x -> x.Request), (fun r x -> { x with Request = r })
+
+        static member representation_ =
+            (fun x -> x.Representation), (fun r x -> { x with Representation = r })
+
+        static member resource_ =
+            (fun x -> x.Resource), (fun r x -> { x with Resource = r })
+
+        static member empty =
+            { Request = Request.empty
+              Representation = Representation.empty
+              Resource = Resource.empty }
+
+     and private Request =
+        { Methods: Value<Set<Method>> option }
+
+        static member methods_ =
+            (fun x -> x.Methods), (fun m x -> { x with Methods = m })
+
+        static member empty =
+            { Methods = None }
+
+     and private Representation =
+        { MediaTypesSupported: Value<MediaType list> option
+          LanguagesSupported: Value<LanguageTag list> option
+          CharsetsSupported: Value<Charset list> option
+          ContentCodingsSupported: Value<ContentCoding list> option }
+
+        static member mediaTypesSupported_ =
+            (fun x -> x.MediaTypesSupported), (fun m x -> { x with MediaTypesSupported = m })
+
+        static member languagesSupported_ =
+            (fun x -> x.LanguagesSupported), (fun l x -> { x with LanguagesSupported = l })
+
+        static member charsetsSupported_ =
+            (fun x -> x.CharsetsSupported), (fun c x -> { x with CharsetsSupported = c })
+
+        static member contentCodingsSupported_ =
+            (fun x -> x.ContentCodingsSupported), (fun c x -> { x with ContentCodingsSupported = c })
+
+        static member empty =
+            { MediaTypesSupported = None
+              LanguagesSupported = None
+              CharsetsSupported = None
+              ContentCodingsSupported = None }
+
+     and private Resource =
+        { EntityTag: Value<EntityTag> option
+          LastModified: Value<DateTime> option }
+
+        static member entityTag_ =
+            (fun x -> x.EntityTag), (fun e x -> { x with EntityTag = e })
+
+        static member lastModified_ =
+            (fun x -> x.LastModified), (fun l x -> { x with LastModified = l })
+
+        static member empty =
+            { EntityTag = None
+              LastModified = None }
+
+    (* Optics *)
 
     let private root_ =
         Configuration.element_ Properties.empty "http.configuration.properties"
