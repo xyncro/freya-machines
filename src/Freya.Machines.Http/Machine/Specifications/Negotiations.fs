@@ -1,11 +1,9 @@
-﻿namespace Freya.Machines.Http.Machine.Specifications
+﻿namespace Freya.Machines.Http
 
 open Aether
 open Aether.Operators
 open Freya.Core.Operators
 open Freya.Machines
-open Freya.Machines.Http
-open Freya.Machines.Http.Machine.Configuration
 open Freya.Optics.Http
 
 (* Negotiations

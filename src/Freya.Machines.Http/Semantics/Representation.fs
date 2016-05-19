@@ -52,7 +52,7 @@ type Representation =
 
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
-module Representation =
+module internal Representation =
 
     (* Optics *)
 

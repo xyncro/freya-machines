@@ -1,11 +1,10 @@
-﻿namespace Freya.Machines.Http.Machine.Specifications
+﻿namespace Freya.Machines.Http
 
 open Aether
 open Aether.Operators
 open Arachne.Http
 open Freya.Core
 open Freya.Machines
-open Freya.Machines.Http
 
 (* Operation
 

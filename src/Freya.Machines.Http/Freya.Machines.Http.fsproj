@@ -57,9 +57,9 @@
   </Target>
   -->
   <ItemGroup>
-    <Compile Include="Negotiation.fs" />
-    <Compile Include="Representation.fs" />
-    <Compile Include="Operation.fs" />
+    <Compile Include="Semantics\Negotiation.fs" />
+    <Compile Include="Semantics\Representation.fs" />
+    <Compile Include="Semantics\Operation.fs" />
     <Compile Include="Machine\Configuration\Properties.fs" />
     <Compile Include="Machine\Specifications\Prelude.fs" />
     <Compile Include="Machine\Specifications\Assertions.fs" />

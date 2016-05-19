@@ -1,9 +1,8 @@
-﻿namespace Freya.Machines.Http.Machine.Components
+﻿namespace Freya.Machines.Http
 
 #nowarn "46"
 
 open Arachne.Http
-open Freya.Machines.Http.Machine.Specifications
 open Hephaestus
 
 (* Put *)

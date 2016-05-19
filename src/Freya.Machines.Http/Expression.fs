@@ -2,8 +2,6 @@
 
 open Arachne.Http
 open Freya.Core
-open Freya.Machines.Http.Machine.Configuration
-open Freya.Machines.Http.Machine.Specifications
 
 (* Builder
 

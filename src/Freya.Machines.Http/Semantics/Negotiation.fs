@@ -25,7 +25,7 @@ type Acceptance<'a> =
    will negotiate the relevant aspect of the request. *)
 
 [<RequireQualifiedAccess>]
-module Negotiation =
+module internal Negotiation =
 
     (* Negotiation *)
 

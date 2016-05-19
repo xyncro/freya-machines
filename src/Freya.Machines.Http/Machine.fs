@@ -1,13 +1,11 @@
 ﻿namespace Freya.Machines.Http
 
 open System
-open Aether
 open Arachne.Http
 open Arachne.Language
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
-open Freya.Machines.Http
 
 (* Inference
 
@@ -15,6 +13,7 @@ open Freya.Machines.Http
    defined elsewhere. *)
 
 [<RequireQualifiedAccess>]
+[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module Charsets =
 
     (* Inference *)
@@ -44,6 +43,7 @@ module Charsets =
         Inference.infer v
 
 [<RequireQualifiedAccess>]
+[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module ContentCodings =
 
     (* Inference *)
@@ -73,6 +73,7 @@ module ContentCodings =
         Inference.infer v
 
 [<RequireQualifiedAccess>]
+[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module DateTime =
 
     (* Inference *)
@@ -99,6 +100,7 @@ module DateTime =
         Inference.infer v
 
 [<RequireQualifiedAccess>]
+[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module Decision =
 
     (* Inference *)
@@ -125,6 +127,7 @@ module Decision =
         Inference.infer v
 
 [<RequireQualifiedAccess>]
+[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module EntityTag =
 
     (* Inference *)
@@ -151,6 +154,7 @@ module EntityTag =
         Inference.infer v
 
 [<RequireQualifiedAccess>]
+[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module Handler =
 
     (* Inference *)
@@ -180,6 +184,7 @@ module Handler =
         Inference.infer v
 
 [<RequireQualifiedAccess>]
+[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module LanguageTags =
 
     (* Inference *)
@@ -209,6 +214,7 @@ module LanguageTags =
         Inference.infer v
 
 [<RequireQualifiedAccess>]
+[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module MediaTypes =
 
     (* Inference *)
@@ -238,6 +244,7 @@ module MediaTypes =
         Inference.infer v
 
 [<RequireQualifiedAccess>]
+[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module Methods =
 
     (* Inference *)
