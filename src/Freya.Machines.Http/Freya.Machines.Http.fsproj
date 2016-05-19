@@ -63,14 +63,21 @@
     <Compile Include="Machine\Configuration\Properties.fs" />
     <Compile Include="Machine\Specifications\Prelude.fs" />
     <Compile Include="Machine\Specifications\Assertions.fs" />
-    <Compile Include="Machine\Specifications\Permissions.fs" />
-    <Compile Include="Machine\Specifications\Validations.fs" />
-    <Compile Include="Machine\Specifications\Negotiations.fs" />
-    <Compile Include="Machine\Specifications\Method.fs" />
+    <Compile Include="Machine\Specifications\Conflict.fs" />
     <Compile Include="Machine\Specifications\Existence.fs" />
+    <Compile Include="Machine\Specifications\Method.fs" />
+    <Compile Include="Machine\Specifications\Negotiations.fs" />
+    <Compile Include="Machine\Specifications\Operations.fs" />
+    <Compile Include="Machine\Specifications\Permissions.fs" />
     <Compile Include="Machine\Specifications\Preconditions.fs" />
+    <Compile Include="Machine\Specifications\Responses.fs" />
+    <Compile Include="Machine\Specifications\Validations.fs" />
     <Compile Include="Machine\Components\Core.fs" />
+    <Compile Include="Machine\Components\Delete.fs" />
     <Compile Include="Machine\Components\GetOrHead.fs" />
+    <Compile Include="Machine\Components\Options.fs" />
+    <Compile Include="Machine\Components\Post.fs" />
+    <Compile Include="Machine\Components\Put.fs" />
     <Compile Include="Machine\Models\Http.fs" />
   </ItemGroup>
   <ItemGroup>

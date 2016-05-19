@@ -33,6 +33,9 @@ module internal Aliases =
     let lift =
         Freya.Value.lift
 
+    let liftOption =
+        Freya.Value.liftOption
+
     let map =
         Value.Freya.map
 

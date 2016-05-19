@@ -10,7 +10,7 @@ open Hephaestus
 (* Core *)
 
 [<RequireQualifiedAccess>]
-module Core =
+module internal Core =
 
     (* Name *)
 

@@ -13,9 +13,9 @@ module internal Http =
     let model =
         Model.create (
             set [
-                Core.component ])
-//                GetOrHead.export
-//                Options.export
-//                Post.export
-//                Put.export
-//                Delete.export ])
+                Core.component
+                Delete.component
+                GetOrHead.component
+                Options.component
+                Post.component
+                Put.component ])
