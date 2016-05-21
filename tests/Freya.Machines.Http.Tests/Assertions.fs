@@ -24,12 +24,12 @@ let ``machine handles serviceAvailable correctly`` () =
     let staticMachine =
         freyaMachine {
             serviceAvailable false
-            handleServiceUnavailable (defaultHandler "Service Unavailable") }
+            handleServiceUnavailable ((defaultValue .= Some "Service Unavailable") *> defaultRepresentation) }
 
     verify defaultSetup staticMachine [
         Response.statusCode_ => Some 503
         Response.reasonPhrase_ => Some "Service Unavailable"
-        State.value_ "test" => Some "Service Unavailable" ]
+        defaultValue => Some "Service Unavailable" ]
 
     (* Dynamic *)
 
@@ -39,18 +39,18 @@ let ``machine handles serviceAvailable correctly`` () =
     let dynamicMachine =
         freyaMachine {
             serviceAvailable ((=) "/available" <!> !. Request.path_)
-            handleOk (defaultHandler "OK")
-            handleServiceUnavailable (defaultHandler "Service Unavailable") }
+            handleOk ((defaultValue .= Some "OK") *> defaultRepresentation)
+            handleServiceUnavailable ((defaultValue .= Some "Service Unavailable") *> defaultRepresentation) }
 
     verify setup dynamicMachine [
         Response.statusCode_ => Some 200
         Response.reasonPhrase_ => Some "OK"
-        State.value_ "test" => Some "OK" ]
+        defaultValue => Some "OK" ]
 
     verify defaultSetup dynamicMachine [
         Response.statusCode_ => Some 503
         Response.reasonPhrase_ => Some "Service Unavailable"
-        State.value_ "test" => Some "Service Unavailable" ]
+        defaultValue => Some "Service Unavailable" ]
 
 (* Http Version Supported *)
 
@@ -62,12 +62,12 @@ let ``machine handles httpVersionSupported correctly`` () =
     let staticMachine =
         freyaMachine {
             httpVersionSupported false
-            handleNotSupported (defaultHandler "HTTP Version Not Supported") }
+            handleNotSupported ((defaultValue .= Some "HTTP Version Not Supported") *> defaultRepresentation) }
 
     verify defaultSetup staticMachine [
         Response.statusCode_ => Some 505
         Response.reasonPhrase_ => Some "HTTP Version Not Supported"
-        State.value_ "test" => Some "HTTP Version Not Supported" ]
+        defaultValue => Some "HTTP Version Not Supported" ]
 
     (* Default *)
 
@@ -103,7 +103,7 @@ let ``machine handles methodImplemented correctly`` () =
     let machine =
         freyaMachine {
             methods [ Method.Custom "FOO" ]
-            handleNotImplemented (defaultHandler "Not Implemented") }
+            handleNotImplemented ((defaultValue .= Some "Not Implemented") *> defaultRepresentation) }
 
     verify allowedSetup machine [
         Response.statusCode_ => Some 200
@@ -112,7 +112,7 @@ let ``machine handles methodImplemented correctly`` () =
     verify notAllowedSetup machine [
         Response.statusCode_ => Some 501
         Response.reasonPhrase_ => Some "Not Implemented"
-        State.value_ "test" => Some "Not Implemented" ]
+        defaultValue => Some "Not Implemented" ]
 
     (* Default *)
 

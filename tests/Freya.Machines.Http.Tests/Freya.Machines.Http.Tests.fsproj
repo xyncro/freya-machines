@@ -57,7 +57,7 @@
   </Target>
   -->
   <ItemGroup>
-    <Compile Include="Fixtures.fs" />
+    <Compile Include="Prelude.fs" />
     <Compile Include="Defaults.fs" />
     <Compile Include="Assertions.fs" />
     <Compile Include="Conflict.fs" />
