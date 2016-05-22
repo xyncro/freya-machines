@@ -2,7 +2,6 @@
 
 open Arachne.Http
 open Arachne.Language
-open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines.Http
 open Freya.Optics.Http
@@ -42,7 +41,7 @@ let ``machine handles accept negotiation correctly`` () =
     (* Configured *)
 
     let matchedMachine =
-        freyaMachine {
+        freyaHttpMachine {
             mediaTypesSupported (MediaType (Type "text", SubType "plain", Parameters Map.empty)) }
 
     verify setup matchedMachine [
@@ -50,7 +49,7 @@ let ``machine handles accept negotiation correctly`` () =
         Response.reasonPhrase_ => Some "OK" ]
 
     let unmatchedMachine =
-        freyaMachine {
+        freyaHttpMachine {
             mediaTypesSupported (MediaType (Type "application", SubType "json", Parameters Map.empty)) }
 
     verify setup unmatchedMachine [
@@ -77,7 +76,7 @@ let ``machine handles accept-language negotiation correctly`` () =
     (* Configured *)
 
     let matchedMachine =
-        freyaMachine {
+        freyaHttpMachine {
             languagesSupported (LanguageTag (Language ("en", None), None, None, Variant [])) }
 
     verify setup matchedMachine [
@@ -85,7 +84,7 @@ let ``machine handles accept-language negotiation correctly`` () =
         Response.reasonPhrase_ => Some "OK" ]
 
     let unmatchedMachine =
-        freyaMachine {
+        freyaHttpMachine {
             languagesSupported (LanguageTag (Language ("de", None), None, None, Variant [])) }
 
     verify setup unmatchedMachine [
@@ -112,7 +111,7 @@ let ``machine handles accept-charset negotiation correctly`` () =
     (* Configured *)
 
     let matchedMachine =
-        freyaMachine {
+        freyaHttpMachine {
             charsetsSupported (Charset "utf-8") }
 
     verify setup matchedMachine [
@@ -120,7 +119,7 @@ let ``machine handles accept-charset negotiation correctly`` () =
         Response.reasonPhrase_ => Some "OK" ]
 
     let unmatchedMachine =
-        freyaMachine {
+        freyaHttpMachine {
             charsetsSupported (Charset "iso-8859-1") }
 
     verify setup unmatchedMachine [
@@ -147,7 +146,7 @@ let ``machine handles accept-encoding negotiation correctly`` () =
     (* Configured *)
 
     let matchedMachine =
-        freyaMachine {
+        freyaHttpMachine {
             contentCodingsSupported (ContentCoding "gzip") }
 
     verify setup matchedMachine [
@@ -155,7 +154,7 @@ let ``machine handles accept-encoding negotiation correctly`` () =
         Response.reasonPhrase_ => Some "OK" ]
 
     let unmatchedMachine =
-        freyaMachine {
+        freyaHttpMachine {
             contentCodingsSupported (ContentCoding "compress") }
 
     verify setup unmatchedMachine [

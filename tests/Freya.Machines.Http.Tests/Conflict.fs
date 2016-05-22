@@ -1,7 +1,6 @@
 ﻿module Freya.Machines.Http.Tests.Conflict
 
 open Arachne.Http
-open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines.Http
 open Freya.Optics.Http
@@ -29,7 +28,7 @@ let ``machine handles conflict correctly`` () =
     (* Static *)
 
     let staticMachine =
-        freyaMachine {
+        freyaHttpMachine {
             conflict true
             methods POST }
 
@@ -40,7 +39,7 @@ let ``machine handles conflict correctly`` () =
     (* Dynamic *)
 
     let dynamicMachine =
-        freyaMachine {
+        freyaHttpMachine {
             conflict ((=) "/conflict" <!> !. Request.path_)
             methods POST }
 

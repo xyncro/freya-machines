@@ -1,6 +1,5 @@
 ﻿module Freya.Machines.Http.Tests.Permissions
 
-open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines.Http
 open Freya.Optics.Http
@@ -21,7 +20,7 @@ let ``machine handles authorized correctly`` () =
     (* Static *)
 
     let staticMachine =
-        freyaMachine {
+        freyaHttpMachine {
             authorized false }
 
     verify defaultSetup staticMachine [
@@ -34,7 +33,7 @@ let ``machine handles authorized correctly`` () =
         Request.path_ .= "/authorized"
 
     let dynamicMachine =
-        freyaMachine {
+        freyaHttpMachine {
             authorized ((=) "/authorized" <!> !. Request.path_) }
 
     verify setup dynamicMachine [
@@ -53,7 +52,7 @@ let ``machine handles allowed correctly`` () =
     (* Static *)
 
     let staticMachine =
-        freyaMachine {
+        freyaHttpMachine {
             allowed false }
 
     verify defaultSetup staticMachine [
@@ -66,7 +65,7 @@ let ``machine handles allowed correctly`` () =
         Request.path_ .= "/allowed"
 
     let dynamicMachine =
-        freyaMachine {
+        freyaHttpMachine {
             allowed ((=) "/allowed" <!> !. Request.path_) }
 
     verify setup dynamicMachine [

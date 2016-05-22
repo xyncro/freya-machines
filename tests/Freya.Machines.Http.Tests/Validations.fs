@@ -1,7 +1,6 @@
 ﻿module Freya.Machines.Http.Tests.Validations
 
 open Arachne.Http
-open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines.Http
 open Freya.Optics.Http
@@ -22,7 +21,7 @@ let ``machine handles expectationMet correctly`` () =
     (* Static *)
 
     let staticMachine =
-        freyaMachine {
+        freyaHttpMachine {
             expectationMet false }
 
     verify defaultSetup staticMachine [
@@ -35,7 +34,7 @@ let ``machine handles expectationMet correctly`` () =
         Request.path_ .= "/unmet"
 
     let dynamicMachine =
-        freyaMachine {
+        freyaHttpMachine {
             expectationMet ((<>) "/unmet" <!> !. Request.path_) }
 
     verify setup dynamicMachine [
@@ -54,7 +53,7 @@ let ``machine handles method allowance correctly`` () =
     (* Static *)
 
     let staticMachine =
-        freyaMachine {
+        freyaHttpMachine {
             methods POST }
 
     verify defaultSetup staticMachine [
@@ -70,7 +69,7 @@ let ``machine handles uriTooLong correctly`` () =
     (* Static *)
 
     let staticMachine =
-        freyaMachine {
+        freyaHttpMachine {
             uriTooLong true }
 
     verify defaultSetup staticMachine [
@@ -83,7 +82,7 @@ let ``machine handles uriTooLong correctly`` () =
         Request.path_ .= "/uritoolong"
 
     let dynamicMachine =
-        freyaMachine {
+        freyaHttpMachine {
             uriTooLong ((=) "/uritoolong" <!> !. Request.path_) }
 
     verify setup dynamicMachine [
@@ -102,7 +101,7 @@ let ``machine handles badRequest correctly`` () =
     (* Static *)
 
     let staticMachine =
-        freyaMachine {
+        freyaHttpMachine {
             badRequest true }
 
     verify defaultSetup staticMachine [
@@ -115,7 +114,7 @@ let ``machine handles badRequest correctly`` () =
         Request.path_ .= "/badrequest"
 
     let dynamicMachine =
-        freyaMachine {
+        freyaHttpMachine {
             badRequest ((=) "/badrequest" <!> !. Request.path_) }
 
     verify setup dynamicMachine [

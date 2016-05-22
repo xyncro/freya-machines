@@ -2,7 +2,6 @@
 
 open System
 open Arachne.Http
-open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines.Http
 open Freya.Optics.Http
@@ -34,7 +33,7 @@ module Common =
             Request.Headers.ifMatch_ .= Some (IfMatch (IfMatchChoice.EntityTags [ Strong "bar" ]))
 
         let machine =
-            freyaMachine {
+            freyaHttpMachine {
                 entityTag (Strong "foo") }
 
         verify anySetup defaultMachine [
@@ -72,7 +71,7 @@ module Common =
             Request.Headers.ifUnmodifiedSince_ .= Some (IfUnmodifiedSince (baseDate.AddDays (-2.)))
 
         let machine =
-            freyaMachine {
+            freyaHttpMachine {
                 lastModified (baseDate.AddDays (-1.)) }
 
         verify newSetup machine [
@@ -103,7 +102,7 @@ module Safe =
             Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (IfNoneMatchChoice.EntityTags [ Weak "bar" ]))
 
         let machine =
-            freyaMachine {
+            freyaHttpMachine {
                 entityTag (Strong "foo") }
 
         verify anySetup defaultMachine [
@@ -141,7 +140,7 @@ module Safe =
             Request.Headers.ifModifiedSince_ .= Some (IfModifiedSince (baseDate.AddDays (-2.)))
 
         let machine =
-            freyaMachine {
+            freyaHttpMachine {
                 lastModified (baseDate.AddDays (-1.)) }
 
         verify newSetup machine [
@@ -175,7 +174,7 @@ module Unsafe =
              *> (Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (EntityTags [ Weak "bar" ])))
 
         let machine =
-            freyaMachine {
+            freyaHttpMachine {
                 methods POST
                 entityTag (Strong "foo") }
 

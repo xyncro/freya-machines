@@ -1,6 +1,5 @@
 ﻿module Freya.Machines.Http.Tests.Existence
 
-open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines.Http
 open Freya.Optics.Http
@@ -21,7 +20,7 @@ let ``machine handles exists decision correctly`` () =
     (* Static *)
 
     let staticMachine =
-        freyaMachine {
+        freyaHttpMachine {
             exists true }
 
     verify defaultSetup staticMachine [
@@ -34,7 +33,7 @@ let ``machine handles exists decision correctly`` () =
         Request.path_ .= "/exists"
 
     let dynamicMachine =
-        freyaMachine {
+        freyaHttpMachine {
             exists ((=) "/exists" <!> !. Request.path_) }
 
     verify setup dynamicMachine [

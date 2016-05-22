@@ -1,7 +1,6 @@
 ﻿module Freya.Machines.Http.Tests.Assertions
 
 open Arachne.Http
-open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines.Http
 open Freya.Optics.Http
@@ -22,7 +21,7 @@ let ``machine handles serviceAvailable correctly`` () =
     (* Static *)
 
     let staticMachine =
-        freyaMachine {
+        freyaHttpMachine {
             serviceAvailable false
             handleServiceUnavailable ((defaultValue .= Some "Service Unavailable") *> defaultRepresentation) }
 
@@ -37,7 +36,7 @@ let ``machine handles serviceAvailable correctly`` () =
         Request.path_ .= "/available"
 
     let dynamicMachine =
-        freyaMachine {
+        freyaHttpMachine {
             serviceAvailable ((=) "/available" <!> !. Request.path_)
             handleOk ((defaultValue .= Some "OK") *> defaultRepresentation)
             handleServiceUnavailable ((defaultValue .= Some "Service Unavailable") *> defaultRepresentation) }
@@ -60,7 +59,7 @@ let ``machine handles httpVersionSupported correctly`` () =
     (* Static *)
 
     let staticMachine =
-        freyaMachine {
+        freyaHttpMachine {
             httpVersionSupported false
             handleNotSupported ((defaultValue .= Some "HTTP Version Not Supported") *> defaultRepresentation) }
 
@@ -99,7 +98,7 @@ let ``machine handles methodImplemented correctly`` () =
         Request.method_ .= Method.Custom "BAR"
 
     let machine =
-        freyaMachine {
+        freyaHttpMachine {
             methods [ Method.Custom "FOO" ]
             handleNotImplemented ((defaultValue .= Some "Not Implemented") *> defaultRepresentation) }
 

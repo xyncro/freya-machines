@@ -20,44 +20,32 @@ open Xunit
 [<Fact>]
 let ``machine processes operation correctly`` () =
 
-    let test_ =
-        State.value_<string> "test"
-
     let setup =
         Request.method_ .= POST
 
     (* Success *)
 
-    let success =
-        freya {
-            do! Freya.Optic.set test_ (Some "test") }
-
     let successMachine =
-        freyaMachine {
-            doPost success
+        freyaHttpMachine {
+            doPost (defaultValue .= Some "Success")
             methods POST }
 
     verify setup successMachine [
         Response.statusCode_ => Some 200
         Response.reasonPhrase_ => Some "OK"
-        test_ => Some "test" ]
+        defaultValue => Some "Success" ]
 
     (* Failure *)
 
-    let failure =
-        freya {
-            do! Freya.Optic.set test_ (Some "test")
-            return false }
-
     let failureMachine =
-        freyaMachine {
-            doPost failure
+        freyaHttpMachine {
+            doPost ((defaultValue .= Some "Failure") *> (Freya.init false))
             methods POST }
 
     verify setup failureMachine [
         Response.statusCode_ => Some 500
         Response.reasonPhrase_ => Some "Internal Server Error"
-        test_ => Some "test" ]
+        defaultValue => Some "Failure" ]
 
 (* Completed *)
 
@@ -70,7 +58,7 @@ let ``machine handles completed correctly`` () =
     (* Completed *)
 
     let completedMachine =
-        freyaMachine {
+        freyaHttpMachine {
             methods POST }
 
     verify setup completedMachine [
@@ -80,7 +68,7 @@ let ``machine handles completed correctly`` () =
     (* Uncompleted *)
 
     let uncompletedMachine =
-        freyaMachine {
+        freyaHttpMachine {
             completed false
             methods POST }
 

@@ -1,6 +1,5 @@
 ﻿module Freya.Machines.Http.Tests.Responses
 
-open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines.Http
 open Freya.Optics.Http
@@ -25,7 +24,7 @@ module Common =
         (* Static *)
 
         let staticMachine =
-            freyaMachine {
+            freyaHttpMachine {
                 noContent true }
 
         verify defaultSetup staticMachine [
@@ -38,7 +37,7 @@ module Common =
             Request.path_ .= "/nocontent"
 
         let dynamicMachine =
-            freyaMachine {
+            freyaHttpMachine {
                 noContent ((=) "/nocontent" <!> !. Request.path_) }
 
         verify defaultSetup dynamicMachine [
