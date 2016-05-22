@@ -20,6 +20,16 @@ type HttpMachineBuilder () =
 
 (* Operations *)
 
+(* Extensions
+
+   Custom extensions to the HTTP model. *)
+
+type HttpMachineBuilder with
+
+    [<CustomOperation ("extend", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.Extend (m, a) =
+        HttpMachine.map (m, Extensions.Components.components_, (Set.union (Components.infer a)))
+
 (* Properties
 
    Configuration for common properties of a the HTTP model which may be used by

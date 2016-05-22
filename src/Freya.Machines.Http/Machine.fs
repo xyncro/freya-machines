@@ -6,6 +6,7 @@ open Arachne.Language
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
+open Hephaestus
 
 (* Inference
 
@@ -35,6 +36,36 @@ module Charsets =
 
         let inline defaults (a: ^a, _: ^b) =
             ((^a or ^b) : (static member Charsets: ^a -> Value<Charset list>) a)
+
+        let inline infer (x: 'a) =
+            defaults (x, Defaults)
+
+    let inline infer v =
+        Inference.infer v
+
+[<RequireQualifiedAccess>]
+[<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
+module Components =
+
+    (* Inference *)
+
+    [<RequireQualifiedAccess>]
+    module Inference =
+
+        type Defaults =
+            | Defaults
+
+            static member Components (x: Set<Component<Configuration,unit,State>>) =
+                x
+
+            static member Components (x: Component<Configuration,unit,State> list) =
+                set x
+
+            static member Charsets (x: Component<Configuration,unit,State>) =
+                set [ x ]
+
+        let inline defaults (a: ^a, _: ^b) =
+            ((^a or ^b) : (static member Components: ^a -> Set<Component<Configuration,unit,State>>) a)
 
         let inline infer (x: 'a) =
             defaults (x, Defaults)

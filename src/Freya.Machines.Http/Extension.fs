@@ -48,13 +48,18 @@ module HttpMachine =
 
             (), Optic.set o (Some v) (snd (m c)))
 
-    (* Pipeline *)
+    let inline map (m: HttpMachine, o, f) =
+        HttpMachine (fun c ->
+            let (HttpMachine m) = m
 
-    let private prototype =
-        Prototype.create Http.model
+            (), Optic.map o f (snd (m c)))
+
+    (* Pipeline *)
 
     let internal pipeline (HttpMachine machine) : Pipeline =
         let configuration = snd (machine Configuration.empty)
+        let extensions = Optic.get Extensions.Components.components_ configuration
+        let prototype = Prototype.create (Http.model extensions)
         let machine = Machine.create prototype configuration
 
         Machine.execute machine *> Pipeline.next

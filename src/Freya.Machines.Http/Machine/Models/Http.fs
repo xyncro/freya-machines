@@ -9,12 +9,14 @@ open Hephaestus
 [<RequireQualifiedAccess>]
 module internal Http =
 
-    let model =
-        Model.create (
-            set [
-                Core.component
-                Delete.component
-                GetOrHead.component
-                Options.component
-                Post.component
-                Put.component ])
+    let private components =
+        set [
+            Core.component
+            Delete.component
+            GetOrHead.component
+            Options.component
+            Post.component
+            Put.component ]
+
+    let model extensions =
+        Model.create (Set.union components extensions)

@@ -10,6 +10,12 @@ NUGET
       Arachne.Language (>= 3.0)
       Arachne.Uri (>= 3.0)
       FParsec (>= 1.0 < 2.0)
+    Arachne.Http.Cors (3.0)
+      Arachne.Core (>= 3.0)
+      Arachne.Http (>= 3.0)
+      Arachne.Language (>= 3.0)
+      Arachne.Uri (>= 3.0)
+      FParsec (>= 1.0 < 2.0)
     Arachne.Language (3.0)
       Arachne.Core (>= 3.0)
       FParsec (>= 1.0 < 2.0)
@@ -35,12 +41,18 @@ NUGET
       Arachne.Uri (>= 3.0.0-b < 3.1)
       Freya.Core (>= 4.0.0-b < 4.1)
       Freya.Optics (>= 4.0.0-b004)
+    Freya.Optics.Http.Cors (4.0.0-b004)
+      Aether (>= 8.1 < 9.0)
+      Arachne.Http.Cors (>= 3.0.0-b < 3.1)
+      Freya.Core (>= 4.0.0-b < 4.1)
+      Freya.Optics (>= 4.0.0-b004)
+      Freya.Optics.Http (>= 4.0.0-b004)
 
 GROUP Build
 NUGET
   remote: http://www.nuget.org/api/v2
   specs:
-    FAKE (4.26)
+    FAKE (4.27)
 GITHUB
   remote: xyncro/build
   specs:
@@ -85,7 +97,7 @@ NUGET
   specs:
     Freya.Core (4.0.0-b010)
       Aether (>= 8.1 < 9.0)
-    Freya.Testing (4.0.0-b006)
+    Freya.Testing (4.0.0-b007)
       Aether (>= 8.1 < 9.0)
       Freya.Core (>= 4.0.0-b < 4.1)
       Unquote
