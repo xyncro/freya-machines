@@ -50,8 +50,8 @@ module HttpMachine =
 
     (* Pipeline *)
 
-    let private prototype, log =
-        Prototype.createLogged Http.model
+    let private prototype =
+        Prototype.create Http.model
 
     let internal pipeline (HttpMachine machine) : Pipeline =
         let configuration = snd (machine Configuration.empty)
