@@ -42,6 +42,17 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Machine\Components\Preflight.fs" />
+    <Compile Include="Machine\Extension\Cors.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Freya.Machines\Freya.Machines.fsproj">
+      <Name>Freya.Machines</Name>
+      <Project>{afc409af-b301-4ece-b776-aaa8aa9a2298}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>

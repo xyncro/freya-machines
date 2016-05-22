@@ -55,14 +55,11 @@ module Components =
         type Defaults =
             | Defaults
 
+            static member Components (x: Set<Component<Configuration,unit,State>> list) =
+                Set.unionMany x
+
             static member Components (x: Set<Component<Configuration,unit,State>>) =
                 x
-
-            static member Components (x: Component<Configuration,unit,State> list) =
-                set x
-
-            static member Charsets (x: Component<Configuration,unit,State>) =
-                set [ x ]
 
         let inline defaults (a: ^a, _: ^b) =
             ((^a or ^b) : (static member Components: ^a -> Set<Component<Configuration,unit,State>>) a)

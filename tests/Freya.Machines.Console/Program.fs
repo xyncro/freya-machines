@@ -6,6 +6,7 @@ open Arachne.Http
 open Arachne.Language
 open Freya.Core
 open Freya.Machines.Http
+open Freya.Machines.Http.Cors
 
 let ok =
     freya {
@@ -20,6 +21,7 @@ let ok =
 
 let machine =
     freyaMachine {
+        using cors
         handleOk ok }
 
 let app =

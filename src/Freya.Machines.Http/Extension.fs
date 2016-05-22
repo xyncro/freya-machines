@@ -59,7 +59,8 @@ module HttpMachine =
     let internal pipeline (HttpMachine machine) : Pipeline =
         let configuration = snd (machine Configuration.empty)
         let extensions = Optic.get Extensions.Components.components_ configuration
-        let prototype = Prototype.create (Http.model extensions)
+        let model = Http.model extensions
+        let prototype = Prototype.create model
         let machine = Machine.create prototype configuration
 
         Machine.execute machine *> Pipeline.next

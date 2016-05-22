@@ -26,8 +26,8 @@ type HttpMachineBuilder () =
 
 type HttpMachineBuilder with
 
-    [<CustomOperation ("extend", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.Extend (m, a) =
+    [<CustomOperation ("using", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.Using (m, a) =
         HttpMachine.map (m, Extensions.Components.components_, (Set.union (Components.infer a)))
 
 (* Properties
