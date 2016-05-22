@@ -42,4 +42,4 @@ module internal Put =
             { Required = set [ "http.core" ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ "http"; "end-decision" ], Right, put) ] }
+            [ Splice (Key [ "http"; "core"; "fallback"; "fallback-decision" ], Right, put) ] }

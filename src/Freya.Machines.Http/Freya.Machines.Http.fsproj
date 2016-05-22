@@ -65,6 +65,7 @@
     <Compile Include="Machine\Specifications\Assertions.fs" />
     <Compile Include="Machine\Specifications\Conflict.fs" />
     <Compile Include="Machine\Specifications\Existence.fs" />
+    <Compile Include="Machine\Specifications\Fallback.fs" />
     <Compile Include="Machine\Specifications\Method.fs" />
     <Compile Include="Machine\Specifications\Negotiations.fs" />
     <Compile Include="Machine\Specifications\Operations.fs" />

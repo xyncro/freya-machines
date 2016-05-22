@@ -67,11 +67,11 @@ type HttpMachineBuilder with
     member inline __.LastModified (m, a) =
         HttpMachine.set (m, Properties.Resource.lastModified_, DateTime.infer a)
 
-(* Elements
+(* Specifications
 
-   Configuration for discrete elements used to make up specific components used
-   within the HTTP model. The elements structure is flattened here to make the
-   application of custom syntax more tractable. *)
+   Configuration for discrete specifications used to make up specific
+   components used within the HTTP model. The elements structure is flattened
+   here to make the application of custom syntax more tractable. *)
 
 (* Assertions *)
 
@@ -126,6 +126,16 @@ type HttpMachineBuilder with
     [<CustomOperation ("exists", MaintainsVariableSpaceUsingBind = true)>]
     member inline __.Exists (m, decision) =
         HttpMachine.set (m, Existence.Decisions.exists_, Decision.infer decision)
+
+(* Fallback *)
+
+type HttpMachineBuilder with
+
+    (* Terminals *)
+
+    [<CustomOperation ("handleFallback", MaintainsVariableSpaceUsingBind = true)>]
+    member inline __.HandleFallback (m, handler) =
+        HttpMachine.set (m, Fallback.Terminals.fallback_, Handler.infer handler)
 
 (* Negotiations *)
 

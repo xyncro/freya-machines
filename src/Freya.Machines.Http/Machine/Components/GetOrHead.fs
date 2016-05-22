@@ -36,4 +36,4 @@ module internal GetOrHead =
             { Required = set [ "http.core" ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ "http"; "end-decision" ], Right, getOrHead) ] }
+            [ Splice (Key [ "http"; "core"; "fallback"; "fallback-decision" ], Right, getOrHead) ] }

@@ -2,7 +2,6 @@
 
 #nowarn "46"
 
-open Freya.Machines
 open Hephaestus
 
 (* Core *)
@@ -16,27 +15,14 @@ module internal Core =
     let private Core =
         "core"
 
-    (* Terminals *)
-
-    let private endpointTerminal =
-        Terminal.create (Key.root, "end")
-            (function | _ -> Operation.ok None None)
-            (function | _ -> None)
-
-    (* Decisions *)
-
-    let private endpointDecision =
-        Decision.create (Key.root, "end")
-            (function | _ -> Static true)
-            (Specification.Terminal.empty, endpointTerminal)
-
     (* Component *)
 
     let private core =
         Assertions.specification Core (
             Permissions.specification Core (
                 Validations.specification Core (
-                    Negotiations.specification Core endpointDecision)))
+                    Negotiations.specification Core (
+                        Fallback.specification Core))))
 
     let component =
         { Metadata = 

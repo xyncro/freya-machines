@@ -98,8 +98,6 @@ let ``machine handles methodImplemented correctly`` () =
     let notAllowedSetup =
         Request.method_ .= Method.Custom "BAR"
 
-    // TODO: How should we handle custom methods!
-
     let machine =
         freyaMachine {
             methods [ Method.Custom "FOO" ]
