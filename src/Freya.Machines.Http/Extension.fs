@@ -1,5 +1,6 @@
 ﻿namespace Freya.Machines.Http
 
+open System.Text
 open Aether
 open Freya.Core
 open Freya.Core.Operators
@@ -56,12 +57,40 @@ module HttpMachine =
 
     (* Pipeline *)
 
+    let rec private log (s: StringBuilder) =
+        function | Log ps -> passes s ps
+
+    and private passes (s: StringBuilder) =
+        function | p :: ps -> passes (pass s p) ps
+                 | _ -> s
+
+    and private pass (s: StringBuilder) =
+        function | Pass (n, _, os) -> operations (s.AppendFormat ("Pass: {0}\n", n)) os
+
+    and private operations (s: StringBuilder) =
+        function | o :: os -> operations (operation s o) os
+                 | _ -> s
+
+    and private operation (s: StringBuilder) =
+        function | Operation (n, x) -> data (s.AppendFormat ("Operation: {0}\n", n)) x
+
+    and private data (s: StringBuilder) =
+        function | m -> s.AppendFormat ("Data: {0}\n", sprintf "%A" m)
+
     let internal pipeline (HttpMachine machine) : Pipeline =
         let configuration = snd (machine Configuration.empty)
         let extensions = Optic.get Extensions.Components.components_ configuration
         let model = Http.model extensions
-        let prototype = Prototype.create model
-        let machine = Machine.create prototype configuration
+
+        // Begin Logging
+
+        let prototype, l1 = Prototype.createLogged model
+        let machine, l2 = Machine.createLogged prototype configuration
+
+        printfn "Prototype:\n%s" (string (log (StringBuilder ()) l1))
+        printfn "Machine:\n%s" (string (log (StringBuilder ()) l2))
+
+        // End Logging
 
         Machine.execute machine *> Pipeline.next
 
