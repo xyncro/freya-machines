@@ -1,6 +1,22 @@
 ﻿namespace Freya.Machines
 
 open Aether
+open Freya.Core
+open Hephaestus
+
+(* Key
+
+   Functions for working with Hephaestus Keys, making defining and using keys
+   slightly more pleasant. *)
+
+[<RequireQualifiedAccess>]
+module  Key =
+
+    let add x =
+        Optic.map (Lens.ofIsomorphism Key.key_) ((flip List.append) x)
+
+    let root k =
+        Key [ k ]
 
 (* Patterns
 

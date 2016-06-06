@@ -18,368 +18,371 @@ type HttpMachineBuilder () =
         { Init = HttpMachine.init
           Bind = HttpMachine.bind }
 
-(* Operations *)
+(* Syntax *)
 
-(* Extensions
+[<AutoOpen>]
+module Syntax =
 
-   Custom extensions to the HTTP model. *)
+    (* Extensions
 
-type HttpMachineBuilder with
+       Custom extensions to the HTTP model. *)
 
-    [<CustomOperation ("using", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.Using (m, a) =
-        HttpMachine.map (m, Extensions.Components.components_, (Set.union (Components.infer a)))
+    type HttpMachineBuilder with
 
-(* Properties
+        [<CustomOperation ("using", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.Using (m, a) =
+            HttpMachine.map (m, Extensions.Components.components_, (Set.union (Components.infer a)))
 
-   Configuration for common properties of a the HTTP model which may be used by
-   multiple elements/components as part. Multiple implementations may rely on
-   the same core declarative property of a resource without needing to be aware
-   of the existence of other consumers of that property. *)
+    (* Properties
 
-(* Request *)
+       Configuration for common properties of a the HTTP model which may be used by
+       multiple elements/components as part. Multiple implementations may rely on
+       the same core declarative property of a resource without needing to be aware
+       of the existence of other consumers of that property. *)
 
-type HttpMachineBuilder with
+    (* Request *)
 
-    [<CustomOperation ("methods", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.Methods (m, a) =
-        HttpMachine.set (m, Properties.Request.methods_, Methods.infer a)
+    type HttpMachineBuilder with
 
-(* Representation *)
+        [<CustomOperation ("methods", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.Methods (m, a) =
+            HttpMachine.set (m, Properties.Request.methods_, Methods.infer a)
 
-type HttpMachineBuilder with
+    (* Representation *)
 
-    [<CustomOperation ("charsetsSupported", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.CharsetsSupported (m, a) =
-        HttpMachine.set (m, Properties.Representation.charsetsSupported_, Charsets.infer a)
+    type HttpMachineBuilder with
 
-    [<CustomOperation ("contentCodingsSupported", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.ContentCodingsSupported (m, a) =
-        HttpMachine.set (m, Properties.Representation.contentCodingsSupported_, ContentCodings.infer a)
+        [<CustomOperation ("charsetsSupported", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.CharsetsSupported (m, a) =
+            HttpMachine.set (m, Properties.Representation.charsetsSupported_, Charsets.infer a)
 
-    [<CustomOperation ("languagesSupported", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.LanguagesSupported (m, a) =
-        HttpMachine.set (m, Properties.Representation.languagesSupported_, LanguageTags.infer a)
+        [<CustomOperation ("contentCodingsSupported", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.ContentCodingsSupported (m, a) =
+            HttpMachine.set (m, Properties.Representation.contentCodingsSupported_, ContentCodings.infer a)
 
-    [<CustomOperation ("mediaTypesSupported", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.MediaTypesSupported (m, a) =
-        HttpMachine.set (m, Properties.Representation.mediaTypesSupported_, MediaTypes.infer a)
+        [<CustomOperation ("languagesSupported", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.LanguagesSupported (m, a) =
+            HttpMachine.set (m, Properties.Representation.languagesSupported_, LanguageTags.infer a)
 
-(* Resource *)
+        [<CustomOperation ("mediaTypesSupported", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.MediaTypesSupported (m, a) =
+            HttpMachine.set (m, Properties.Representation.mediaTypesSupported_, MediaTypes.infer a)
 
-type HttpMachineBuilder with
+    (* Resource *)
 
-    [<CustomOperation ("entityTag", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.EntityTag (m, a) =
-        HttpMachine.set (m, Properties.Resource.entityTag_, EntityTag.infer a)
+    type HttpMachineBuilder with
 
-    [<CustomOperation ("lastModified", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.LastModified (m, a) =
-        HttpMachine.set (m, Properties.Resource.lastModified_, DateTime.infer a)
+        [<CustomOperation ("entityTag", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.EntityTag (m, a) =
+            HttpMachine.set (m, Properties.Resource.entityTag_, EntityTag.infer a)
 
-(* Specifications
+        [<CustomOperation ("lastModified", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.LastModified (m, a) =
+            HttpMachine.set (m, Properties.Resource.lastModified_, DateTime.infer a)
 
-   Configuration for discrete specifications used to make up specific
-   components used within the HTTP model. The elements structure is flattened
-   here to make the application of custom syntax more tractable. *)
+    (* Specifications
 
-(* Assertions *)
+       Configuration for discrete specifications used to make up specific
+       components used within the HTTP model. The elements structure is flattened
+       here to make the application of custom syntax more tractable. *)
 
-type HttpMachineBuilder with
+    (* Assertions *)
 
-    (* Decisions *)
+    type HttpMachineBuilder with
 
-    [<CustomOperation ("serviceAvailable", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.ServiceAvailable (m, decision) =
-        HttpMachine.set (m, Assertions.Decisions.serviceAvailable_, Decision.infer decision)
+        (* Decisions *)
 
-    [<CustomOperation ("httpVersionSupported", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HttpVersionSupported (m, decision) =
-        HttpMachine.set (m, Assertions.Decisions.httpVersionSupported_, Decision.infer decision)
+        [<CustomOperation ("serviceAvailable", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.ServiceAvailable (m, decision) =
+            HttpMachine.set (m, Assertions.Decisions.serviceAvailable_, Decision.infer decision)
 
-    (* Terminals *)
+        [<CustomOperation ("httpVersionSupported", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HttpVersionSupported (m, decision) =
+            HttpMachine.set (m, Assertions.Decisions.httpVersionSupported_, Decision.infer decision)
 
-    [<CustomOperation ("handleServiceUnavailable", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleServiceUnavailable (m, handler) =
-        HttpMachine.set (m, Assertions.Terminals.serviceUnavailable_, Handler.infer handler)
+        (* Terminals *)
 
-    [<CustomOperation ("handleNotImplemented", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleNotImplemented (m, handler) =
-        HttpMachine.set (m, Assertions.Terminals.notImplemented_, Handler.infer handler)
+        [<CustomOperation ("handleServiceUnavailable", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleServiceUnavailable (m, handler) =
+            HttpMachine.set (m, Assertions.Terminals.serviceUnavailable_, Handler.infer handler)
 
-    [<CustomOperation ("handleNotSupported", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleNotSupported (m, handler) =
-        HttpMachine.set (m, Assertions.Terminals.httpVersionNotSupported_, Handler.infer handler)
+        [<CustomOperation ("handleNotImplemented", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleNotImplemented (m, handler) =
+            HttpMachine.set (m, Assertions.Terminals.notImplemented_, Handler.infer handler)
 
-(* Conflict *)
+        [<CustomOperation ("handleNotSupported", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleNotSupported (m, handler) =
+            HttpMachine.set (m, Assertions.Terminals.httpVersionNotSupported_, Handler.infer handler)
 
-type HttpMachineBuilder with
+    (* Conflict *)
 
-    (* Decisions *)
+    type HttpMachineBuilder with
 
-    [<CustomOperation ("conflict", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.Conflict (m, decision) =
-        HttpMachine.set (m, Conflict.Decisions.conflict_, Decision.infer decision)
+        (* Decisions *)
 
-    (* Terminals *)
+        [<CustomOperation ("conflict", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.Conflict (m, decision) =
+            HttpMachine.set (m, Conflict.Decisions.conflict_, Decision.infer decision)
 
-    [<CustomOperation ("handleConflict", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleConflict (m, handler) =
-        HttpMachine.set (m, Conflict.Terminals.conflict_, Handler.infer handler)
+        (* Terminals *)
 
-(* Existence *)
+        [<CustomOperation ("handleConflict", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleConflict (m, handler) =
+            HttpMachine.set (m, Conflict.Terminals.conflict_, Handler.infer handler)
 
-type HttpMachineBuilder with
+    (* Existence *)
 
-    (* Decisions *)
+    type HttpMachineBuilder with
 
-    [<CustomOperation ("exists", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.Exists (m, decision) =
-        HttpMachine.set (m, Existence.Decisions.exists_, Decision.infer decision)
+        (* Decisions *)
 
-(* Fallback *)
+        [<CustomOperation ("exists", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.Exists (m, decision) =
+            HttpMachine.set (m, Existence.Decisions.exists_, Decision.infer decision)
 
-type HttpMachineBuilder with
+    (* Fallback *)
 
-    (* Terminals *)
+    type HttpMachineBuilder with
 
-    [<CustomOperation ("handleFallback", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleFallback (m, handler) =
-        HttpMachine.set (m, Fallback.Terminals.fallback_, Handler.infer handler)
+        (* Terminals *)
 
-(* Negotiations *)
+        [<CustomOperation ("handleFallback", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleFallback (m, handler) =
+            HttpMachine.set (m, Fallback.Terminals.fallback_, Handler.infer handler)
 
-type HttpMachineBuilder with
+    (* Negotiations *)
 
-    (* Terminals *)
+    type HttpMachineBuilder with
 
-    [<CustomOperation ("handleNotAcceptable", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleNotAcceptable (m, handler) =
-        HttpMachine.set (m, Negotiations.Terminals.notAcceptable_, Handler.infer handler)
+        (* Terminals *)
 
-(* Operations *)
-
-type HttpMachineBuilder with
-
-    (* Decisions *)
-
-    [<CustomOperation ("completed", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.Completed (m, decision) =
-        HttpMachine.set (m, Operations.Decisions.completed_, Decision.infer decision)
+        [<CustomOperation ("handleNotAcceptable", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleNotAcceptable (m, handler) =
+            HttpMachine.set (m, Negotiations.Terminals.notAcceptable_, Handler.infer handler)
 
     (* Operations *)
 
-    [<CustomOperation ("doDelete", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.DoDelete (m, a) =
-        HttpMachine.set (m, (Operations.Decisions.operationMethod_ DELETE), Operation.infer a)
+    type HttpMachineBuilder with
 
-    [<CustomOperation ("doPost", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.DoPost (m, a) =
-        HttpMachine.set (m, (Operations.Decisions.operationMethod_ POST), Operation.infer a)
+        (* Decisions *)
 
-    [<CustomOperation ("doPut", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.DoPut (m, a) =
-        HttpMachine.set (m, (Operations.Decisions.operationMethod_ PUT), Operation.infer a)
+        [<CustomOperation ("completed", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.Completed (m, decision) =
+            HttpMachine.set (m, Operations.Decisions.completed_, Decision.infer decision)
 
-    (* Terminals *)
+        (* Operations *)
 
-    [<CustomOperation ("handleAccepted", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleAccepted (m, handler) =
-        HttpMachine.set (m, Operations.Terminals.accepted_, Handler.infer handler)
+        [<CustomOperation ("doDelete", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.DoDelete (m, a) =
+            HttpMachine.set (m, (Operations.Decisions.operationMethod_ DELETE), Operation.infer a)
 
-    [<CustomOperation ("handleInternalServerError", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleInternalServerError (m, handler) =
-        HttpMachine.set (m, Operations.Terminals.internalServerError_, Handler.infer handler)
+        [<CustomOperation ("doPost", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.DoPost (m, a) =
+            HttpMachine.set (m, (Operations.Decisions.operationMethod_ POST), Operation.infer a)
 
-(* Permissions *)
+        [<CustomOperation ("doPut", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.DoPut (m, a) =
+            HttpMachine.set (m, (Operations.Decisions.operationMethod_ PUT), Operation.infer a)
 
-type HttpMachineBuilder with
+        (* Terminals *)
 
-    (* Decisions *)
+        [<CustomOperation ("handleAccepted", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleAccepted (m, handler) =
+            HttpMachine.set (m, Operations.Terminals.accepted_, Handler.infer handler)
 
-    [<CustomOperation ("authorized", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.Authorized (m, decision) =
-        HttpMachine.set (m, Permissions.Decisions.authorized_, Decision.infer decision)
+        [<CustomOperation ("handleInternalServerError", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleInternalServerError (m, handler) =
+            HttpMachine.set (m, Operations.Terminals.internalServerError_, Handler.infer handler)
 
-    [<CustomOperation ("allowed", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.Allowed (m, decision) =
-        HttpMachine.set (m, Permissions.Decisions.allowed_, Decision.infer decision)
+    (* Permissions *)
 
-    (* Terminals *)
+    type HttpMachineBuilder with
 
-    [<CustomOperation ("handleUnauthorized", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleUnauthorized (m, handler) =
-        HttpMachine.set (m, Permissions.Terminals.unauthorized_, Handler.infer handler)
+        (* Decisions *)
 
-    [<CustomOperation ("handleForbidden", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleForbidden (m, handler) =
-        HttpMachine.set (m, Permissions.Terminals.forbidden_, Handler.infer handler)
+        [<CustomOperation ("authorized", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.Authorized (m, decision) =
+            HttpMachine.set (m, Permissions.Decisions.authorized_, Decision.infer decision)
 
-(* Preconditions *)
+        [<CustomOperation ("allowed", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.Allowed (m, decision) =
+            HttpMachine.set (m, Permissions.Decisions.allowed_, Decision.infer decision)
 
-type HttpMachineBuilder with
+        (* Terminals *)
 
-    (* Terminals *)
+        [<CustomOperation ("handleUnauthorized", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleUnauthorized (m, handler) =
+            HttpMachine.set (m, Permissions.Terminals.unauthorized_, Handler.infer handler)
 
-    [<CustomOperation ("handlePreconditionFailed", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandlePreconditionFailed (m, handler) =
-        HttpMachine.set (m, Preconditions.Shared.Terminals.preconditionFailed_, Handler.infer handler)
+        [<CustomOperation ("handleForbidden", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleForbidden (m, handler) =
+            HttpMachine.set (m, Permissions.Terminals.forbidden_, Handler.infer handler)
 
-(* Responses.Common *)
+    (* Preconditions *)
 
-type HttpMachineBuilder with
+    type HttpMachineBuilder with
 
-    (* Decisions *)
+        (* Terminals *)
 
-    [<CustomOperation ("noContent", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.NoContent (m, decision) =
-        HttpMachine.set (m, Responses.Common.Decisions.noContent_, Decision.infer decision)
+        [<CustomOperation ("handlePreconditionFailed", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandlePreconditionFailed (m, handler) =
+            HttpMachine.set (m, Preconditions.Shared.Terminals.preconditionFailed_, Handler.infer handler)
 
-    (* Terminals *)
+    (* Responses.Common *)
 
-    [<CustomOperation ("handleNoContent", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleNoContent (m, handler) =
-        HttpMachine.set (m, Responses.Common.Terminals.noContent_, Handler.infer handler)
+    type HttpMachineBuilder with
 
-    [<CustomOperation ("handleOk", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleOk (m, handler) =
-        HttpMachine.set (m, Responses.Common.Terminals.ok_, Handler.infer handler)
+        (* Decisions *)
 
-(* Responses.Created *)
+        [<CustomOperation ("noContent", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.NoContent (m, decision) =
+            HttpMachine.set (m, Responses.Common.Decisions.noContent_, Decision.infer decision)
 
-type HttpMachineBuilder with
+        (* Terminals *)
 
-    (* Decisions *)
+        [<CustomOperation ("handleNoContent", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleNoContent (m, handler) =
+            HttpMachine.set (m, Responses.Common.Terminals.noContent_, Handler.infer handler)
 
-    [<CustomOperation ("created", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.Created (m, decision) =
-        HttpMachine.set (m, Responses.Created.Decisions.created_, Decision.infer decision)
+        [<CustomOperation ("handleOk", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleOk (m, handler) =
+            HttpMachine.set (m, Responses.Common.Terminals.ok_, Handler.infer handler)
 
-    (* Terminals *)
+    (* Responses.Created *)
 
-    [<CustomOperation ("handleCreated", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleCreated (m, handler) =
-        HttpMachine.set (m, Responses.Created.Terminals.created_, Handler.infer handler)
+    type HttpMachineBuilder with
 
-(* Responses.Missing *)
+        (* Decisions *)
 
-type HttpMachineBuilder with
+        [<CustomOperation ("created", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.Created (m, decision) =
+            HttpMachine.set (m, Responses.Created.Decisions.created_, Decision.infer decision)
 
-    (* Terminals *)
+        (* Terminals *)
 
-    [<CustomOperation ("handleNotFound", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleNotFound (m, handler) =
-        HttpMachine.set (m, Responses.Missing.Terminals.notFound_, Handler.infer handler)
+        [<CustomOperation ("handleCreated", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleCreated (m, handler) =
+            HttpMachine.set (m, Responses.Created.Terminals.created_, Handler.infer handler)
 
-(* Responses.Moved *)
+    (* Responses.Missing *)
 
-type HttpMachineBuilder with
+    type HttpMachineBuilder with
 
-    (* Decisions *)
+        (* Terminals *)
 
-    [<CustomOperation ("gone", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.Gone (m, decision) =
-        HttpMachine.set (m, Responses.Moved.Decisions.gone_, Decision.infer decision)
+        [<CustomOperation ("handleNotFound", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleNotFound (m, handler) =
+            HttpMachine.set (m, Responses.Missing.Terminals.notFound_, Handler.infer handler)
 
-    [<CustomOperation ("movedPermanently", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.MovedPermanently (m, decision) =
-        HttpMachine.set (m, Responses.Moved.Decisions.movedPermanently_, Decision.infer decision)
+    (* Responses.Moved *)
 
-    [<CustomOperation ("movedTemporarily", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.MovedTemporarily (m, decision) =
-        HttpMachine.set (m, Responses.Moved.Decisions.movedTemporarily_, Decision.infer decision)
+    type HttpMachineBuilder with
 
-    (* Terminals *)
+        (* Decisions *)
 
-    [<CustomOperation ("handleGone", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleGone (m, handler) =
-        HttpMachine.set (m, Responses.Moved.Terminals.gone_, Handler.infer handler)
+        [<CustomOperation ("gone", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.Gone (m, decision) =
+            HttpMachine.set (m, Responses.Moved.Decisions.gone_, Decision.infer decision)
 
-    [<CustomOperation ("handleMovedPermanently", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleMovedPermanently (m, handler) =
-        HttpMachine.set (m, Responses.Moved.Terminals.movedPermanently_, Handler.infer handler)
+        [<CustomOperation ("movedPermanently", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.MovedPermanently (m, decision) =
+            HttpMachine.set (m, Responses.Moved.Decisions.movedPermanently_, Decision.infer decision)
 
-    [<CustomOperation ("handleTemporaryRedirect", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleTemporaryRedirect (m, handler) =
-        HttpMachine.set (m, Responses.Moved.Terminals.temporaryRedirect_, Handler.infer handler)
+        [<CustomOperation ("movedTemporarily", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.MovedTemporarily (m, decision) =
+            HttpMachine.set (m, Responses.Moved.Decisions.movedTemporarily_, Decision.infer decision)
 
-(* Responses.Options *)
+        (* Terminals *)
 
-type HttpMachineBuilder with
+        [<CustomOperation ("handleGone", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleGone (m, handler) =
+            HttpMachine.set (m, Responses.Moved.Terminals.gone_, Handler.infer handler)
 
-    (* Terminals *)
+        [<CustomOperation ("handleMovedPermanently", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleMovedPermanently (m, handler) =
+            HttpMachine.set (m, Responses.Moved.Terminals.movedPermanently_, Handler.infer handler)
 
-    [<CustomOperation ("handleOptions", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleOptions (m, handler) =
-        HttpMachine.set (m, Responses.Options.Terminals.options_, Handler.infer handler)
+        [<CustomOperation ("handleTemporaryRedirect", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleTemporaryRedirect (m, handler) =
+            HttpMachine.set (m, Responses.Moved.Terminals.temporaryRedirect_, Handler.infer handler)
 
-(* Responses.Other *)
+    (* Responses.Options *)
 
-type HttpMachineBuilder with
+    type HttpMachineBuilder with
 
-    (* Decisions *)
+        (* Terminals *)
 
-    [<CustomOperation ("found", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.Found (m, decision) =
-        HttpMachine.set (m, Responses.Other.Decisions.found_, Decision.infer decision)
+        [<CustomOperation ("handleOptions", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleOptions (m, handler) =
+            HttpMachine.set (m, Responses.Options.Terminals.options_, Handler.infer handler)
 
-    [<CustomOperation ("multipleChoices", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.MultipleChoices (m, decision) =
-        HttpMachine.set (m, Responses.Other.Decisions.multipleChoices_, Decision.infer decision)
+    (* Responses.Other *)
 
-    [<CustomOperation ("seeOther", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.SeeOther (m, decision) =
-        HttpMachine.set (m, Responses.Other.Decisions.seeOther_, Decision.infer decision)
+    type HttpMachineBuilder with
 
-    (* Terminals *)
+        (* Decisions *)
 
-    [<CustomOperation ("handleFound", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleFound (m, handler) =
-        HttpMachine.set (m, Responses.Other.Terminals.found_, Handler.infer handler)
+        [<CustomOperation ("found", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.Found (m, decision) =
+            HttpMachine.set (m, Responses.Other.Decisions.found_, Decision.infer decision)
 
-    [<CustomOperation ("handleMultipleChoices", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleMultipleChoices (m, handler) =
-        HttpMachine.set (m, Responses.Other.Terminals.multipleChoices_, Handler.infer handler)
+        [<CustomOperation ("multipleChoices", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.MultipleChoices (m, decision) =
+            HttpMachine.set (m, Responses.Other.Decisions.multipleChoices_, Decision.infer decision)
 
-    [<CustomOperation ("handleSeeOther", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleSeeOther (m, handler) =
-        HttpMachine.set (m, Responses.Other.Terminals.seeOther_, Handler.infer handler)
+        [<CustomOperation ("seeOther", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.SeeOther (m, decision) =
+            HttpMachine.set (m, Responses.Other.Decisions.seeOther_, Decision.infer decision)
 
-(* Validations *)
+        (* Terminals *)
 
-type HttpMachineBuilder with
+        [<CustomOperation ("handleFound", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleFound (m, handler) =
+            HttpMachine.set (m, Responses.Other.Terminals.found_, Handler.infer handler)
 
-    (* Decisions *)
+        [<CustomOperation ("handleMultipleChoices", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleMultipleChoices (m, handler) =
+            HttpMachine.set (m, Responses.Other.Terminals.multipleChoices_, Handler.infer handler)
 
-    [<CustomOperation ("expectationMet", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.ExpectationMet (m, decision) =
-        HttpMachine.set (m, Validations.Decisions.expectationMet_, Decision.infer decision)
+        [<CustomOperation ("handleSeeOther", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleSeeOther (m, handler) =
+            HttpMachine.set (m, Responses.Other.Terminals.seeOther_, Handler.infer handler)
 
-    [<CustomOperation ("uriTooLong", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.UriTooLong (m, decision) =
-        HttpMachine.set (m, Validations.Decisions.uriTooLong_, Decision.infer decision)
+    (* Validations *)
 
-    [<CustomOperation ("badRequest", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.BadRequest (m, decision) =
-        HttpMachine.set (m, Validations.Decisions.badRequest_, Decision.infer decision)
+    type HttpMachineBuilder with
 
-    (* Terminals *)
+        (* Decisions *)
 
-    [<CustomOperation ("handleExpectationFailed", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleExpectationFailed (m, handler) =
-        HttpMachine.set (m, Validations.Terminals.expectationFailed_, Handler.infer handler)
+        [<CustomOperation ("expectationMet", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.ExpectationMet (m, decision) =
+            HttpMachine.set (m, Validations.Decisions.expectationMet_, Decision.infer decision)
 
-    [<CustomOperation ("handleMethodNotAllowed", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleMethodNotAllowed (m, handler) =
-        HttpMachine.set (m, Validations.Terminals.methodNotAllowed_, Handler.infer handler)
+        [<CustomOperation ("uriTooLong", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.UriTooLong (m, decision) =
+            HttpMachine.set (m, Validations.Decisions.uriTooLong_, Decision.infer decision)
 
-    [<CustomOperation ("handleUriTooLong", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleUriTooLong (m, handler) =
-        HttpMachine.set (m, Validations.Terminals.uriTooLong_, Handler.infer handler)
+        [<CustomOperation ("badRequest", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.BadRequest (m, decision) =
+            HttpMachine.set (m, Validations.Decisions.badRequest_, Decision.infer decision)
 
-    [<CustomOperation ("handleBadRequest", MaintainsVariableSpaceUsingBind = true)>]
-    member inline __.HandleBadRequest (m, handler) =
-        HttpMachine.set (m, Validations.Terminals.badRequest_, Handler.infer handler)
+        (* Terminals *)
+
+        [<CustomOperation ("handleExpectationFailed", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleExpectationFailed (m, handler) =
+            HttpMachine.set (m, Validations.Terminals.expectationFailed_, Handler.infer handler)
+
+        [<CustomOperation ("handleMethodNotAllowed", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleMethodNotAllowed (m, handler) =
+            HttpMachine.set (m, Validations.Terminals.methodNotAllowed_, Handler.infer handler)
+
+        [<CustomOperation ("handleUriTooLong", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleUriTooLong (m, handler) =
+            HttpMachine.set (m, Validations.Terminals.uriTooLong_, Handler.infer handler)
+
+        [<CustomOperation ("handleBadRequest", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleBadRequest (m, handler) =
+            HttpMachine.set (m, Validations.Terminals.badRequest_, Handler.infer handler)
 
 (* Builder
 

@@ -85,7 +85,7 @@ module Properties =
 
     (* Optics *)
 
-    let private root_ =
+    let private properties_ =
         Configuration.element_ Properties.empty [ "http"; "configuration"; "properties" ]
 
     (* Request *)
@@ -95,7 +95,7 @@ module Properties =
     module Request =
 
         let private request_ =
-                root_
+                properties_
             >-> Properties.request_
 
         let methods_ =
@@ -109,7 +109,7 @@ module Properties =
     module Representation =
 
         let private representation_ =
-                root_
+                properties_
             >-> Properties.representation_
 
         let charsetsSupported_ =
@@ -135,7 +135,7 @@ module Properties =
     module Resource =
 
         let private resource_ =
-                root_
+                properties_
             >-> Properties.resource_
 
         let entityTag_ =

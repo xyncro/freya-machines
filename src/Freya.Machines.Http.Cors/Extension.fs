@@ -1,5 +1,7 @@
 ﻿namespace Freya.Machines.Http.Cors
 
+open Freya.Machines
+
 #nowarn "46"
 
 (* Preflight *)
@@ -10,4 +12,4 @@ module Extension =
     (* Extension *)
 
     let cors =
-        set [ Preflight.component ]
+        set [ Cors.component ]

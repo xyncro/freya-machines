@@ -53,20 +53,6 @@ module internal Defaults =
             HEAD
             OPTIONS ]
 
-(* Key
-
-   Functions for working with Hephaestus Keys, making defining and using keys
-   slightly more pleasant. *)
-
-[<RequireQualifiedAccess>]
-module internal Key =
-
-    let add x =
-        Optic.map (Lens.ofIsomorphism Key.key_) ((flip List.append) x)
-
-    let root k =
-        Key [ k ]
-
 (* Resource *)
 
 [<RequireQualifiedAccess>]

@@ -21,8 +21,15 @@ let ok =
 
 let machine =
     freyaMachine {
+
+        // HTTP
+
+        handleOk ok
+
+        // HTTP CORS
+
         using cors
-        handleOk ok }
+        corsAllowedOrigins [ "" ] }
 
 let app =
     OwinAppFunc.ofFreya machine

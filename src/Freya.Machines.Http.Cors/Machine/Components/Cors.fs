@@ -9,22 +9,25 @@ open Hephaestus
 (* Preflight *)
 
 [<RequireQualifiedAccess>]
-module internal Preflight =
+module internal Cors =
 
     (* Name *)
 
     [<Literal>]
-    let private Preflight =
-        "preflight"
+    let Name =
+        "http-cors"
 
     (* Component *)
 
+    let private simple s =
+        Simple.specification Name s
+
     let component : Component<Configuration,unit,State> =
         { Metadata = 
-            { Name = "http.cors.preflight"
+            { Name = Name
               Description = None }
           Requirements =
-            { Required = Set.empty
+            { Required = set [ "http-options" ]
               Preconditions = List.empty }
           Operations =
-            [] }
+            [ Splice (Key [], Left, simple) ] }
