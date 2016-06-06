@@ -13,21 +13,21 @@ module internal Options =
     (* Name *)
 
     [<Literal>]
-    let private Options =
-        "options"
+    let Name =
+        "http-options"
 
     (* Component *)
 
     let private options s =
-        Method.specification Options (set [ OPTIONS ]) (
-            s, Responses.Options.specification Options)
+        Method.specification Name (set [ OPTIONS ]) (
+            s, Responses.Options.specification Name)
 
     let component =
         { Metadata =
-            { Name = "http.options"
+            { Name = Name
               Description = None }
           Requirements =
-            { Required = set [ "http.core" ]
+            { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ "http"; "core"; "validation"; "bad-request-decision" ], Left, options) ] }
+            [ Splice (Key [ Core.Name; "validations"; "bad-request-decision" ], Left, options) ] }

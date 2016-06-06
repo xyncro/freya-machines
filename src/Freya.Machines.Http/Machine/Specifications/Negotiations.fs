@@ -40,13 +40,13 @@ module Negotiations =
 
     (* Key *)
 
-    let private key p =
-        Key.add [ p; "negotiation" ] Key.root
+    let private key =
+        Key.root >> Key.add [ "negotiations" ]
 
     (* Optics *)
 
     let private negotiations_ =
-        Configuration.element_ Negotiations.empty "http.specifications.negotiations"
+        Configuration.element_ Negotiations.empty [ "http"; "specifications"; "negotiations" ]
 
     (* Terminals *)
 

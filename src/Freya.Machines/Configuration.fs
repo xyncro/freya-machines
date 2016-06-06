@@ -7,7 +7,7 @@ open Freya.Core
 (* Types *)
 
 type Configuration =
-    | Configuration of Map<string,obj>
+    | Configuration of Map<string list,obj>
 
     static member configuration_ =
         (fun (Configuration x) -> x), (Configuration)

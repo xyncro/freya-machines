@@ -69,13 +69,13 @@ module Assertions =
 
     (* Key *)
 
-    let private key p =
-        Key.add [ p; "assertion" ] Key.root
+    let private key =
+        Key.root >> Key.add [ "assertions" ]
 
     (* Optics *)
 
     let private assertions_ =
-        Configuration.element_ Assertions.empty "http.specifications.assertions"
+        Configuration.element_ Assertions.empty [ "http"; "specifications"; "assertions" ]
 
     (* Terminals *)
 

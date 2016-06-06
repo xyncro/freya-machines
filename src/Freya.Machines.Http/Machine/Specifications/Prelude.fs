@@ -64,8 +64,8 @@ module internal Key =
     let add x =
         Optic.map (Lens.ofIsomorphism Key.key_) ((flip List.append) x)
 
-    let root =
-        add [ "http" ] Key.empty
+    let root k =
+        Key [ k ]
 
 (* Resource *)
 

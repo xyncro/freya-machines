@@ -18,8 +18,8 @@ module Fallback =
 
     (* Key *)
 
-    let private key p =
-        Key.add [ p; "fallback" ] Key.root
+    let private key =
+        Key.root >> Key.add [ "fallback" ]
 
     (* Types *)
 
@@ -44,7 +44,7 @@ module Fallback =
     (* Optics *)
 
     let private fallback_ =
-        Configuration.element_ Fallback.empty "http.specifications.fallback"
+        Configuration.element_ Fallback.empty [ "http"; "specifications"; "fallback" ]
 
     (* Terminals *)
 

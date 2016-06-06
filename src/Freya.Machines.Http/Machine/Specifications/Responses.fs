@@ -15,8 +15,8 @@ module Responses =
 
     (* Key *)
 
-    let private key p =
-        Key.add [ p; "responses" ] Key.root
+    let private key =
+        Key.root >> Key.add [ "responses" ]
 
     (* Common
 
@@ -73,7 +73,7 @@ module Responses =
         (* Optics *)
 
         let private common_ =
-                Configuration.element_ Common.empty "http.specifications.responses.common"
+                Configuration.element_ Common.empty [ "http"; "specifications"; "responses"; "common" ]
 
         (* Terminals *)
 
@@ -183,7 +183,7 @@ module Responses =
         (* Optics *)
 
         let private created_ =
-            Configuration.element_ Created.empty "http.specifications.responses.created"
+            Configuration.element_ Created.empty [ "http"; "specifications"; "responses"; "created" ]
 
         (* Terminals *)
 
@@ -262,7 +262,7 @@ module Responses =
         (* Optics *)
 
         let private missing_ =
-            Configuration.element_ Missing.empty "http.specifications.responses.missing"
+            Configuration.element_ Missing.empty [ "http"; "specifications"; "responses"; "missing" ]
 
         (* Terminals *)
 
@@ -355,7 +355,7 @@ module Responses =
         (* Optics *)
 
         let private moved_ =
-            Configuration.element_ Moved.empty "http.specifications.responses.moved"
+            Configuration.element_ Moved.empty [ "http"; "specifications"; "responses"; "moved" ]
 
         (* Terminals *)
 
@@ -472,7 +472,7 @@ module Responses =
         (* Optics *)
 
         let private options_ =
-            Configuration.element_ Options.empty "http.specifications.responses.options"
+            Configuration.element_ Options.empty [ "http"; "specifications"; "responses"; "options" ]
 
         (* Terminals *)
 
@@ -565,7 +565,7 @@ module Responses =
         (* Optics *)
 
         let private other_ =
-            Configuration.element_ Other.empty "http.specifications.responses.other"
+            Configuration.element_ Other.empty [ "http"; "specifications"; "responses"; "other" ]
 
         (* Terminals *)
 

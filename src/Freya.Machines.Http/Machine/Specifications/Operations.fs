@@ -18,8 +18,8 @@ module Operations =
 
     (* Key *)
 
-    let private key p =
-        Key.add [ p; "operation" ] Key.root
+    let private key =
+        Key.root >> Key.add [ "operations" ]
 
     (* Types *)
 
@@ -68,7 +68,7 @@ module Operations =
     (* Optics *)
 
     let private operations_ =
-        Configuration.element_ Operations.empty "http.specifications.operations"
+        Configuration.element_ Operations.empty [ "http"; "specifications"; "operations" ]
 
     (* Terminals *)
 

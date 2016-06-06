@@ -86,7 +86,7 @@ module Properties =
     (* Optics *)
 
     let private root_ =
-        Configuration.element_ Properties.empty "http.configuration.properties"
+        Configuration.element_ Properties.empty [ "http"; "configuration"; "properties" ]
 
     (* Request *)
 

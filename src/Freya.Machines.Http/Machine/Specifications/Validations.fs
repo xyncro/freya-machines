@@ -2,7 +2,6 @@
 
 open Aether
 open Aether.Operators
-open Arachne.Http
 open Freya.Core.Operators
 open Freya.Machines
 open Freya.Optics.Http
@@ -82,13 +81,13 @@ module Validations =
 
     (* Key *)
 
-    let private key p =
-        Key.add [ p; "validation" ] Key.root
+    let private key =
+        Key.root >> Key.add [ "validations" ]
 
     (* Optics *)
 
     let private validations_ =
-        Configuration.element_ Validations.empty "http.specifications.validations"
+        Configuration.element_ Validations.empty [ "http"; "specifications"; "validations" ]
 
     (* Terminals *)
 

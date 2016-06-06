@@ -13,27 +13,27 @@ module internal Delete =
     (* Name *)
 
     [<Literal>]
-    let private Delete =
-        "delete"
+    let Name =
+        "http-delete"
 
     (* Component *)
 
     let private delete s =
-        Method.specification Delete (Set.ofList [ DELETE ]) (
-            s, Existence.specification Delete (
-                Responses.Moved.specification Delete (
-                    Responses.Missing.specification Delete),
-                Preconditions.Common.specification Delete (
-                    Preconditions.Unsafe.specification Delete (
-                        Operations.specification Delete DELETE (
-                            Responses.Common.specification Delete)))))
+        Method.specification Name (set [ DELETE ]) (
+            s, Existence.specification Name (
+                Responses.Moved.specification Name (
+                    Responses.Missing.specification Name),
+                Preconditions.Common.specification Name (
+                    Preconditions.Unsafe.specification Name (
+                        Operations.specification Name DELETE (
+                            Responses.Common.specification Name)))))
 
     let component =
         { Metadata =
-            { Name = "http.delete"
+            { Name = Name
               Description = None }
           Requirements =
-            { Required = set [ "http.core" ]
+            { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ "http"; "core"; "fallback"; "fallback-decision" ], Right, delete) ] }
+            [ Splice (Key [ Core.Name; "fallback"; "fallback-decision" ], Right, delete) ] }

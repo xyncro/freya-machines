@@ -12,21 +12,21 @@ module internal Core =
     (* Name *)
 
     [<Literal>]
-    let private Core =
-        "core"
+    let Name =
+        "http-core"
 
     (* Component *)
 
     let private core =
-        Assertions.specification Core (
-            Permissions.specification Core (
-                Validations.specification Core (
-                    Negotiations.specification Core (
-                        Fallback.specification Core))))
+        Assertions.specification Name (
+            Permissions.specification Name (
+                Validations.specification Name (
+                    Negotiations.specification Name (
+                        Fallback.specification Name))))
 
     let component =
         { Metadata = 
-            { Name = "http.core"
+            { Name = Name
               Description = None }
           Requirements =
             { Required = Set.empty

@@ -16,8 +16,8 @@ open Freya.Machines
 [<RequireQualifiedAccess>]
 module Existence =
 
-    let private key p =
-        Key.add [ p; "existence" ] Key.root
+    let private key =
+        Key.root >> Key.add [ "existence" ]
 
     (* Types *)
 
@@ -42,7 +42,7 @@ module Existence =
     (* Optics *)
 
     let private existence_ =
-        Configuration.element_ Existence.empty "http.specifications.existence"
+        Configuration.element_ Existence.empty [ "http"; "specifications"; "existence" ]
 
     (* Decisions *)
 

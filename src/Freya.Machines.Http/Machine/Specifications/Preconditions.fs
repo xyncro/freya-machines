@@ -22,8 +22,8 @@ module Preconditions =
 
     (* Key *)
 
-    let private key p =
-        Key.add [ p; "preconditions" ] Key.root
+    let private key =
+        Key.root >> Key.add [ "preconditions" ]
 
     (* Types *)
 
@@ -48,7 +48,7 @@ module Preconditions =
     (* Optics *)
 
     let private preconditions_ =
-        Configuration.element_ Preconditions.empty "http.specifications.preconditions"
+        Configuration.element_ Preconditions.empty [ "http"; "specifications"; "preconditions" ]
 
     (* Shared *)
 
@@ -168,7 +168,7 @@ module Preconditions =
         (* Optics *)
 
         let private safe_ =
-            Configuration.element_ Safe.empty "http.specifications.preconditions.safe"
+            Configuration.element_ Safe.empty [ "http"; "specifications"; "preconditions"; "safe" ]
 
         (* Terminals *)
 

@@ -17,8 +17,8 @@ module Conflict =
 
     (* Key *)
 
-    let private key p =
-        Key.add [ p; "conflict" ] Key.root
+    let private key =
+        Key.root >> Key.add [ "conflict" ]
 
     (* Types *)
 
@@ -57,7 +57,7 @@ module Conflict =
     (* Optics *)
 
     let private conflict_ =
-        Configuration.element_ Conflict.empty "http.specifications.conflict"
+        Configuration.element_ Conflict.empty [ "http"; "specifications"; "conflict" ]
 
     (* Terminals *)
 

@@ -13,30 +13,30 @@ module internal Post =
     (* Name *)
 
     [<Literal>]
-    let private Post =
-        "post"
+    let Name =
+        "http-post"
 
     (* Component *)
 
     let private post s =
-        Method.specification Post (set [ POST ]) (
-            s, Existence.specification Post (
-                Responses.Moved.specification Post (
-                    Responses.Missing.specification Post),
-                Preconditions.Common.specification Post (
-                    Preconditions.Unsafe.specification Post (
-                        Conflict.specification Post (
-                            Operations.specification Post POST (
-                                Responses.Created.specification Post (
-                                    Responses.Other.specification Post (
-                                        Responses.Common.specification Post))))))))
+        Method.specification Name (set [ POST ]) (
+            s, Existence.specification Name (
+                Responses.Moved.specification Name (
+                    Responses.Missing.specification Name),
+                Preconditions.Common.specification Name (
+                    Preconditions.Unsafe.specification Name (
+                        Conflict.specification Name (
+                            Operations.specification Name POST (
+                                Responses.Created.specification Name (
+                                    Responses.Other.specification Name (
+                                        Responses.Common.specification Name))))))))
 
     let component =
         { Metadata =
-            { Name = "http.post"
+            { Name = Name
               Description = None }
           Requirements =
-            { Required = set [ "http.core" ]
+            { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ "http"; "core"; "fallback"; "fallback-decision" ], Right, post) ] }
+            [ Splice (Key [ Core.Name; "fallback"; "fallback-decision" ], Right, post) ] }

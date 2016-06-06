@@ -61,13 +61,13 @@ module Permissions =
 
     (* Key *)
 
-    let private key p =
-        Key.add [ p; "permission" ] Key.root
+    let private key =
+        Key.root >> Key.add [ "permissions" ]
 
     (* Optics *)
 
     let private permissions_ =
-        Configuration.element_ Permissions.empty "http.specifications.permissions"
+        Configuration.element_ Permissions.empty [ "http"; "specifications"; "permissions" ]
 
     (* Terminals *)
 

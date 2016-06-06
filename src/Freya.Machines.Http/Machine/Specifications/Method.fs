@@ -25,8 +25,8 @@ module Method =
 
     (* Key *)
 
-    let private key p =
-        Key.add [ p; "method" ] Key.root
+    let private key =
+        Key.root >> Key.add [ "method" ]
 
     (* Decisions *)
 

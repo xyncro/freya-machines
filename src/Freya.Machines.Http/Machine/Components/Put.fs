@@ -13,33 +13,33 @@ module internal Put =
     (* Name *)
 
     [<Literal>]
-    let private Put =
-        "put"
+    let Name =
+        "http-put"
 
     (* Component *)
 
     let rec private put s =
-        Method.specification Put (set [ PUT ]) (
-            s, Existence.specification Put (
-                Responses.Moved.specification Put (
+        Method.specification Name (set [ PUT ]) (
+            s, Existence.specification Name (
+                Responses.Moved.specification Name (
                     continuation),
-                Preconditions.Common.specification Put (
-                    Preconditions.Unsafe.specification Put (
-                        Conflict.specification Put (
+                Preconditions.Common.specification Name (
+                    Preconditions.Unsafe.specification Name (
+                        Conflict.specification Name (
                             continuation)))))
 
     and private continuation =
-        Operations.specification Put PUT (
-            Responses.Created.specification Put (
-                Responses.Other.specification Put (
-                    Responses.Common.specification Put)))
+        Operations.specification Name PUT (
+            Responses.Created.specification Name (
+                Responses.Other.specification Name (
+                    Responses.Common.specification Name)))
 
     let component =
         { Metadata =
-            { Name = "http.put"
+            { Name = Name
               Description = None }
           Requirements =
-            { Required = set [ "http.core" ]
+            { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ "http"; "core"; "fallback"; "fallback-decision" ], Right, put) ] }
+            [ Splice (Key [ Core.Name; "fallback"; "fallback-decision" ], Right, put) ] }

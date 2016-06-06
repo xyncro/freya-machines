@@ -13,27 +13,27 @@ module internal GetOrHead =
     (* Name *)
 
     [<Literal>]
-    let private GetOrHead =
-        "get-or-head"
+    let Name =
+        "http-get-or-head"
 
     (* Component *)
 
     let private getOrHead s =
-        Method.specification GetOrHead (set [ GET; HEAD ]) (
-            s, Existence.specification GetOrHead (
-                Responses.Moved.specification GetOrHead (
-                    Responses.Missing.specification GetOrHead),
-                Preconditions.Common.specification GetOrHead (
-                    Preconditions.Safe.specification GetOrHead (
-                        Responses.Other.specification GetOrHead (
-                            Responses.Common.specification GetOrHead)))))
+        Method.specification Name (set [ GET; HEAD ]) (
+            s, Existence.specification Name (
+                Responses.Moved.specification Name (
+                    Responses.Missing.specification Name),
+                Preconditions.Common.specification Name (
+                    Preconditions.Safe.specification Name (
+                        Responses.Other.specification Name (
+                            Responses.Common.specification Name)))))
 
     let component =
         { Metadata =
             { Name = "http.get"
               Description = None }
           Requirements =
-            { Required = set [ "http.core" ]
+            { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ "http"; "core"; "fallback"; "fallback-decision" ], Right, getOrHead) ] }
+            [ Splice (Key [ Core.Name; "fallback"; "fallback-decision" ], Right, getOrHead) ] }
