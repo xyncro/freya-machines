@@ -19,9 +19,14 @@ module Simple =
     [<RequireQualifiedAccess>]
     module Decisions =
 
-        let rec internal hasOrigin p s =
-            Decision.create (key p, "has-origin")
+        let rec internal hasOrigin k s =
+            Decision.create (key k, "has-origin")
                 (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.origin_))
+                (s, originMatches k s)
+
+        and internal originMatches k s =
+            Decision.create (key k, "origin-matches")
+                (function | _ -> Static false)
                 (s, s)
 
     (* Specification *)
