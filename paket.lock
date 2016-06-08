@@ -31,7 +31,7 @@ NUGET
       Hekate (>= 3.2 < 4.0)
   remote: https://www.myget.org/F/freya/api/v2
   specs:
-    Freya.Core (4.0.0-b010)
+    Freya.Core (4.0.0-b011)
       Aether (>= 8.1 < 9.0)
     Freya.Optics (4.0.0-b004)
       Aether (>= 8.1 < 9.0)
@@ -52,7 +52,7 @@ GROUP Build
 NUGET
   remote: http://www.nuget.org/api/v2
   specs:
-    FAKE (4.27)
+    FAKE (4.28)
 GITHUB
   remote: xyncro/build
   specs:
@@ -95,9 +95,9 @@ NUGET
     xunit.runner.console (2.1)
   remote: https://www.myget.org/F/freya/api/v2
   specs:
-    Freya.Core (4.0.0-b010)
+    Freya.Core (4.0.0-b011)
       Aether (>= 8.1 < 9.0)
-    Freya.Testing (4.0.0-b007)
+    Freya.Testing (4.0.0-b008)
       Aether (>= 8.1 < 9.0)
       Freya.Core (>= 4.0.0-b < 4.1)
       Unquote

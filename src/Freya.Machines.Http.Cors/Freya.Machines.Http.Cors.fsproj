@@ -33,35 +33,6 @@
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\Freya.Machines.Http.Cors.XML</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Machine\Configuration\Properties.fs" />
-    <Compile Include="Machine\Specifications\Prelude.fs" />
-    <Compile Include="Machine\Specifications\Simple.fs" />
-    <Compile Include="Machine\Components\Cors.fs" />
-    <Compile Include="Extension.fs" />
-    <Compile Include="Expression.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Freya.Machines.Http\Freya.Machines.Http.fsproj">
-      <Name>Freya.Machines.Http</Name>
-      <Project>{7aadeb04-3aa4-4019-b13e-0b75b473de6a}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\Freya.Machines\Freya.Machines.fsproj">
-      <Name>Freya.Machines</Name>
-      <Project>{afc409af-b301-4ece-b776-aaa8aa9a2298}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -348,4 +319,31 @@
       </ItemGroup>
     </When>
   </Choose>
+  <ItemGroup>
+    <Compile Include="Machine\Configuration\Properties.fs" />
+    <Compile Include="Machine\Specifications\Prelude.fs" />
+    <Compile Include="Machine\Specifications\Simple.fs" />
+    <Compile Include="Machine\Components\Cors.fs" />
+    <Compile Include="Extension.fs" />
+    <Compile Include="Expression.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <ProjectReference Include="..\Freya.Machines.Http\Freya.Machines.Http.fsproj">
+      <Name>Freya.Machines.Http</Name>
+      <Project>{7aadeb04-3aa4-4019-b13e-0b75b473de6a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Freya.Machines\Freya.Machines.fsproj">
+      <Name>Freya.Machines</Name>
+      <Project>{afc409af-b301-4ece-b776-aaa8aa9a2298}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

@@ -23,6 +23,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "packages", "packages", "{BD433EC3-9F6C-4A0E-B9DF-A2342AAD75BE}"
 	ProjectSection(SolutionItems) = preProject
 		src\Freya.Machines\Freya.Machines.fsproj.paket.template = src\Freya.Machines\Freya.Machines.fsproj.paket.template
+		src\Freya.Machines.Http.Cors\Freya.Machines.Http.Cors.fsproj.paket.template = src\Freya.Machines.Http.Cors\Freya.Machines.Http.Cors.fsproj.paket.template
 		src\Freya.Machines.Http\Freya.Machines.Http.fsproj.paket.template = src\Freya.Machines.Http\Freya.Machines.Http.fsproj.paket.template
 	EndProjectSection
 EndProject

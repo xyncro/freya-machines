@@ -1,0 +1,23 @@
+﻿type project
+id
+    Freya.Machines.Http.Cors
+title
+    Freya.Machines.Http.Cors
+description
+    An extension to the Freya HTTP Machine adding CORS support
+tags
+    functional, web, f#, freya, machines, http, cors
+version
+    4.0.0-b002
+owners
+    Andrew Cherry, Ryan Riley
+authors
+    Andrew Cherry, Ryan Riley
+copyright
+    Copyright Xyncro Ltd 2016
+projectUrl
+    https://xyncro.tech/freya
+licenseUrl
+    https://github.com/xyncro/freya-machines/blob/master/LICENSE.md
+requireLicenseAcceptance
+    false
