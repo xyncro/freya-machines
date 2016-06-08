@@ -5,6 +5,8 @@ open Aether
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
+open Freya.Machines.Http.Machine.Configuration
+open Freya.Machines.Http.Machine.Models
 open Hephaestus
 
 (* Types

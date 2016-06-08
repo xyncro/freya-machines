@@ -1,8 +1,9 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Aether
 open Aether.Operators
 open Freya.Machines
+open Freya.Machines.Http
 
 (* Permissions
 
@@ -89,12 +90,12 @@ module Permissions =
 
         let internal unauthorized p =
             Terminal.create (key p, "unauthorized")
-                (function | _ -> Operation.unauthorized)
+                (function | _ -> Operations.unauthorized)
                 (function | Get unauthorized_ x -> x)
 
         let internal forbidden p =
             Terminal.create (key p, "forbidden")
-                (function | _ -> Operation.forbidden)
+                (function | _ -> Operations.forbidden)
                 (function | Get forbidden_ x -> x)
 
     (* Decisions *)

@@ -1,8 +1,9 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Components
 
 #nowarn "46"
 
 open Arachne.Http
+open Freya.Machines.Http.Machine.Specifications
 open Hephaestus
 
 (* Delete *)
@@ -25,7 +26,7 @@ module internal Delete =
                     Responses.Missing.specification Name),
                 Preconditions.Common.specification Name (
                     Preconditions.Unsafe.specification Name (
-                        Operations.specification Name DELETE (
+                        Operation.specification Name DELETE (
                             Responses.Common.specification Name)))))
 
     let component =

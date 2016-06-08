@@ -1,4 +1,4 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Aether
 open Aether.Operators
@@ -6,6 +6,8 @@ open Arachne.Http
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
+open Freya.Machines.Http
+open Freya.Machines.Http.Machine.Configuration
 open Hephaestus
 
 (* Prelude *)

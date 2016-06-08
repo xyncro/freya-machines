@@ -1,10 +1,11 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Aether
 open Aether.Operators
 open Arachne.Http
 open Freya.Core
 open Freya.Machines
+open Freya.Machines.Http
 
 (* Operation
 
@@ -14,12 +15,12 @@ open Freya.Machines
    remain dynamic throughout optimization (if present). *)
 
 [<RequireQualifiedAccess>]
-module Operations =
+module Operation =
 
     (* Key *)
 
     let private key =
-        Key.root >> Key.add [ "operations" ]
+        Key.root >> Key.add [ "operation" ]
 
     (* Types *)
 
@@ -68,7 +69,7 @@ module Operations =
     (* Optics *)
 
     let private operations_ =
-        Configuration.element_ Operations.empty [ "http"; "specifications"; "operations" ]
+        Configuration.element_ Operations.empty [ "http"; "specifications"; "operation" ]
 
     (* Terminals *)
 
@@ -90,12 +91,12 @@ module Operations =
 
         let internal internalServerError p =
             Terminal.create (key p, "internal-server-error")
-                (function | _ -> Operation.internalServerError)
+                (function | _ -> Operations.internalServerError)
                 (function | Get internalServerError_ x -> x)
 
         let internal accepted p =
             Terminal.create (key p, "accepted")
-                (function | _ -> Operation.accepted)
+                (function | _ -> Operations.accepted)
                 (function | Get accepted_ x -> x)
 
     (* Decisions *)

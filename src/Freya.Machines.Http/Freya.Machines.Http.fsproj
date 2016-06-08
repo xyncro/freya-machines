@@ -57,9 +57,8 @@
   </Target>
   -->
   <ItemGroup>
-    <Compile Include="Semantics\Negotiation.fs" />
-    <Compile Include="Semantics\Representation.fs" />
-    <Compile Include="Semantics\Operation.fs" />
+    <Compile Include="Semantics.fs" />
+    <Compile Include="Operations.fs" />
     <Compile Include="Machine\Configuration\Extensions.fs" />
     <Compile Include="Machine\Configuration\Properties.fs" />
     <Compile Include="Machine\Specifications\Prelude.fs" />
@@ -69,7 +68,7 @@
     <Compile Include="Machine\Specifications\Fallback.fs" />
     <Compile Include="Machine\Specifications\Method.fs" />
     <Compile Include="Machine\Specifications\Negotiations.fs" />
-    <Compile Include="Machine\Specifications\Operations.fs" />
+    <Compile Include="Machine\Specifications\Operation.fs" />
     <Compile Include="Machine\Specifications\Permissions.fs" />
     <Compile Include="Machine\Specifications\Preconditions.fs" />
     <Compile Include="Machine\Specifications\Responses.fs" />
@@ -81,7 +80,7 @@
     <Compile Include="Machine\Components\Post.fs" />
     <Compile Include="Machine\Components\Put.fs" />
     <Compile Include="Machine\Models\Http.fs" />
-    <Compile Include="Machine.fs" />
+    <Compile Include="Inference.fs" />
     <Compile Include="Extension.fs" />
     <Compile Include="Expression.fs" />
   </ItemGroup>

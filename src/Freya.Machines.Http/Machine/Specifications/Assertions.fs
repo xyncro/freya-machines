@@ -1,10 +1,12 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Aether
 open Aether.Operators
 open Arachne.Http
 open Freya.Core.Operators
 open Freya.Machines
+open Freya.Machines.Http
+open Freya.Machines.Http.Machine.Configuration
 open Freya.Optics.Http
 
 (* Assertions
@@ -101,17 +103,17 @@ module Assertions =
 
         let internal serviceUnavailable p =
             Terminal.create (key p, "service-unavailable")
-                (function | _ -> Operation.serviceUnavailable)
+                (function | _ -> Operations.serviceUnavailable)
                 (function | Get serviceUnavailable_ x -> x) 
 
         let internal httpVersionNotSupported p =
             Terminal.create (key p, "http-version-not-supported")
-                (function | _ -> Operation.httpVersionNotSupported)
+                (function | _ -> Operations.httpVersionNotSupported)
                 (function | Get httpVersionNotSupported_ x -> x)
 
         let internal notImplemented p =
             Terminal.create (key p, "not-implemented")
-                (function | _ -> Operation.notImplemented)
+                (function | _ -> Operations.notImplemented)
                 (function | Get notImplemented_ x -> x)
 
     (* Decisions *)

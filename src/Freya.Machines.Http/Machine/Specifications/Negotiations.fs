@@ -1,9 +1,11 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Aether
 open Aether.Operators
 open Freya.Core.Operators
 open Freya.Machines
+open Freya.Machines.Http
+open Freya.Machines.Http.Machine.Configuration
 open Freya.Optics.Http
 
 (* Negotiations
@@ -64,7 +66,7 @@ module Negotiations =
 
         let internal notAcceptable p =
             Terminal.create (key p, "not-acceptable")
-                (function | _ -> Operation.notAcceptable)
+                (function | _ -> Operations.notAcceptable)
                 (function | Get notAcceptable_ x -> x)
 
     (* Decisions *)

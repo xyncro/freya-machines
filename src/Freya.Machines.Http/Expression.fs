@@ -2,6 +2,8 @@
 
 open Arachne.Http
 open Freya.Core
+open Freya.Machines.Http.Machine.Configuration
+open Freya.Machines.Http.Machine.Specifications
 
 (* Builder
 
@@ -168,31 +170,31 @@ module Syntax =
 
         [<CustomOperation ("completed", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.Completed (m, decision) =
-            HttpMachine.set (m, Operations.Decisions.completed_, Decision.infer decision)
+            HttpMachine.set (m, Operation.Decisions.completed_, Decision.infer decision)
 
         (* Operations *)
 
         [<CustomOperation ("doDelete", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.DoDelete (m, a) =
-            HttpMachine.set (m, (Operations.Decisions.operationMethod_ DELETE), Operation.infer a)
+            HttpMachine.set (m, (Operation.Decisions.operationMethod_ DELETE), Operation.infer a)
 
         [<CustomOperation ("doPost", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.DoPost (m, a) =
-            HttpMachine.set (m, (Operations.Decisions.operationMethod_ POST), Operation.infer a)
+            HttpMachine.set (m, (Operation.Decisions.operationMethod_ POST), Operation.infer a)
 
         [<CustomOperation ("doPut", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.DoPut (m, a) =
-            HttpMachine.set (m, (Operations.Decisions.operationMethod_ PUT), Operation.infer a)
+            HttpMachine.set (m, (Operation.Decisions.operationMethod_ PUT), Operation.infer a)
 
         (* Terminals *)
 
         [<CustomOperation ("handleAccepted", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.HandleAccepted (m, handler) =
-            HttpMachine.set (m, Operations.Terminals.accepted_, Handler.infer handler)
+            HttpMachine.set (m, Operation.Terminals.accepted_, Handler.infer handler)
 
         [<CustomOperation ("handleInternalServerError", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.HandleInternalServerError (m, handler) =
-            HttpMachine.set (m, Operations.Terminals.internalServerError_, Handler.infer handler)
+            HttpMachine.set (m, Operation.Terminals.internalServerError_, Handler.infer handler)
 
     (* Permissions *)
 

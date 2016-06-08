@@ -1,8 +1,9 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Aether
 open Aether.Operators
 open Freya.Machines
+open Freya.Machines.Http
 open Hephaestus
 
 (* Fallback
@@ -62,7 +63,7 @@ module Fallback =
 
         let internal fallback p =
             Terminal.create (key p, "fallback")
-                (function | _ -> Operation.ok None None)
+                (function | _ -> Operations.ok None None)
                 (function | Get fallback_ x -> x)
 
     (* Decisions *)

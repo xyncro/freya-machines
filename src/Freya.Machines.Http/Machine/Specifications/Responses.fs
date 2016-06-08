@@ -1,9 +1,11 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Aether
 open Aether.Operators
 open Freya.Core.Operators
 open Freya.Machines
+open Freya.Machines.Http
+open Freya.Machines.Http.Machine.Configuration
 
 (* Responses
 
@@ -95,7 +97,7 @@ module Responses =
 
             let internal noContent p =
                 Terminal.create (key p, "no-content")
-                    (function | _ -> Operation.noContent)
+                    (function | _ -> Operations.noContent)
                     (function | Get noContent_ x -> x)
 
             let internal ok p =
@@ -105,7 +107,7 @@ module Responses =
                                         liftOption e 
                                     >>= fun e -> 
                                             liftOption l
-                                        >>= Operation.ok e)
+                                        >>= Operations.ok e)
                     (function | Get ok_ x -> x)
 
         (* Decisions *)
@@ -201,7 +203,7 @@ module Responses =
 
             let internal created p =
                 Terminal.create (key p, "created")
-                    (function | _ -> Operation.created)
+                    (function | _ -> Operations.created)
                     (function | Get created_ x -> x)
 
         (* Decisions *)
@@ -280,7 +282,7 @@ module Responses =
 
             let internal notFound p =
                 Terminal.create (key p, "not-found")
-                    (function | _ -> Operation.notFound)
+                    (function | _ -> Operations.notFound)
                     (function | Get notFound_ x -> x)
 
         (* Specification *)
@@ -381,17 +383,17 @@ module Responses =
 
             let internal gone p =
                 Terminal.create (key p, "gone")
-                    (function | _ -> Operation.gone)
+                    (function | _ -> Operations.gone)
                     (function | Get gone_ x -> x)
 
             let internal temporaryRedirect p =
                 Terminal.create (key p, "temporary-redirect")
-                    (function | _ -> Operation.temporaryRedirect)
+                    (function | _ -> Operations.temporaryRedirect)
                     (function | Get temporaryRedirect_ x -> x) 
 
             let internal movedPermanently p =
                 Terminal.create (key p, "moved-permanently")
-                    (function | _ -> Operation.movedPermanently)
+                    (function | _ -> Operations.movedPermanently)
                     (function | Get movedPermanently_ x -> x)
 
         (* Decisions *)
@@ -490,7 +492,7 @@ module Responses =
 
             let internal options p =
                 Terminal.create (key p, "options")
-                    (function | _ -> Operation.options)
+                    (function | _ -> Operations.options)
                     (function | Get options_ x -> x)
 
         (* Specification *)
@@ -591,17 +593,17 @@ module Responses =
 
             let internal seeOther p =
                 Terminal.create (key p, "see-other")
-                    (function | _ -> Operation.seeOther)
+                    (function | _ -> Operations.seeOther)
                     (function | Get seeOther_ x -> x) 
 
             let internal found p =
                 Terminal.create (key p, "found")
-                    (function | _ -> Operation.found)
+                    (function | _ -> Operations.found)
                     (function | Get found_ x -> x)
 
             let internal multipleChoices p =
                 Terminal.create (key p, "multiple-choices")
-                    (function | _ -> Operation.multipleChoices)
+                    (function | _ -> Operations.multipleChoices)
                     (function | Get multipleChoices_ x -> x)
 
         (* Decisions *)

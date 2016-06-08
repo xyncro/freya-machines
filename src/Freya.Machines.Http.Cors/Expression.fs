@@ -1,6 +1,7 @@
 ﻿namespace Freya.Machines.Http.Cors
 
 open Freya.Machines.Http
+open Freya.Machines.Http.Cors.Machine.Configuration
 
 (* Syntax *)
 

@@ -1,7 +1,8 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Models
 
 #nowarn "46"
 
+open Freya.Machines.Http.Machine.Components
 open Hephaestus
 
 (* Http *)

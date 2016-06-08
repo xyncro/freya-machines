@@ -1,4 +1,4 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Aether.Operators
 open Freya.Machines

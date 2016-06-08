@@ -1,6 +1,7 @@
 ﻿namespace Freya.Machines.Http.Cors
 
 open Freya.Machines
+open Freya.Machines.Http.Cors.Machine.Components
 
 #nowarn "46"
 

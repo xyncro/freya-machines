@@ -1,8 +1,9 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Aether
 open Aether.Operators
 open Freya.Machines
+open Freya.Machines.Http
 
 (* Conflict
 
@@ -75,7 +76,7 @@ module Conflict =
 
         let internal conflict p =
             Terminal.create (key p, "conflict")
-                (function | _ -> Operation.conflict)
+                (function | _ -> Operations.conflict)
                 (function | Get conflict_ x -> x)
 
     (* Decisions *)

@@ -1,9 +1,10 @@
-﻿namespace Freya.Machines.Http.Cors
+﻿namespace Freya.Machines.Http.Cors.Machine.Components
 
 #nowarn "46"
 
 open Freya.Core
 open Freya.Machines
+open Freya.Machines.Http.Cors.Machine.Specifications
 open Hephaestus
 
 (* Preflight *)

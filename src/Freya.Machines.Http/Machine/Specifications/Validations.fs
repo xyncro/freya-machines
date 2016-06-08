@@ -1,9 +1,11 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Aether
 open Aether.Operators
 open Freya.Core.Operators
 open Freya.Machines
+open Freya.Machines.Http
+open Freya.Machines.Http.Machine.Configuration
 open Freya.Optics.Http
 
 (* Validation
@@ -117,23 +119,23 @@ module Validations =
 
         let internal expectationFailed p =
             Terminal.create (key p, "expectation-failed")
-                (function | _ -> Operation.expectationFailed)
+                (function | _ -> Operations.expectationFailed)
                 (function | Get expectationFailed_ x -> x)
 
         let internal methodNotAllowed p =
             Terminal.create (key p, "method-not-allowed")
-                (function | TryGet Properties.Request.methods_ x -> apply Operation.methodNotAllowed x
-                          | _ -> Operation.methodNotAllowed Defaults.methods)
+                (function | TryGet Properties.Request.methods_ x -> apply Operations.methodNotAllowed x
+                          | _ -> Operations.methodNotAllowed Defaults.methods)
                 (function | Get methodNotAllowed_ x -> x)
 
         let internal uriTooLong p =
             Terminal.create (key p, "uri-too-long")
-                (function | _ -> Operation.uriTooLong)
+                (function | _ -> Operations.uriTooLong)
                 (function | Get uriTooLong_ x -> x)
 
         let internal badRequest p =
             Terminal.create (key p, "bad-request")
-                (function | _ -> Operation.badRequest)
+                (function | _ -> Operations.badRequest)
                 (function | Get badRequest_ x -> x)
 
     (* Decisions *)

@@ -1,4 +1,4 @@
-﻿namespace Freya.Machines.Http.Cors
+﻿namespace Freya.Machines.Http.Cors.Machine.Specifications
 
 open Freya.Core.Operators
 open Freya.Machines

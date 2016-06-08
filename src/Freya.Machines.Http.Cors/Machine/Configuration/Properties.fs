@@ -1,4 +1,4 @@
-﻿namespace Freya.Machines.Http.Cors
+﻿namespace Freya.Machines.Http.Cors.Machine.Configuration
 
 open Aether.Operators
 open Freya.Machines

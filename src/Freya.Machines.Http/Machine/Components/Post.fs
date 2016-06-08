@@ -1,8 +1,9 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Components
 
 #nowarn "46"
 
 open Arachne.Http
+open Freya.Machines.Http.Machine.Specifications
 open Hephaestus
 
 (* Post *)
@@ -26,7 +27,7 @@ module internal Post =
                 Preconditions.Common.specification Name (
                     Preconditions.Unsafe.specification Name (
                         Conflict.specification Name (
-                            Operations.specification Name POST (
+                            Operation.specification Name POST (
                                 Responses.Created.specification Name (
                                     Responses.Other.specification Name (
                                         Responses.Common.specification Name))))))))

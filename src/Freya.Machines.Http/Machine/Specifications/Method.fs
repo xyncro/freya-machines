@@ -1,7 +1,8 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Freya.Core.Operators
 open Freya.Machines
+open Freya.Machines.Http.Machine.Configuration
 open Freya.Optics.Http
 
 (* Method

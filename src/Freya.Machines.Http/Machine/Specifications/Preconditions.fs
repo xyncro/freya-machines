@@ -1,10 +1,12 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Specifications
 
 open Aether
 open Aether.Operators
 open Arachne.Http
 open Freya.Core.Operators
 open Freya.Machines
+open Freya.Machines.Http
+open Freya.Machines.Http.Machine.Configuration
 open Freya.Optics.Http
 
 (* Preconditions
@@ -70,7 +72,7 @@ module Preconditions =
 
             let internal preconditionFailed p =
                 Terminal.create (key p, "precondition-failed")
-                    (function | _ -> Operation.preconditionFailed)
+                    (function | _ -> Operations.preconditionFailed)
                     (function | Get preconditionFailed_ x -> x)
 
     (* Common *)
@@ -186,7 +188,7 @@ module Preconditions =
 
             let internal notModified p =
                 Terminal.create (key p, "not-modified")
-                    (function | _ -> Operation.notModified)
+                    (function | _ -> Operations.notModified)
                     (function | Get notModified_ x -> x)
 
         (* Decisions *)

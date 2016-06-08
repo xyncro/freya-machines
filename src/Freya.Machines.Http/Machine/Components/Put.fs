@@ -1,8 +1,9 @@
-﻿namespace Freya.Machines.Http
+﻿namespace Freya.Machines.Http.Machine.Components
 
 #nowarn "46"
 
 open Arachne.Http
+open Freya.Machines.Http.Machine.Specifications
 open Hephaestus
 
 (* Put *)
@@ -29,7 +30,7 @@ module internal Put =
                             continuation)))))
 
     and private continuation =
-        Operations.specification Name PUT (
+        Operation.specification Name PUT (
             Responses.Created.specification Name (
                 Responses.Other.specification Name (
                     Responses.Common.specification Name)))

@@ -17,30 +17,7 @@ open Freya.Optics.Http
    they are made available "as a service"! *)
 
 [<RequireQualifiedAccess>]
-module Operation =
-
-    (* Inference *)
-
-    [<RequireQualifiedAccess>]
-    module Inference =
-
-        type Defaults =
-            | Defaults
-
-            static member Operation (x: Freya<bool>) =
-                x
-
-            static member Operation (x: Freya<unit>) =
-                Freya.map (x, fun _ -> true)
-
-        let inline defaults (a: ^a, _: ^b) =
-            ((^a or ^b) : (static member Operation: ^a -> Freya<bool>) a)
-
-        let inline infer (x: 'a) =
-            defaults (x, Defaults)
-
-    let inline infer v =
-        Inference.infer v
+module Operations =
 
     (* Setters *)
 
