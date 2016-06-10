@@ -1,6 +1,7 @@
 ﻿namespace Freya.Machines.Http.Cors.Machine.Configuration
 
 open Aether.Operators
+open Arachne.Http.Cors
 open Freya.Machines
 
 (* Properties *)
@@ -17,10 +18,10 @@ module Properties =
             (fun x -> x.Resource), (fun r x -> { x with Resource = r })
 
         static member empty =
-            { Resource = Resource.empty}
+            { Resource = Resource.empty }
 
      and private Resource =
-        { AllowedOrigins: string list option }
+        { AllowedOrigins: Value<AccessControlAllowOriginRange> option }
 
         static member allowedOrigins_ =
             (fun x -> x.AllowedOrigins), (fun a x -> { x with AllowedOrigins = a })

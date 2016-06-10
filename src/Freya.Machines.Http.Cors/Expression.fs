@@ -8,10 +8,10 @@ open Freya.Machines.Http.Cors.Machine.Configuration
 [<AutoOpen>]
 module Syntax =
 
-    (* Origins *)
+    (* Properties *)
 
     type HttpMachineBuilder with
 
         [<CustomOperation ("corsAllowedOrigins", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.CorsAllowedOrigins (m, a) =
-            HttpMachine.set (m, Properties.Resource.allowedOrigins_, a)
+            HttpMachine.set (m, Properties.Resource.allowedOrigins_, AccessControlAllowOriginRange.infer a)
