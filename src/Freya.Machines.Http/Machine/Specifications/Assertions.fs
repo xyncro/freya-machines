@@ -136,8 +136,7 @@ module Assertions =
 
         let rec internal serviceAvailable p s =
             Decision.create (key p, "service-available")
-                (function | TryGet serviceAvailable_ x -> x
-                          | _ -> Static true)
+                (function | TryGetOrElse serviceAvailable_ (Static true) x -> x)
                 (Terminals.serviceUnavailable p, httpVersionSupported p s)
 
         and internal httpVersionSupported p s =

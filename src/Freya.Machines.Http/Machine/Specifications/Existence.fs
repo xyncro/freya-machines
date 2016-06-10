@@ -60,8 +60,7 @@ module Existence =
 
         let internal exists p =
             Decision.create (key p, "exists")
-                (function | TryGet exists_ x -> x
-                          | _ -> Static true)
+                (function | TryGetOrElse exists_ (Static true) x -> x)
 
     (* Specification *)
 

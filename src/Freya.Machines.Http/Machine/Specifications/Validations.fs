@@ -162,8 +162,7 @@ module Validations =
 
         let rec internal expectationMet p s =
             Decision.create (key p, "expectation-met")
-                (function | TryGet expectationMet_ x -> x
-                          | _ -> Static true)
+                (function | TryGetOrElse expectationMet_ (Static true) x -> x)
                 (Terminals.expectationFailed p, methodAllowed p s)
 
         and internal methodAllowed p s =
@@ -179,14 +178,12 @@ module Validations =
 
         and internal uriTooLong p s =
             Decision.create (key p, "uri-too-long")
-                (function | TryGet uriTooLong_ x -> x
-                          | _ -> Static false)
+                (function | TryGetOrElse uriTooLong_ (Static false) x -> x)
                 (badRequest p s, Terminals.uriTooLong p)
 
         and internal badRequest p s =
             Decision.create (key p, "bad-request")
-                (function | TryGet badRequest_ x -> x
-                          | _ -> Static false)
+                (function | TryGetOrElse badRequest_ (Static false) x -> x)
                 (s, Terminals.badRequest p)
 
     (* Specification *)

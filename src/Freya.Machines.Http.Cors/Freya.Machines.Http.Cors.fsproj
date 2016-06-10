@@ -57,6 +57,7 @@
   </Target>
   -->
   <ItemGroup>
+    <Compile Include="Operations.fs" />
     <Compile Include="Machine\Configuration\Properties.fs" />
     <Compile Include="Machine\Specifications\Prelude.fs" />
     <Compile Include="Machine\Specifications\Simple.fs" />

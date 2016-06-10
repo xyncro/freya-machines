@@ -22,24 +22,24 @@ module Operations =
     (* Setters *)
 
     let private allow =
-        function | methods -> Response.Headers.allow_ .= Some (Allow (Set.toList methods))
+        function | x -> Response.Headers.allow_ .= Some (Allow (Set.toList x))
 
     let private date =
-        function | () -> Response.Headers.date_ .= Some (Date.Date (DateTime.UtcNow))
+        function | _ -> Response.Headers.date_ .= Some (Date.Date (DateTime.UtcNow))
 
     let private eTag =
-        function | Some entityTag -> Response.Headers.eTag_ .= Some (ETag entityTag)
+        function | Some x -> Response.Headers.eTag_ .= Some (ETag x)
                  | _ -> Freya.empty
 
     let private lastModified =
-        function | Some dateTime -> Response.Headers.lastModified_ .= Some (LastModified dateTime)
+        function | Some x -> Response.Headers.lastModified_ .= Some (LastModified x)
                  | _ -> Freya.empty
 
     let private phrase =
-        function | phrase -> Response.reasonPhrase_ .= Some phrase
+        function | x -> Response.reasonPhrase_ .= Some x
 
     let private status =
-        function | status -> Response.statusCode_ .= Some status
+        function | x -> Response.statusCode_ .= Some x
 
     (* 2xx *)
 

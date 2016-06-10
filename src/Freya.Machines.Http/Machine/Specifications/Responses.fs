@@ -104,10 +104,11 @@ module Responses =
                 Terminal.create (key p, "ok")
                     (function |   Get Properties.Resource.entityTag_ e
                                 & Get Properties.Resource.lastModified_ l ->
-                                        Freya.Value.liftOption e 
-                                    >>= fun e -> 
-                                            Freya.Value.liftOption l
-                                        >>= Operations.ok e)
+                                        Freya.Value.liftOption e
+                                    >>= fun entityTag ->
+                                        Freya.Value.liftOption l
+                                    >>= fun lastModified ->
+                                        Operations.ok entityTag lastModified)
                     (function | Get ok_ x -> x)
 
         (* Decisions *)
@@ -126,8 +127,7 @@ module Responses =
 
             let internal noContent p =
                 Decision.create (key p, "no-content")
-                    (function | TryGet noContent_ x -> x
-                              | _ -> Static false)
+                    (function | TryGetOrElse noContent_ (Static false) x -> x)
                     (Terminals.ok p, Terminals.noContent p)
 
         (* Specification *)
@@ -222,8 +222,7 @@ module Responses =
 
             let internal created p s =
                 Decision.create (key p, "created")
-                    (function | TryGet created_ x -> x
-                              | _ -> Static false)
+                    (function | TryGetOrElse created_ (Static false) x -> x)
                     (s, Terminals.created p)
 
         (* Specification *)
@@ -420,20 +419,17 @@ module Responses =
 
             let rec internal gone p s =
                 Decision.create (key p, "see-other")
-                    (function | TryGet gone_ x -> x
-                              | _ -> Static false)
+                    (function | TryGetOrElse gone_ (Static false) x -> x)
                     (movedTemporarily p s, Terminals.gone p)
 
             and internal movedTemporarily p s =
                 Decision.create (key p, "found")
-                    (function | TryGet movedTemporarily_ x -> x
-                              | _ -> Static false)
+                    (function | TryGetOrElse movedTemporarily_ (Static false) x -> x)
                     (movedPermanently p s, Terminals.temporaryRedirect p)
 
             and internal movedPermanently p s =
                 Decision.create (key p, "see-other")
-                    (function | TryGet movedPermanently_ x -> x
-                              | _ -> Static false)
+                    (function | TryGetOrElse movedPermanently_ (Static false) x -> x)
                     (s, Terminals.movedPermanently p)
 
         (* Specification *)
@@ -630,20 +626,17 @@ module Responses =
 
             let rec internal seeOther p s =
                 Decision.create (key p, "see-other")
-                    (function | TryGet seeOther_ x -> x
-                              | _ -> Static false)
+                    (function | TryGetOrElse seeOther_ (Static false) x -> x)
                     (found p s, Terminals.seeOther p)
 
             and internal found p s =
                 Decision.create (key p, "found")
-                    (function | TryGet found_ x -> x
-                              | _ -> Static false)
+                    (function | TryGetOrElse found_ (Static false) x -> x)
                     (multipleChoices p s, Terminals.found p)
 
             and internal multipleChoices p s =
                 Decision.create (key p, "see-other")
-                    (function | TryGet multipleChoices_ x -> x
-                              | _ -> Static false)
+                    (function | TryGetOrElse multipleChoices_ (Static false) x -> x)
                     (s, Terminals.multipleChoices p)
 
         (* Specification *)

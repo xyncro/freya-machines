@@ -1,10 +1,13 @@
 ﻿namespace Freya.Machines.Http.Cors.Machine.Specifications
 
 open Arachne.Http.Cors
+open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
+open Freya.Machines.Http.Cors
 open Freya.Machines.Http.Cors.Machine.Configuration
 open Freya.Optics.Http.Cors
+open Hephaestus
 
 (* Simple *)
 
@@ -53,13 +56,22 @@ module Simple =
                           | TryGet allowedOrigins_ (Static (Origins (O.Origins []))) -> Static false
                           | TryGet allowedOrigins_ x -> Dynamic (allow <!> lift x <*> !. Request.Headers.origin_)
                           | _ -> Static false)
-                (s, s)
+                (s, simple k s)
 
         and private allow range origin =
             match range, origin with
             | Origins (O.Origins xs), Some (Origin (O.Origins [ x ])) when List.contains x xs -> true
             | Any, _ -> true
             | _ -> false
+
+        and internal simple k s =
+            Decision.create (key k, "simple")
+                (function | _ -> Dynamic (
+                                    !. Request.Headers.origin_
+                                >>= function | Some (Origin x) -> Operations.simple x
+                                             | _ -> Freya.empty
+                                >>= function | _ -> Freya.init true))
+                (Specification.Terminal.empty, s)
 
     (* Specification *)
 

@@ -89,8 +89,8 @@ module HttpMachine =
         let prototype, l1 = Prototype.createLogged model
         let machine, l2 = Machine.createLogged prototype configuration
 
-        printfn "Prototype:\n%s" (string (log (StringBuilder ()) l1))
-        printfn "Machine:\n%s" (string (log (StringBuilder ()) l2))
+        //printfn "Prototype:\n%s" (string (log (StringBuilder ()) l1))
+        //printfn "Machine:\n%s" (string (log (StringBuilder ()) l2))
 
         // End Logging
 

@@ -32,3 +32,6 @@ module Patterns =
 
     let inline (|TryGet|_|) optic =
         Optic.get optic
+
+    let inline (|TryGetOrElse|) optic y =
+        Optic.get optic >> function | Some x -> x | _ -> y

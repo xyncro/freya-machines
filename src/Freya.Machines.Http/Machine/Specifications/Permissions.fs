@@ -118,14 +118,12 @@ module Permissions =
 
         let rec internal authorized p s =
             Decision.create (key p, "authorized")
-                (function | TryGet authorized_ x -> x
-                          | _ -> Static true)
+                (function | TryGetOrElse authorized_ (Static true) x -> x)
                 (Terminals.unauthorized p, allowed p s)
 
         and internal allowed p s =
             Decision.create (key p, "allowed")
-                (function | TryGet allowed_ x -> x
-                          | _ -> Static true)
+                (function | TryGetOrElse allowed_ (Static true) x -> x)
                 (Terminals.forbidden p, s)
 
     (* Specification *)

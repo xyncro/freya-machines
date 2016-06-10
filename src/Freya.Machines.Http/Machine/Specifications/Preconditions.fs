@@ -93,7 +93,7 @@ module Preconditions =
 
             let rec internal hasIfMatch p s =
                 Decision.create (key p, "has-if-match")
-                    (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifMatch_))
+                    (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifMatch_))
                     (hasIfUnmodifiedSince p s, ifMatchMatches p s)
 
             and internal ifMatchMatches p s =

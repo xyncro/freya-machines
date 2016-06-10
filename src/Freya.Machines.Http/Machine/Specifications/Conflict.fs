@@ -95,8 +95,7 @@ module Conflict =
 
         let internal conflict p s =
             Decision.create (key p, "conflict")
-                (function | TryGet conflict_ x -> x
-                          | _ -> Static false)
+                (function | TryGetOrElse conflict_ (Static false) x -> x)
                 (s, Terminals.conflict p)
 
     (* Specification *)

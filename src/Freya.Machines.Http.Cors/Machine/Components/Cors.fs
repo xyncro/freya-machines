@@ -31,4 +31,4 @@ module internal Cors =
             { Required = set [ "http-options" ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [], Left, simple) ] }
+            [ Splice (Key [ "http-options"; "method"; "method-matches-decision" ], Left, simple) ] }
