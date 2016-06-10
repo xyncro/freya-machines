@@ -16,19 +16,31 @@ module Simple =
     let private key =
         Key.root >> Key.add [ "simple" ]
 
+    (* Aliases
+
+       Shorthand/abbreviations for common functions, used locally to make the
+       code more concise where these verbose formulations make the logic harder
+       to read. *)
+
+    (* Monadic *)
+
+    let private lift =
+        Freya.Value.lift
+
+    (* Optics *)
+
+    let private allowedOrigins_ =
+        Properties.Resource.allowedOrigins_
+
+    (* Types *)
+
+    type private O =
+        OriginListOrNull
+
     (* Decisions *)
 
     [<RequireQualifiedAccess>]
     module Decisions =
-
-        type private O =
-            OriginListOrNull
-
-        let private lift =
-            Freya.Value.lift
-
-        let private allowedOrigins_ =
-            Properties.Resource.allowedOrigins_
 
         let rec internal hasOrigin k s =
             Decision.create (key k, "has-origin")
@@ -45,8 +57,8 @@ module Simple =
 
         and private allow range origin =
             match range, origin with
-            | Any, _ -> true
             | Origins (O.Origins xs), Some (Origin (O.Origins [ x ])) when List.contains x xs -> true
+            | Any, _ -> true
             | _ -> false
 
     (* Specification *)

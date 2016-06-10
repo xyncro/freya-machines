@@ -124,7 +124,7 @@ module Validations =
 
         let internal methodNotAllowed p =
             Terminal.create (key p, "method-not-allowed")
-                (function | TryGet Properties.Request.methods_ x -> apply Operations.methodNotAllowed x
+                (function | TryGet Properties.Request.methods_ x -> Freya.Value.apply Operations.methodNotAllowed x
                           | _ -> Operations.methodNotAllowed Defaults.methods)
                 (function | Get methodNotAllowed_ x -> x)
 
@@ -168,7 +168,7 @@ module Validations =
 
         and internal methodAllowed p s =
             Decision.create (key p, "method-allowed")
-                (function | TryGet Properties.Request.methods_ x -> bind allowed x
+                (function | TryGet Properties.Request.methods_ x -> Value.Freya.bind allowed x
                           | _ -> Dynamic (allowed Defaults.methods))
                 (Terminals.methodNotAllowed p, uriTooLong p s)
 

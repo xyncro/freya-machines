@@ -22,8 +22,8 @@ module Responses =
 
     (* Common
 
-        Common conclusions of successful requests, handling the case of
-        an OK situation, or a (successful) no content situation. *)
+       Common conclusions of successful requests, handling the case of
+       an OK situation, or a (successful) no content situation. *)
 
     [<RequireQualifiedAccess>]
     module Common =
@@ -75,7 +75,7 @@ module Responses =
         (* Optics *)
 
         let private common_ =
-                Configuration.element_ Common.empty [ "http"; "specifications"; "responses"; "common" ]
+            Configuration.element_ Common.empty [ "http"; "specifications"; "responses"; "common" ]
 
         (* Terminals *)
 
@@ -104,9 +104,9 @@ module Responses =
                 Terminal.create (key p, "ok")
                     (function |   Get Properties.Resource.entityTag_ e
                                 & Get Properties.Resource.lastModified_ l ->
-                                        liftOption e 
+                                        Freya.Value.liftOption e 
                                     >>= fun e -> 
-                                            liftOption l
+                                            Freya.Value.liftOption l
                                         >>= Operations.ok e)
                     (function | Get ok_ x -> x)
 

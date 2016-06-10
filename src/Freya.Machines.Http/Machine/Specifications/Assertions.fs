@@ -153,7 +153,7 @@ module Assertions =
 
         and internal methodImplemented p s =
             Decision.create (key p, "method-implemented")
-                (function | TryGet Properties.Request.methods_ x -> bind knownCustom x
+                (function | TryGet Properties.Request.methods_ x -> Value.Freya.bind knownCustom x
                           | _ -> Dynamic nonCustom)
                 (Terminals.notImplemented p, s)
 

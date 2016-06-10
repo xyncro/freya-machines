@@ -98,7 +98,7 @@ module Preconditions =
 
             and internal ifMatchMatches p s =
                 Decision.create (key p, "if-match-matches")
-                    (function | TryGet Properties.Resource.entityTag_ x -> bind matches x
+                    (function | TryGet Properties.Resource.entityTag_ x -> Value.Freya.bind matches x
                               | _ -> Static true)
                     (Shared.Terminals.preconditionFailed p, s)
 
@@ -123,7 +123,7 @@ module Preconditions =
 
             and internal ifUnmodifiedSinceMatches p s =
                 Decision.create (key p, "if-unmodified-since-matches")
-                    (function | TryGet Properties.Resource.lastModified_ x -> bind earlier x
+                    (function | TryGet Properties.Resource.lastModified_ x -> Value.Freya.bind earlier x
                               | _ -> Static true)
                     (Shared.Terminals.preconditionFailed p, s)
 
@@ -204,7 +204,7 @@ module Preconditions =
 
             and internal ifNoneMatchMatches p s =
                 Decision.create (key p, "if-none-match-matches")
-                    (function | TryGet Properties.Resource.entityTag_ x -> bind matches x
+                    (function | TryGet Properties.Resource.entityTag_ x -> Value.Freya.bind matches x
                               | _ -> Static true)
                     (Terminals.notModified p, s)
 
@@ -229,7 +229,7 @@ module Preconditions =
 
             and internal ifModifiedSinceMatches p s =
                 Decision.create (key p, "if-modified-since-matches")
-                    (function | TryGet Properties.Resource.lastModified_ x -> bind later x
+                    (function | TryGet Properties.Resource.lastModified_ x -> Value.Freya.bind later x
                               | _ -> Static true)
                     (Terminals.notModified p, s)
 
@@ -266,7 +266,7 @@ module Preconditions =
 
             and internal ifNoneMatchMatches p s =
                 Decision.create (key p, "if-none-match-matches")
-                    (function | TryGet Properties.Resource.entityTag_ x -> bind matches x
+                    (function | TryGet Properties.Resource.entityTag_ x -> Value.Freya.bind matches x
                               | _ -> Static true)
                     (Shared.Terminals.preconditionFailed p, s)
 

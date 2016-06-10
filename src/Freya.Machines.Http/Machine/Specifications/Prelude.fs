@@ -17,33 +17,6 @@ open Hephaestus
 type Handler =
     Acceptable -> Freya<Representation>
 
-(* Aliases *)
-
-[<AutoOpen>]
-module internal Aliases =
-
-    (* Monadic *)
-
-    let apply =
-        Freya.Value.apply
-
-    let bind =
-        Value.Freya.bind
-
-    let lift =
-        Freya.Value.lift
-
-    let liftOption =
-        Freya.Value.liftOption
-
-    let map =
-        Value.Freya.map
-
-    (* Content *)
-
-    let negotiable =
-        Negotiation.negotiable
-
 (* Defaults *)
 
 [<RequireQualifiedAccess>]

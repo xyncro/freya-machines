@@ -50,6 +50,51 @@ module Negotiations =
     let private negotiations_ =
         Configuration.element_ Negotiations.empty [ "http"; "specifications"; "negotiations" ]
 
+    (* Aliases
+
+       Shorthand/abbreviations for common functions, used locally to make the
+       code more concise where these verbose formulations make the logic harder
+       to read. *)
+
+    (* Monadic *)
+
+    let private bind =
+        Value.Freya.bind
+
+    let private map =
+        Value.Freya.map
+
+    (* Negotiation *)
+
+    let private charset =
+        Negotiation.Charset.negotiator
+
+    let private contentCoding =
+        Negotiation.ContentCoding.negotiator
+
+    let private language =
+        Negotiation.Language.negotiator
+
+    let private mediaType =
+        Negotiation.MediaType.negotiator
+
+    let private negotiable =
+        Negotiation.negotiable
+
+    (* Optics *)
+
+    let private charsets_ =
+        Properties.Representation.charsetsSupported_
+
+    let private contentCodings_ =
+        Properties.Representation.contentCodingsSupported_
+
+    let private languages_ =
+        Properties.Representation.languagesSupported_
+
+    let private mediaTypes_ =
+        Properties.Representation.mediaTypesSupported_
+
     (* Terminals *)
 
     [<RequireQualifiedAccess>]
@@ -74,36 +119,6 @@ module Negotiations =
     [<RequireQualifiedAccess>]
     [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
     module Decisions =
-
-        (* Optics *)
-
-        let private charsets_ =
-            Properties.Representation.charsetsSupported_
-
-        let private contentCodings_ =
-            Properties.Representation.contentCodingsSupported_
-
-        let private languages_ =
-            Properties.Representation.languagesSupported_
-
-        let private mediaTypes_ =
-            Properties.Representation.mediaTypesSupported_
-
-        (* Aliases *)
-
-        let private charset =
-            Negotiation.Charset.negotiator
-
-        let private contentCoding =
-            Negotiation.ContentCoding.negotiator
-
-        let private language =
-            Negotiation.Language.negotiator
-
-        let private mediaType =
-            Negotiation.MediaType.negotiator
-
-        (* Decisions *)
 
         let rec internal hasAccept p s =
             Decision.create (key p, "has-accept")
