@@ -4,6 +4,7 @@
 
 open Arachne.Http
 open Arachne.Http.Cors
+open Arachne.Uri
 open Arachne.Language
 open Freya.Core
 open Freya.Machines.Http
@@ -30,7 +31,8 @@ let machine =
         // HTTP CORS
 
         using cors
-        corsAllowedOrigins AccessControlAllowOriginRange.Any }
+        corsEnabled true
+        corsOrigins (SerializedOrigin (Scheme "http", Name (RegName "xyncro.com"), None)) }
 
 let app =
     OwinAppFunc.ofFreya machine

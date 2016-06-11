@@ -4,13 +4,14 @@
 
 open Freya.Core
 open Freya.Machines
+open Freya.Machines.Http.Machine.Components
 open Freya.Machines.Http.Cors.Machine.Specifications
 open Hephaestus
 
 (* Preflight *)
 
 [<RequireQualifiedAccess>]
-module internal Cors =
+module Cors =
 
     (* Name *)
 
@@ -31,4 +32,4 @@ module internal Cors =
             { Required = set [ "http-options" ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ "http-options"; "method"; "method-matches-decision" ], Left, simple) ] }
+            [ Splice (Key [ Options.Name; "method"; "method-matches-decision" ], Left, simple) ] }

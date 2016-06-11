@@ -8,10 +8,18 @@ open Freya.Machines.Http.Cors.Machine.Configuration
 [<AutoOpen>]
 module Syntax =
 
+    (* Extension *)
+
+    type HttpMachineBuilder with
+
+        [<CustomOperation ("corsEnabled", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.CorsEnabled (m, a) =
+            HttpMachine.set (m, Properties.Extension.enabled_, Decision.infer a)
+
     (* Properties *)
 
     type HttpMachineBuilder with
 
-        [<CustomOperation ("corsAllowedOrigins", MaintainsVariableSpaceUsingBind = true)>]
-        member inline __.CorsAllowedOrigins (m, a) =
-            HttpMachine.set (m, Properties.Resource.allowedOrigins_, AccessControlAllowOriginRange.infer a)
+        [<CustomOperation ("corsOrigins", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.CorsOrigins (m, a) =
+            HttpMachine.set (m, Properties.Resource.origins_, Origins.infer a)

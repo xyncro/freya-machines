@@ -2,6 +2,7 @@
 
 open Arachne.Http.Cors
 open Freya.Core
+open Freya.Core.Operators
 open Freya.Machines
 
 (* Inference *)
@@ -10,7 +11,7 @@ open Freya.Machines
 module Inference =
 
     [<RequireQualifiedAccess>]
-    module AccessControlAllowOriginRange =
+    module Origins =
 
         (* Inference *)
 
@@ -20,14 +21,20 @@ module Inference =
             type Defaults =
                 | Defaults
 
-                static member AccessControlAllowOriginRange (x: Freya<AccessControlAllowOriginRange>) =
+                static member Origins (x: Freya<SerializedOrigin list>) =
                     Dynamic x
 
-                static member AccessControlAllowOriginRange (x: AccessControlAllowOriginRange) =
+                static member Origins (x: Freya<SerializedOrigin>) =
+                    Dynamic (List.singleton <!> x)
+
+                static member Origins (x: SerializedOrigin list) =
                     Static x
 
+                static member Origins (x: SerializedOrigin) =
+                    Static (List.singleton x)
+
             let inline defaults (a: ^a, _: ^b) =
-                ((^a or ^b) : (static member AccessControlAllowOriginRange: ^a -> Value<AccessControlAllowOriginRange>) a)
+                ((^a or ^b) : (static member Origins: ^a -> Value<SerializedOrigin list>) a)
 
             let inline infer (x: 'a) =
                 defaults (x, Defaults)

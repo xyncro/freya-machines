@@ -117,23 +117,23 @@ module Validations =
                 terminals_
             >-> Terminals.badRequest_
 
-        let internal expectationFailed p =
+        let expectationFailed p =
             Terminal.create (key p, "expectation-failed")
                 (function | _ -> Operations.expectationFailed)
                 (function | Get expectationFailed_ x -> x)
 
-        let internal methodNotAllowed p =
+        let methodNotAllowed p =
             Terminal.create (key p, "method-not-allowed")
                 (function | TryGet Properties.Request.methods_ x -> Freya.Value.apply Operations.methodNotAllowed x
                           | _ -> Operations.methodNotAllowed Defaults.methods)
                 (function | Get methodNotAllowed_ x -> x)
 
-        let internal uriTooLong p =
+        let uriTooLong p =
             Terminal.create (key p, "uri-too-long")
                 (function | _ -> Operations.uriTooLong)
                 (function | Get uriTooLong_ x -> x)
 
-        let internal badRequest p =
+        let badRequest p =
             Terminal.create (key p, "bad-request")
                 (function | _ -> Operations.badRequest)
                 (function | Get badRequest_ x -> x)
@@ -160,12 +160,12 @@ module Validations =
                 decisions_
             >-> Decisions.badRequest_
 
-        let rec internal expectationMet p s =
+        let rec expectationMet p s =
             Decision.create (key p, "expectation-met")
                 (function | TryGetOrElse expectationMet_ (Static true) x -> x)
                 (Terminals.expectationFailed p, methodAllowed p s)
 
-        and internal methodAllowed p s =
+        and methodAllowed p s =
             Decision.create (key p, "method-allowed")
                 (function | TryGet Properties.Request.methods_ x -> Value.Freya.bind allowed x
                           | _ -> Dynamic (allowed Defaults.methods))
@@ -176,17 +176,17 @@ module Validations =
                          | _ -> false
             <!> !. Request.method_
 
-        and internal uriTooLong p s =
+        and uriTooLong p s =
             Decision.create (key p, "uri-too-long")
                 (function | TryGetOrElse uriTooLong_ (Static false) x -> x)
                 (badRequest p s, Terminals.uriTooLong p)
 
-        and internal badRequest p s =
+        and badRequest p s =
             Decision.create (key p, "bad-request")
                 (function | TryGetOrElse badRequest_ (Static false) x -> x)
                 (s, Terminals.badRequest p)
 
     (* Specification *)
 
-    let internal specification =
+    let specification =
         Decisions.expectationMet

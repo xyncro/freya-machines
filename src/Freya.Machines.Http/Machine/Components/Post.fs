@@ -9,7 +9,7 @@ open Hephaestus
 (* Post *)
 
 [<RequireQualifiedAccess>]
-module internal Post =
+module Post =
 
     (* Name *)
 

@@ -101,17 +101,17 @@ module Assertions =
                 terminals_
             >-> Terminals.notImplemented_
 
-        let internal serviceUnavailable p =
+        let serviceUnavailable p =
             Terminal.create (key p, "service-unavailable")
                 (function | _ -> Operations.serviceUnavailable)
                 (function | Get serviceUnavailable_ x -> x) 
 
-        let internal httpVersionNotSupported p =
+        let httpVersionNotSupported p =
             Terminal.create (key p, "http-version-not-supported")
                 (function | _ -> Operations.httpVersionNotSupported)
                 (function | Get httpVersionNotSupported_ x -> x)
 
-        let internal notImplemented p =
+        let notImplemented p =
             Terminal.create (key p, "not-implemented")
                 (function | _ -> Operations.notImplemented)
                 (function | Get notImplemented_ x -> x)
@@ -134,12 +134,12 @@ module Assertions =
                 decisions_
             >-> Decisions.httpVersionSupported_
 
-        let rec internal serviceAvailable p s =
+        let rec serviceAvailable p s =
             Decision.create (key p, "service-available")
                 (function | TryGetOrElse serviceAvailable_ (Static true) x -> x)
                 (Terminals.serviceUnavailable p, httpVersionSupported p s)
 
-        and internal httpVersionSupported p s =
+        and httpVersionSupported p s =
             Decision.create (key p, "http-version-supported")
                 (function | TryGet httpVersionSupported_ x -> x
                           | _ -> Dynamic supported)
@@ -150,7 +150,7 @@ module Assertions =
                          | _ -> false
             <!> !. Request.httpVersion_
 
-        and internal methodImplemented p s =
+        and methodImplemented p s =
             Decision.create (key p, "method-implemented")
                 (function | TryGet Properties.Request.methods_ x -> Value.Freya.bind knownCustom x
                           | _ -> Dynamic nonCustom)
@@ -168,5 +168,5 @@ module Assertions =
 
     (* Specification *)
 
-    let internal specification =
+    let specification =
         Decisions.serviceAvailable

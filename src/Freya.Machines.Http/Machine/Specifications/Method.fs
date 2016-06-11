@@ -34,7 +34,7 @@ module Method =
     [<RequireQualifiedAccess>]
     module Decisions =
 
-        let rec internal methodMatches p methods =
+        let rec methodMatches p methods =
             Decision.create (key p, "method-matches")
                 (function | TryGet Properties.Request.methods_ (Static x) when disjoint methods x -> Static false
                           | TryGet Properties.Request.methods_ _ -> Dynamic (matches methods)
@@ -52,5 +52,5 @@ module Method =
 
     (* Specification *)
 
-    let internal specification =
+    let specification =
         Decisions.methodMatches

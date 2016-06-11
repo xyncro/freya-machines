@@ -8,7 +8,7 @@ open Hephaestus
 (* Http *)
 
 [<RequireQualifiedAccess>]
-module internal Http =
+module Http =
 
     let private components =
         set [

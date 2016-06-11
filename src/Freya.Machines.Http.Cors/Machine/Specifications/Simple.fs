@@ -32,8 +32,8 @@ module Simple =
 
     (* Optics *)
 
-    let private allowedOrigins_ =
-        Properties.Resource.allowedOrigins_
+    let private origins_ =
+        Properties.Resource.origins_
 
     (* Types *)
 
@@ -45,26 +45,29 @@ module Simple =
     [<RequireQualifiedAccess>]
     module Decisions =
 
-        let rec internal hasOrigin k s =
+        let rec enabled k s =
+            Decision.create (key k, "enabled")
+                (function | TryGetOrElse Properties.Extension.enabled_ (Static true) x -> x)
+                (s, hasOrigin k s)
+
+        and hasOrigin k s =
             Decision.create (key k, "has-origin")
                 (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.origin_))
                 (s, originAllowed k s)
 
-        and internal originAllowed k s =
+        and originAllowed k s =
             Decision.create (key k, "origin-allowed")
-                (function | TryGet allowedOrigins_ (Static Any) | Get allowedOrigins_ None -> Static true
-                          | TryGet allowedOrigins_ (Static (Origins (O.Origins []))) -> Static false
-                          | TryGet allowedOrigins_ x -> Dynamic (allow <!> lift x <*> !. Request.Headers.origin_)
+                (function | Get origins_ None -> Static true
+                          | TryGet origins_ (Static []) -> Static false
+                          | TryGet origins_ x -> Dynamic (allow <!> lift x <*> !. Request.Headers.origin_)
                           | _ -> Static false)
                 (s, simple k s)
 
-        and private allow range origin =
-            match range, origin with
-            | Origins (O.Origins xs), Some (Origin (O.Origins [ x ])) when List.contains x xs -> true
-            | Any, _ -> true
-            | _ -> false
+        and private allow origins =
+            function | Some (Origin (O.Origins [ x ])) when List.contains x origins -> true
+                     | _ -> false
 
-        and internal simple k s =
+        and simple k s =
             Decision.create (key k, "simple")
                 (function | _ -> Dynamic (
                                     !. Request.Headers.origin_
@@ -75,5 +78,5 @@ module Simple =
 
     (* Specification *)
 
-    let internal specification =
-        Decisions.hasOrigin
+    let specification =
+        Decisions.enabled

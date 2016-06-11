@@ -74,7 +74,7 @@ module Conflict =
                 terminals_
             >-> Terminals.conflict_
 
-        let internal conflict p =
+        let conflict p =
             Terminal.create (key p, "conflict")
                 (function | _ -> Operations.conflict)
                 (function | Get conflict_ x -> x)
@@ -93,12 +93,12 @@ module Conflict =
                 decisions_
             >-> Decisions.conflict_
 
-        let internal conflict p s =
+        let conflict p s =
             Decision.create (key p, "conflict")
                 (function | TryGetOrElse conflict_ (Static false) x -> x)
                 (s, Terminals.conflict p)
 
     (* Specification *)
 
-    let internal specification =
+    let specification =
         Decisions.conflict

@@ -9,7 +9,7 @@ open Hephaestus
 (* Put *)
 
 [<RequireQualifiedAccess>]
-module internal Put =
+module Put =
 
     (* Name *)
 

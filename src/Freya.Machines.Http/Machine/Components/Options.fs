@@ -9,7 +9,7 @@ open Hephaestus
 (* Options *)
 
 [<RequireQualifiedAccess>]
-module internal Options =
+module Options =
 
     (* Name *)
 

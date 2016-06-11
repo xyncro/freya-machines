@@ -9,7 +9,7 @@ open Hephaestus
 (* Get or Head *)
 
 [<RequireQualifiedAccess>]
-module internal GetOrHead =
+module GetOrHead =
 
     (* Name *)
 

@@ -9,7 +9,7 @@ open Hephaestus
 (* Delete *)
 
 [<RequireQualifiedAccess>]
-module internal Delete =
+module Delete =
 
     (* Name *)
 

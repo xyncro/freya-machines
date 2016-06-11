@@ -27,7 +27,7 @@ module Extensions =
 
     (* Optics *)
 
-    let private root_ =
+    let private extensions_ =
         Configuration.element_ Extensions.empty [ "http"; "configuration"; "extensions" ]
 
     (* Request *)
@@ -37,5 +37,5 @@ module Extensions =
     module Components =
 
         let components_ =
-                root_
+                extensions_
             >-> Extensions.components_

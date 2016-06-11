@@ -58,11 +58,11 @@ module Existence =
                 decisions_
             >-> Decisions.exists_
 
-        let internal exists p =
+        let exists p =
             Decision.create (key p, "exists")
                 (function | TryGetOrElse exists_ (Static true) x -> x)
 
     (* Specification *)
 
-    let internal specification =
+    let specification =
         Decisions.exists
