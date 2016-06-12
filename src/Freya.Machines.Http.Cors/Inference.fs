@@ -11,6 +11,38 @@ open Freya.Machines
 module Inference =
 
     [<RequireQualifiedAccess>]
+    module Headers =
+
+        (* Inference *)
+
+        [<RequireQualifiedAccess>]
+        module Inference =
+
+            type Defaults =
+                | Defaults
+
+                static member Headers (x: Freya<string list>) =
+                    Dynamic (Set.ofList <!> x)
+
+                static member Headers (x: Freya<string>) =
+                    Dynamic (Set.singleton <!> x)
+
+                static member Headers (x: string list) =
+                    Static (Set.ofList x)
+
+                static member Headers (x: string) =
+                    Static (Set.singleton x)
+
+            let inline defaults (a: ^a, _: ^b) =
+                ((^a or ^b) : (static member Headers: ^a -> Value<Set<string>>) a)
+
+            let inline infer (x: 'a) =
+                defaults (x, Defaults)
+
+        let inline infer v =
+            Inference.infer v
+
+    [<RequireQualifiedAccess>]
     module Origins =
 
         (* Inference *)

@@ -38,3 +38,15 @@ module Syntax =
         [<CustomOperation ("corsMethods", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.CorsMethods (m, a) =
             HttpMachine.set (m, Properties.Resource.methods_, Methods.infer a)
+
+        [<CustomOperation ("corsHeaders", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.CorsHeaders (m, a) =
+            HttpMachine.set (m, Properties.Resource.headers_, Headers.infer a)
+
+        [<CustomOperation ("corsExposedHeaders", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.CorsExposedHeaders (m, a) =
+            HttpMachine.set (m, Properties.Resource.exposedHeaders_, Headers.infer a)
+
+        [<CustomOperation ("corsSupportsCredentials", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.CorsSupportsCredentials (m, a) =
+            HttpMachine.set (m, Properties.Resource.supportsCredentials_, Decision.infer a)

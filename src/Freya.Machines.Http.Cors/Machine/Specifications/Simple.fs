@@ -5,6 +5,7 @@ open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
 open Freya.Machines.Http.Cors
+open Freya.Machines.Http.Cors.Machine.Configuration
 open Freya.Optics.Http.Cors
 open Hephaestus
 
@@ -42,11 +43,12 @@ module Simple =
 
         and simple k s =
             Decision.create (key k, "simple")
-                (function | _ -> Dynamic (
-                                    !. Request.Headers.origin_
-                                >>= function | Some (Origin x) -> Operations.simple x
-                                             | _ -> Freya.empty
-                                >>= function | _ -> Freya.init true))
+                (function | TryGetOrElse Properties.Resource.supportsCredentials_ (Static true) sc ->
+                                Dynamic (
+                                        !. Request.Headers.origin_
+                                    >>= function | Some (Origin x) -> Operations.simple x
+                                                 | _ -> Freya.empty
+                                    >>= function | _ -> Freya.init true))
                 (Specification.Terminal.empty, s)
 
     (* Specification *)
