@@ -63,6 +63,7 @@
     <Compile Include="Machine\Specifications\Prelude.fs" />
     <Compile Include="Machine\Specifications\Common.fs" />
     <Compile Include="Machine\Specifications\Simple.fs" />
+    <Compile Include="Machine\Specifications\Preflight.fs" />
     <Compile Include="Machine\Components\Cors.fs" />
     <Compile Include="Inference.fs" />
     <Compile Include="Expression.fs" />

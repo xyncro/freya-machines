@@ -20,7 +20,7 @@ type Handler =
 (* Defaults *)
 
 [<RequireQualifiedAccess>]
-module internal Defaults =
+module Defaults =
 
     let methods =
         set [
