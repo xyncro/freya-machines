@@ -22,19 +22,19 @@ module Inference =
                 | Defaults
 
                 static member Origins (x: Freya<SerializedOrigin list>) =
-                    Dynamic x
+                    Dynamic (Set.ofList <!> x)
 
                 static member Origins (x: Freya<SerializedOrigin>) =
-                    Dynamic (List.singleton <!> x)
+                    Dynamic (Set.singleton <!> x)
 
                 static member Origins (x: SerializedOrigin list) =
-                    Static x
+                    Static (Set.ofList x)
 
                 static member Origins (x: SerializedOrigin) =
-                    Static (List.singleton x)
+                    Static (Set.singleton x)
 
             let inline defaults (a: ^a, _: ^b) =
-                ((^a or ^b) : (static member Origins: ^a -> Value<SerializedOrigin list>) a)
+                ((^a or ^b) : (static member Origins: ^a -> Value<Set<SerializedOrigin>>) a)
 
             let inline infer (x: 'a) =
                 defaults (x, Defaults)

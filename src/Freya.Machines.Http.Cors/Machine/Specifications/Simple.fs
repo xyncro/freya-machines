@@ -5,7 +5,6 @@ open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
 open Freya.Machines.Http.Cors
-open Freya.Machines.Http.Cors.Machine.Configuration
 open Freya.Optics.Http.Cors
 open Hephaestus
 
@@ -19,53 +18,27 @@ module Simple =
     let private key =
         Key.root >> Key.add [ "simple" ]
 
-    (* Aliases
-
-       Shorthand/abbreviations for common functions, used locally to make the
-       code more concise where these verbose formulations make the logic harder
-       to read. *)
-
-    (* Monadic *)
-
-    let private lift =
-        Freya.Value.lift
-
-    (* Optics *)
-
-    let private origins_ =
-        Properties.Resource.origins_
-
-    (* Types *)
-
-    type private O =
-        OriginListOrNull
-
     (* Decisions *)
 
     [<RequireQualifiedAccess>]
     module Decisions =
 
         let rec enabled k s =
-            Decision.create (key k, "enabled")
-                (function | TryGetOrElse Properties.Extension.enabled_ (Static true) x -> x)
+            Common.Decisions.enabled (key k)
                 (s, hasOrigin k s)
 
         and hasOrigin k s =
-            Decision.create (key k, "has-origin")
-                (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.origin_))
+            Common.Decisions.hasOrigin (key k)
                 (s, originAllowed k s)
 
         and originAllowed k s =
-            Decision.create (key k, "origin-allowed")
-                (function | Get origins_ None -> Static true
-                          | TryGet origins_ (Static []) -> Static false
-                          | TryGet origins_ x -> Dynamic (allow <!> lift x <*> !. Request.Headers.origin_)
-                          | _ -> Static false)
+            Common.Decisions.originAllowed (key k)
                 (s, simple k s)
 
-        and private allow origins =
-            function | Some (Origin (O.Origins [ x ])) when List.contains x origins -> true
-                     | _ -> false
+        // TODO: Set origin based on origins + credential support, plus matched origin
+        // TODO: Set credential support
+        // TODO: Set exposed headers
+        // TODO: Consider modularisation of this
 
         and simple k s =
             Decision.create (key k, "simple")

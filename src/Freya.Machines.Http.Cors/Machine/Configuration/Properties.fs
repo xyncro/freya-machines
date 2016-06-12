@@ -1,6 +1,7 @@
 ﻿namespace Freya.Machines.Http.Cors.Machine.Configuration
 
 open Aether.Operators
+open Arachne.Http
 open Arachne.Http.Cors
 open Freya.Machines
 
@@ -12,55 +13,47 @@ module Properties =
     (* Types *)
 
     type private Properties =
-        { Extension: Extension
-          Resource: Resource }
-
-        static member extension_ =
-            (fun x -> x.Extension), (fun e x -> { x with Extension = e })
+        { Resource: Resource }
 
         static member resource_ =
             (fun x -> x.Resource), (fun r x -> { x with Resource = r })
 
         static member empty =
-            { Extension = Extension.empty
-              Resource = Resource.empty }
-
-    and private Extension =
-        { Enabled: Value<bool> option }
-
-        static member enabled_ =
-            (fun x -> x.Enabled), (fun e x -> { x with Enabled = e })
-
-        static member empty =
-            { Enabled = None }
+            { Resource = Resource.empty }
 
      and private Resource =
-        { Origins: Value<SerializedOrigin list> option }
+        { Origins: Value<Set<SerializedOrigin>> option
+          Methods: Value<Set<Method>> option
+          Headers: Value<Set<string>> option
+          ExposedHeaders: Value<Set<string>> option
+          SupportsCredentials: Value<bool> option }
 
         static member origins_ =
-            (fun x -> x.Origins), (fun a x -> { x with Origins = a })
+            (fun x -> x.Origins), (fun o x -> { x with Origins = o })
+
+        static member methods_ =
+            (fun x -> x.Methods), (fun m x -> { x with Methods = m })
+
+        static member headers_ =
+            (fun x -> x.Headers), (fun h x -> { x with Headers = h })
+
+        static member exposedHeaders_ =
+            (fun x -> x.ExposedHeaders), (fun e x -> { x with ExposedHeaders = e })
+
+        static member supportsCredentials_ =
+            (fun x -> x.SupportsCredentials), (fun s x -> { x with SupportsCredentials = s })
 
         static member empty =
-            { Origins = None }
+            { Origins = None
+              Methods = None
+              Headers = None
+              ExposedHeaders = None
+              SupportsCredentials = None }
 
     (* Optics *)
 
     let private properties_ =
         Configuration.element_ Properties.empty [ "http-cors"; "configuration"; "properties" ]
-
-    (* Extension *)
-
-    [<RequireQualifiedAccess>]
-    [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
-    module Extension =
-
-        let private extension_ =
-                properties_
-            >-> Properties.extension_
-
-        let enabled_ =
-                extension_
-            >-> Extension.enabled_
 
     (* Resource *)
 
@@ -75,3 +68,19 @@ module Properties =
         let origins_ =
                 resource_
             >-> Resource.origins_
+
+        let methods_ =
+                resource_
+            >-> Resource.methods_
+
+        let headers_ =
+                resource_
+            >-> Resource.headers_
+
+        let exposedHeaders_ =
+                resource_
+            >-> Resource.exposedHeaders_
+
+        let supportsCredentials_ =
+                resource_
+            >-> Resource.supportsCredentials_
