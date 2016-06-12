@@ -58,8 +58,8 @@ module Existence =
                 decisions_
             >-> Decisions.exists_
 
-        let exists p =
-            Decision.create (key p, "exists")
+        let exists k =
+            Decision.create (key k, "exists")
                 (function | TryGetOrElse exists_ (Static true) x -> x)
 
     (* Specification *)

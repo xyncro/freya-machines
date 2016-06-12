@@ -50,3 +50,7 @@ module Syntax =
         [<CustomOperation ("corsSupportsCredentials", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.CorsSupportsCredentials (m, a) =
             HttpMachine.set (m, Properties.Resource.supportsCredentials_, Decision.infer a)
+
+        [<CustomOperation ("corsMaxAge", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.CorsMaxAge (m, a) =
+            HttpMachine.set (m, Properties.Resource.maxAge_, Integer.infer a)

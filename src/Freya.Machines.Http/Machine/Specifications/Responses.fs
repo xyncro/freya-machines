@@ -30,8 +30,8 @@ module Responses =
 
         (* Key *)
 
-        let private key p =
-            Key.add [ "common" ] (key p)
+        let private key k =
+            Key.add [ "common" ] (key k)
 
         (* Types *)
 
@@ -95,13 +95,13 @@ module Responses =
                     terminals_
                 >-> Terminals.ok_
 
-            let noContent p =
-                Terminal.create (key p, "no-content")
+            let noContent k =
+                Terminal.create (key k, "no-content")
                     (function | _ -> Operations.noContent)
                     (function | Get noContent_ x -> x)
 
-            let rec ok p =
-                Terminal.create (key p, "ok")
+            let rec ok k =
+                Terminal.create (key k, "ok")
                     (function |   Get Properties.Resource.entityTag_ entityTag
                                 & Get Properties.Resource.lastModified_ lastModified ->
                                         Freya.Value.liftOption entityTag
@@ -125,10 +125,10 @@ module Responses =
                     decisions_
                 >-> Decisions.noContent_
 
-            let noContent p =
-                Decision.create (key p, "no-content")
+            let noContent k =
+                Decision.create (key k, "no-content")
                     (function | TryGetOrElse noContent_ (Static false) x -> x)
-                    (Terminals.ok p, Terminals.noContent p)
+                    (Terminals.ok k, Terminals.noContent k)
 
         (* Specification *)
 
@@ -145,8 +145,8 @@ module Responses =
 
         (* Key *)
 
-        let private key p =
-            Key.add [ "created" ] (key p)
+        let private key k =
+            Key.add [ "created" ] (key k)
 
         (* Types *)
 
@@ -201,8 +201,8 @@ module Responses =
                     terminals_
                 >-> Terminals.created_
 
-            let created p =
-                Terminal.create (key p, "created")
+            let created k =
+                Terminal.create (key k, "created")
                     (function | _ -> Operations.created)
                     (function | Get created_ x -> x)
 
@@ -220,10 +220,10 @@ module Responses =
                     decisions_
                 >-> Decisions.created_
 
-            let created p s =
-                Decision.create (key p, "created")
+            let created k s =
+                Decision.create (key k, "created")
                     (function | TryGetOrElse created_ (Static false) x -> x)
-                    (s, Terminals.created p)
+                    (s, Terminals.created k)
 
         (* Specification *)
 
@@ -237,8 +237,8 @@ module Responses =
 
         (* Key *)
 
-        let private key p =
-            Key.add [ "missing" ] (key p)
+        let private key k =
+            Key.add [ "missing" ] (key k)
 
         (* Types *)
 
@@ -279,8 +279,8 @@ module Responses =
                     terminals_
                 >-> Terminals.notFound_
 
-            let notFound p =
-                Terminal.create (key p, "not-found")
+            let notFound k =
+                Terminal.create (key k, "not-found")
                     (function | _ -> Operations.notFound)
                     (function | Get notFound_ x -> x)
 
@@ -296,8 +296,8 @@ module Responses =
 
         (* Key *)
 
-        let private key p =
-            Key.add [ "moved" ] (key p)
+        let private key k =
+            Key.add [ "moved" ] (key k)
 
         (* Types *)
 
@@ -380,18 +380,18 @@ module Responses =
                     terminals_
                 >-> Terminals.movedPermanently_
 
-            let gone p =
-                Terminal.create (key p, "gone")
+            let gone k =
+                Terminal.create (key k, "gone")
                     (function | _ -> Operations.gone)
                     (function | Get gone_ x -> x)
 
-            let temporaryRedirect p =
-                Terminal.create (key p, "temporary-redirect")
+            let temporaryRedirect k =
+                Terminal.create (key k, "temporary-redirect")
                     (function | _ -> Operations.temporaryRedirect)
                     (function | Get temporaryRedirect_ x -> x) 
 
-            let movedPermanently p =
-                Terminal.create (key p, "moved-permanently")
+            let movedPermanently k =
+                Terminal.create (key k, "moved-permanently")
                     (function | _ -> Operations.movedPermanently)
                     (function | Get movedPermanently_ x -> x)
 
@@ -417,20 +417,20 @@ module Responses =
                     decisions_
                 >-> Decisions.movedPermanently_
 
-            let rec gone p s =
-                Decision.create (key p, "see-other")
+            let rec gone k s =
+                Decision.create (key k, "see-other")
                     (function | TryGetOrElse gone_ (Static false) x -> x)
-                    (movedTemporarily p s, Terminals.gone p)
+                    (movedTemporarily k s, Terminals.gone k)
 
-            and movedTemporarily p s =
-                Decision.create (key p, "found")
+            and movedTemporarily k s =
+                Decision.create (key k, "found")
                     (function | TryGetOrElse movedTemporarily_ (Static false) x -> x)
-                    (movedPermanently p s, Terminals.temporaryRedirect p)
+                    (movedPermanently k s, Terminals.temporaryRedirect k)
 
-            and movedPermanently p s =
-                Decision.create (key p, "see-other")
+            and movedPermanently k s =
+                Decision.create (key k, "see-other")
                     (function | TryGetOrElse movedPermanently_ (Static false) x -> x)
-                    (s, Terminals.movedPermanently p)
+                    (s, Terminals.movedPermanently k)
 
         (* Specification *)
 
@@ -444,8 +444,8 @@ module Responses =
 
         (* Key *)
 
-        let private key p =
-            Key.add [ "options" ] (key p)
+        let private key k =
+            Key.add [ "options" ] (key k)
 
         (* Types *)
 
@@ -486,8 +486,8 @@ module Responses =
                     terminals_
                 >-> Terminals.options_
 
-            let options p =
-                Terminal.create (key p, "options")
+            let options k =
+                Terminal.create (key k, "options")
                     (function | _ -> Operations.options)
                     (function | Get options_ x -> x)
 
@@ -503,8 +503,8 @@ module Responses =
 
         (* Key *)
 
-        let private key p =
-            Key.add [ "other" ] (key p)
+        let private key k =
+            Key.add [ "other" ] (key k)
 
         (* Types *)
 
@@ -587,18 +587,18 @@ module Responses =
                     terminals_
                 >-> Terminals.multipleChoices_
 
-            let seeOther p =
-                Terminal.create (key p, "see-other")
+            let seeOther k =
+                Terminal.create (key k, "see-other")
                     (function | _ -> Operations.seeOther)
                     (function | Get seeOther_ x -> x) 
 
-            let found p =
-                Terminal.create (key p, "found")
+            let found k =
+                Terminal.create (key k, "found")
                     (function | _ -> Operations.found)
                     (function | Get found_ x -> x)
 
-            let multipleChoices p =
-                Terminal.create (key p, "multiple-choices")
+            let multipleChoices k =
+                Terminal.create (key k, "multiple-choices")
                     (function | _ -> Operations.multipleChoices)
                     (function | Get multipleChoices_ x -> x)
 
@@ -624,20 +624,20 @@ module Responses =
                     decisions_
                 >-> Decisions.multipleChoices_
 
-            let rec seeOther p s =
-                Decision.create (key p, "see-other")
+            let rec seeOther k s =
+                Decision.create (key k, "see-other")
                     (function | TryGetOrElse seeOther_ (Static false) x -> x)
-                    (found p s, Terminals.seeOther p)
+                    (found k s, Terminals.seeOther k)
 
-            and found p s =
-                Decision.create (key p, "found")
+            and found k s =
+                Decision.create (key k, "found")
                     (function | TryGetOrElse found_ (Static false) x -> x)
-                    (multipleChoices p s, Terminals.found p)
+                    (multipleChoices k s, Terminals.found k)
 
-            and multipleChoices p s =
-                Decision.create (key p, "see-other")
+            and multipleChoices k s =
+                Decision.create (key k, "see-other")
                     (function | TryGetOrElse multipleChoices_ (Static false) x -> x)
-                    (s, Terminals.multipleChoices p)
+                    (s, Terminals.multipleChoices k)
 
         (* Specification *)
 

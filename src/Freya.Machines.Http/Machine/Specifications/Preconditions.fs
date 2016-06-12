@@ -70,8 +70,8 @@ module Preconditions =
                     terminals_
                 >-> Terminals.preconditionFailed_
 
-            let preconditionFailed p =
-                Terminal.create (key p, "precondition-failed")
+            let preconditionFailed k =
+                Terminal.create (key k, "precondition-failed")
                     (function | _ -> Operations.preconditionFailed)
                     (function | Get preconditionFailed_ x -> x)
 
@@ -82,8 +82,8 @@ module Preconditions =
 
         (* Key *)
 
-        let private key p =
-            Key.add [ "common" ] (key p)
+        let private key k =
+            Key.add [ "common" ] (key k)
 
         (* Decisions *)
 
@@ -91,16 +91,16 @@ module Preconditions =
         [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
         module Decisions =
 
-            let rec hasIfMatch p s =
-                Decision.create (key p, "has-if-match")
+            let rec hasIfMatch k s =
+                Decision.create (key k, "has-if-match")
                     (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifMatch_))
-                    (hasIfUnmodifiedSince p s, ifMatchMatches p s)
+                    (hasIfUnmodifiedSince k s, ifMatchMatches k s)
 
-            and ifMatchMatches p s =
-                Decision.create (key p, "if-match-matches")
+            and ifMatchMatches k s =
+                Decision.create (key k, "if-match-matches")
                     (function | TryGet Properties.Resource.entityTag_ x -> Value.Freya.bind matches x
                               | _ -> Static true)
-                    (Shared.Terminals.preconditionFailed p, s)
+                    (Shared.Terminals.preconditionFailed k, s)
 
             and private matches entityTag =
                     function | Some (IfMatch (IfMatchChoice.EntityTags x)) when exists entityTag x -> true
@@ -116,16 +116,16 @@ module Preconditions =
                     function | Strong y when x = y -> true
                              | _ -> false
 
-            and hasIfUnmodifiedSince p s =
-                Decision.create (key p, "has-if-unmodified-since")
+            and hasIfUnmodifiedSince k s =
+                Decision.create (key k, "has-if-unmodified-since")
                     (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifUnmodifiedSince_))
-                    (s, ifUnmodifiedSinceMatches p s)
+                    (s, ifUnmodifiedSinceMatches k s)
 
-            and ifUnmodifiedSinceMatches p s =
-                Decision.create (key p, "if-unmodified-since-matches")
+            and ifUnmodifiedSinceMatches k s =
+                Decision.create (key k, "if-unmodified-since-matches")
                     (function | TryGet Properties.Resource.lastModified_ x -> Value.Freya.bind earlier x
                               | _ -> Static true)
-                    (Shared.Terminals.preconditionFailed p, s)
+                    (Shared.Terminals.preconditionFailed k, s)
 
             and private earlier date =
                     function | Some (IfUnmodifiedSince x) when date <= x -> true
@@ -144,8 +144,8 @@ module Preconditions =
 
         (* Key *)
 
-        let private key p =
-            Key.add [ "safe" ] (key p)
+        let private key k =
+            Key.add [ "safe" ] (key k)
 
         (* Types *)
 
@@ -186,8 +186,8 @@ module Preconditions =
                     terminals_
                 >-> Terminals.notModified_
 
-            let notModified p =
-                Terminal.create (key p, "not-modified")
+            let notModified k =
+                Terminal.create (key k, "not-modified")
                     (function | _ -> Operations.notModified)
                     (function | Get notModified_ x -> x)
 
@@ -197,16 +197,16 @@ module Preconditions =
         [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
         module Decisions =
 
-            let rec hasIfNoneMatch p s =
-                Decision.create (key p, "has-if-none-match")
+            let rec hasIfNoneMatch k s =
+                Decision.create (key k, "has-if-none-match")
                     (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifNoneMatch_))
-                    (hasIfModifiedSince p s, ifNoneMatchMatches p s)
+                    (hasIfModifiedSince k s, ifNoneMatchMatches k s)
 
-            and ifNoneMatchMatches p s =
-                Decision.create (key p, "if-none-match-matches")
+            and ifNoneMatchMatches k s =
+                Decision.create (key k, "if-none-match-matches")
                     (function | TryGet Properties.Resource.entityTag_ x -> Value.Freya.bind matches x
                               | _ -> Static true)
-                    (Terminals.notModified p, s)
+                    (Terminals.notModified k, s)
 
             and private matches entityTag =
                     function | Some (IfNoneMatch (EntityTags x)) when not (exists entityTag x) -> true
@@ -222,16 +222,16 @@ module Preconditions =
                     function | Strong y 
                              | Weak y -> x = y 
 
-            and hasIfModifiedSince p s =
-                Decision.create (key p, "has-if-modified-since")
+            and hasIfModifiedSince k s =
+                Decision.create (key k, "has-if-modified-since")
                     (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifModifiedSince_))
-                    (s, ifModifiedSinceMatches p s)
+                    (s, ifModifiedSinceMatches k s)
 
-            and ifModifiedSinceMatches p s =
-                Decision.create (key p, "if-modified-since-matches")
+            and ifModifiedSinceMatches k s =
+                Decision.create (key k, "if-modified-since-matches")
                     (function | TryGet Properties.Resource.lastModified_ x -> Value.Freya.bind later x
                               | _ -> Static true)
-                    (Terminals.notModified p, s)
+                    (Terminals.notModified k, s)
 
             and private later date =
                     function | Some (IfModifiedSince x) when date > x -> true
@@ -250,8 +250,8 @@ module Preconditions =
 
         (* Key *)
 
-        let private key p =
-            Key.add [ "unsafe" ] (key p)
+        let private key k =
+            Key.add [ "unsafe" ] (key k)
 
         (* Decisions *)
 
@@ -259,16 +259,16 @@ module Preconditions =
         [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
         module Decisions =
 
-            let rec hasIfNoneMatch p s =
-                Decision.create (key p, "has-if-none-match")
+            let rec hasIfNoneMatch k s =
+                Decision.create (key k, "has-if-none-match")
                     (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifNoneMatch_))
-                    (s, ifNoneMatchMatches p s)
+                    (s, ifNoneMatchMatches k s)
 
-            and ifNoneMatchMatches p s =
-                Decision.create (key p, "if-none-match-matches")
+            and ifNoneMatchMatches k s =
+                Decision.create (key k, "if-none-match-matches")
                     (function | TryGet Properties.Resource.entityTag_ x -> Value.Freya.bind matches x
                               | _ -> Static true)
-                    (Shared.Terminals.preconditionFailed p, s)
+                    (Shared.Terminals.preconditionFailed k, s)
 
             and private matches entityTag =
                     function | Some (IfNoneMatch (EntityTags x)) when not (exists entityTag x) -> true

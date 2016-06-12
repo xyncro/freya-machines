@@ -26,7 +26,8 @@ module Properties =
           Methods: Value<Set<Method>> option
           Headers: Value<Set<string>> option
           ExposedHeaders: Value<Set<string>> option
-          SupportsCredentials: Value<bool> option }
+          SupportsCredentials: Value<bool> option
+          MaxAge: Value<int> option }
 
         static member origins_ =
             (fun x -> x.Origins), (fun o x -> { x with Origins = o })
@@ -43,12 +44,16 @@ module Properties =
         static member supportsCredentials_ =
             (fun x -> x.SupportsCredentials), (fun s x -> { x with SupportsCredentials = s })
 
+        static member maxAge_ =
+            (fun x -> x.MaxAge), (fun m x -> { x with MaxAge = m })
+
         static member empty =
             { Origins = None
               Methods = None
               Headers = None
               ExposedHeaders = None
-              SupportsCredentials = None }
+              SupportsCredentials = None
+              MaxAge = None }
 
     (* Optics *)
 
@@ -84,3 +89,7 @@ module Properties =
         let supportsCredentials_ =
                 resource_
             >-> Resource.supportsCredentials_
+
+        let maxAge_ =
+                resource_
+            >-> Resource.maxAge_

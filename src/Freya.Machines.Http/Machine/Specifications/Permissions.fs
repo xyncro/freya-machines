@@ -88,13 +88,13 @@ module Permissions =
                 terminals_
             >-> Terminals.forbidden_
 
-        let unauthorized p =
-            Terminal.create (key p, "unauthorized")
+        let unauthorized k =
+            Terminal.create (key k, "unauthorized")
                 (function | _ -> Operations.unauthorized)
                 (function | Get unauthorized_ x -> x)
 
-        let forbidden p =
-            Terminal.create (key p, "forbidden")
+        let forbidden k =
+            Terminal.create (key k, "forbidden")
                 (function | _ -> Operations.forbidden)
                 (function | Get forbidden_ x -> x)
 
@@ -116,15 +116,15 @@ module Permissions =
                 decisions_
             >-> Decisions.allowed_
 
-        let rec authorized p s =
-            Decision.create (key p, "authorized")
+        let rec authorized k s =
+            Decision.create (key k, "authorized")
                 (function | TryGetOrElse authorized_ (Static true) x -> x)
-                (Terminals.unauthorized p, allowed p s)
+                (Terminals.unauthorized k, allowed k s)
 
-        and allowed p s =
-            Decision.create (key p, "allowed")
+        and allowed k s =
+            Decision.create (key k, "allowed")
                 (function | TryGetOrElse allowed_ (Static true) x -> x)
-                (Terminals.forbidden p, s)
+                (Terminals.forbidden k, s)
 
     (* Specification *)
 

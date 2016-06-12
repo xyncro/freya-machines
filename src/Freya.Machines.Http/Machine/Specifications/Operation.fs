@@ -89,13 +89,13 @@ module Operation =
                 terminals_
             >-> Terminals.accepted_
 
-        let internalServerError p =
-            Terminal.create (key p, "internal-server-error")
+        let internalServerError k =
+            Terminal.create (key k, "internal-server-error")
                 (function | _ -> Operations.internalServerError)
                 (function | Get internalServerError_ x -> x)
 
-        let accepted p =
-            Terminal.create (key p, "accepted")
+        let accepted k =
+            Terminal.create (key k, "accepted")
                 (function | _ -> Operations.accepted)
                 (function | Get accepted_ x -> x)
 
@@ -118,17 +118,17 @@ module Operation =
             >-> Operations.operations_
             >-> Map.value_ m
 
-        let rec operation p m s =
-            Decision.create (key p, "operation")
+        let rec operation k m s =
+            Decision.create (key k, "operation")
                 (function | TryGet (operationMethod_ m) f -> Dynamic (f)
                           | _ -> Static true)
-                (Terminals.internalServerError p, completed p s)
+                (Terminals.internalServerError k, completed k s)
 
-        and completed p s =
-            Decision.create (key p, "completed")
+        and completed k s =
+            Decision.create (key k, "completed")
                 (function | TryGet completed_ x -> x
                           | _ -> Static true)
-                (Terminals.accepted p, s)
+                (Terminals.accepted k, s)
 
     (* Specification *)
 

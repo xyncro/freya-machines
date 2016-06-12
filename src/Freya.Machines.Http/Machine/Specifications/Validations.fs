@@ -117,24 +117,24 @@ module Validations =
                 terminals_
             >-> Terminals.badRequest_
 
-        let expectationFailed p =
-            Terminal.create (key p, "expectation-failed")
+        let expectationFailed k =
+            Terminal.create (key k, "expectation-failed")
                 (function | _ -> Operations.expectationFailed)
                 (function | Get expectationFailed_ x -> x)
 
-        let methodNotAllowed p =
-            Terminal.create (key p, "method-not-allowed")
+        let methodNotAllowed k =
+            Terminal.create (key k, "method-not-allowed")
                 (function | TryGet Properties.Request.methods_ x -> Freya.Value.apply Operations.methodNotAllowed x
                           | _ -> Operations.methodNotAllowed Defaults.methods)
                 (function | Get methodNotAllowed_ x -> x)
 
-        let uriTooLong p =
-            Terminal.create (key p, "uri-too-long")
+        let uriTooLong k =
+            Terminal.create (key k, "uri-too-long")
                 (function | _ -> Operations.uriTooLong)
                 (function | Get uriTooLong_ x -> x)
 
-        let badRequest p =
-            Terminal.create (key p, "bad-request")
+        let badRequest k =
+            Terminal.create (key k, "bad-request")
                 (function | _ -> Operations.badRequest)
                 (function | Get badRequest_ x -> x)
 
@@ -160,31 +160,31 @@ module Validations =
                 decisions_
             >-> Decisions.badRequest_
 
-        let rec expectationMet p s =
-            Decision.create (key p, "expectation-met")
+        let rec expectationMet k s =
+            Decision.create (key k, "expectation-met")
                 (function | TryGetOrElse expectationMet_ (Static true) x -> x)
-                (Terminals.expectationFailed p, methodAllowed p s)
+                (Terminals.expectationFailed k, methodAllowed k s)
 
-        and methodAllowed p s =
-            Decision.create (key p, "method-allowed")
+        and methodAllowed k s =
+            Decision.create (key k, "method-allowed")
                 (function | TryGet Properties.Request.methods_ x -> Value.Freya.bind allowed x
                           | _ -> Dynamic (allowed Defaults.methods))
-                (Terminals.methodNotAllowed p, uriTooLong p s)
+                (Terminals.methodNotAllowed k, uriTooLong k s)
 
         and private allowed s =
                 function | x when Set.contains x s -> true
                          | _ -> false
             <!> !. Request.method_
 
-        and uriTooLong p s =
-            Decision.create (key p, "uri-too-long")
+        and uriTooLong k s =
+            Decision.create (key k, "uri-too-long")
                 (function | TryGetOrElse uriTooLong_ (Static false) x -> x)
-                (badRequest p s, Terminals.uriTooLong p)
+                (badRequest k s, Terminals.uriTooLong k)
 
-        and badRequest p s =
-            Decision.create (key p, "bad-request")
+        and badRequest k s =
+            Decision.create (key k, "bad-request")
                 (function | TryGetOrElse badRequest_ (Static false) x -> x)
-                (s, Terminals.badRequest p)
+                (s, Terminals.badRequest k)
 
     (* Specification *)
 

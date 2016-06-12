@@ -101,18 +101,18 @@ module Assertions =
                 terminals_
             >-> Terminals.notImplemented_
 
-        let serviceUnavailable p =
-            Terminal.create (key p, "service-unavailable")
+        let serviceUnavailable k =
+            Terminal.create (key k, "service-unavailable")
                 (function | _ -> Operations.serviceUnavailable)
                 (function | Get serviceUnavailable_ x -> x) 
 
-        let httpVersionNotSupported p =
-            Terminal.create (key p, "http-version-not-supported")
+        let httpVersionNotSupported k =
+            Terminal.create (key k, "http-version-not-supported")
                 (function | _ -> Operations.httpVersionNotSupported)
                 (function | Get httpVersionNotSupported_ x -> x)
 
-        let notImplemented p =
-            Terminal.create (key p, "not-implemented")
+        let notImplemented k =
+            Terminal.create (key k, "not-implemented")
                 (function | _ -> Operations.notImplemented)
                 (function | Get notImplemented_ x -> x)
 
@@ -134,27 +134,27 @@ module Assertions =
                 decisions_
             >-> Decisions.httpVersionSupported_
 
-        let rec serviceAvailable p s =
-            Decision.create (key p, "service-available")
+        let rec serviceAvailable k s =
+            Decision.create (key k, "service-available")
                 (function | TryGetOrElse serviceAvailable_ (Static true) x -> x)
-                (Terminals.serviceUnavailable p, httpVersionSupported p s)
+                (Terminals.serviceUnavailable k, httpVersionSupported k s)
 
-        and httpVersionSupported p s =
-            Decision.create (key p, "http-version-supported")
+        and httpVersionSupported k s =
+            Decision.create (key k, "http-version-supported")
                 (function | TryGet httpVersionSupported_ x -> x
                           | _ -> Dynamic supported)
-                (Terminals.httpVersionNotSupported p, methodImplemented p s)
+                (Terminals.httpVersionNotSupported k, methodImplemented k s)
 
         and private supported =
                 function | HTTP x when x >= 1.1 -> true
                          | _ -> false
             <!> !. Request.httpVersion_
 
-        and methodImplemented p s =
-            Decision.create (key p, "method-implemented")
+        and methodImplemented k s =
+            Decision.create (key k, "method-implemented")
                 (function | TryGet Properties.Request.methods_ x -> Value.Freya.bind knownCustom x
                           | _ -> Dynamic nonCustom)
-                (Terminals.notImplemented p, s)
+                (Terminals.notImplemented k, s)
 
         and private knownCustom methodsAllowed =
                 function | Method.Custom x when not (Set.contains (Method.Custom x) methodsAllowed) -> false

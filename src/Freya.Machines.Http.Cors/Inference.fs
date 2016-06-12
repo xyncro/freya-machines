@@ -43,6 +43,32 @@ module Inference =
             Inference.infer v
 
     [<RequireQualifiedAccess>]
+    module Integer =
+
+        (* Inference *)
+
+        [<RequireQualifiedAccess>]
+        module Inference =
+
+            type Defaults =
+                | Defaults
+
+                static member Integer (x: Freya<int>) =
+                    Dynamic x
+
+                static member Integer (x: int) =
+                    Static x
+
+            let inline defaults (a: ^a, _: ^b) =
+                ((^a or ^b) : (static member Integer: ^a -> Value<int>) a)
+
+            let inline infer (x: 'a) =
+                defaults (x, Defaults)
+
+        let inline infer v =
+            Inference.infer v
+
+    [<RequireQualifiedAccess>]
     module Origins =
 
         (* Inference *)

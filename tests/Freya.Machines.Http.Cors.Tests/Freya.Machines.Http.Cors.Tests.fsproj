@@ -388,6 +388,7 @@
   <ItemGroup>
     <Compile Include="Prelude.fs" />
     <Compile Include="Simple.fs" />
+    <Compile Include="Preflight.fs" />
     <Content Include="App.config" />
   </ItemGroup>
   <ItemGroup>

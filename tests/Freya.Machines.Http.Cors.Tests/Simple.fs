@@ -11,8 +11,8 @@ open Xunit
 
 (* Simple
 
-   Verification that the Assertions specifications behave as expected given
-   suitable input. *)
+   Verification that CORS Simple requests are handled correctly given
+   appropriate request data. *)
 
 [<Fact>]
 let ``basic cors allows request correctly`` () =
@@ -22,8 +22,7 @@ let ``basic cors allows request correctly`` () =
             using cors }
 
     let setup =
-        Request.Headers.origin_ .=
-            Some (Origin (OriginListOrNull.Origins [ Xyncro.com ]))
+        Request.Headers.origin_ .= Some (Origin (OriginListOrNull.Origins [ Xyncro.com ]))
 
     verify setup machine [
         Response.Headers.accessControlAllowOrigin_ => Some (AccessControlAllowOrigin (Origins (OriginListOrNull.Origins [ Xyncro.com ])))
@@ -38,8 +37,7 @@ let ``cors disabled ignores cors`` () =
             corsEnabled false }
 
     let setup =
-        Request.Headers.origin_ .=
-            Some (Origin (OriginListOrNull.Origins [ Xyncro.com ]))
+        Request.Headers.origin_ .= Some (Origin (OriginListOrNull.Origins [ Xyncro.com ]))
 
     verify setup machine [
         Response.Headers.accessControlAllowOrigin_ => None
@@ -49,8 +47,7 @@ let ``cors disabled ignores cors`` () =
 let ``credentials unsupported cors behaves correctly`` () =
 
     let setup =
-        Request.Headers.origin_ .=
-            Some (Origin (OriginListOrNull.Origins [ Xyncro.com ]))
+        Request.Headers.origin_ .= Some (Origin (OriginListOrNull.Origins [ Xyncro.com ]))
 
     (* Credentials Unsupported, Origins Unspecified *)
 
@@ -91,8 +88,7 @@ let ``credentials unsupported cors behaves correctly`` () =
 let ``headers exposed behaves correctly`` () =
 
     let setup =
-        Request.Headers.origin_ .=
-            Some (Origin (OriginListOrNull.Origins [ Xyncro.com ]))
+        Request.Headers.origin_ .= Some (Origin (OriginListOrNull.Origins [ Xyncro.com ]))
 
     (* Exposed Headers Unspecified *)
 

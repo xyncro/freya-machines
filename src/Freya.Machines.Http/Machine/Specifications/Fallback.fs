@@ -61,8 +61,8 @@ module Fallback =
                 terminals_
             >-> Terminals.fallback_
 
-        let fallback p =
-            Terminal.create (key p, "fallback")
+        let fallback k =
+            Terminal.create (key k, "fallback")
                 (function | _ -> Operations.ok None None)
                 (function | Get fallback_ x -> x)
 
@@ -72,10 +72,10 @@ module Fallback =
     [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
     module Decisions =
 
-        let fallback p =
-            Decision.create (key p, "fallback")
+        let fallback k =
+            Decision.create (key k, "fallback")
                 (function | _ -> Static true)
-                (Specification.Terminal.empty, Terminals.fallback p)
+                (Specification.Terminal.empty, Terminals.fallback k)
 
     (* Specification *)
 
