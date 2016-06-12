@@ -100,13 +100,13 @@ module Responses =
                     (function | _ -> Operations.noContent)
                     (function | Get noContent_ x -> x)
 
-            let ok p =
+            let rec ok p =
                 Terminal.create (key p, "ok")
-                    (function |   Get Properties.Resource.entityTag_ e
-                                & Get Properties.Resource.lastModified_ l ->
-                                        Freya.Value.liftOption e
+                    (function |   Get Properties.Resource.entityTag_ entityTag
+                                & Get Properties.Resource.lastModified_ lastModified ->
+                                        Freya.Value.liftOption entityTag
                                     >>= fun entityTag ->
-                                        Freya.Value.liftOption l
+                                        Freya.Value.liftOption lastModified
                                     >>= fun lastModified ->
                                         Operations.ok entityTag lastModified)
                     (function | Get ok_ x -> x)

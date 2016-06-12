@@ -43,12 +43,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{9BEF39FC-EBA1-453B-BE35-0D1E540F3ED6}"
 	ProjectSection(SolutionItems) = preProject
 		tests\Freya.Machines.Console\Freya.Machines.Console.fsproj.paket.references = tests\Freya.Machines.Console\Freya.Machines.Console.fsproj.paket.references
+		tests\Freya.Machines.Http.Cors.Tests\Freya.Machines.Http.Cors.Tests.fsproj.paket.references = tests\Freya.Machines.Http.Cors.Tests\Freya.Machines.Http.Cors.Tests.fsproj.paket.references
 		tests\Freya.Machines.Http.Tests\Freya.Machines.Http.Tests.fsproj.paket.references = tests\Freya.Machines.Http.Tests\Freya.Machines.Http.Tests.fsproj.paket.references
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Freya.Machines.Http.Tests", "tests\Freya.Machines.Http.Tests\Freya.Machines.Http.Tests.fsproj", "{7D3D8020-B758-4985-8169-1D92990E9849}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Freya.Machines.Http.Cors", "src\Freya.Machines.Http.Cors\Freya.Machines.Http.Cors.fsproj", "{D200E0A7-971E-47AF-95BB-A6841B905505}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Freya.Machines.Http.Cors.Tests", "tests\Freya.Machines.Http.Cors.Tests\Freya.Machines.Http.Cors.Tests.fsproj", "{5C3287F2-F56A-41D1-AE97-DFB9DFEE243B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,6 +79,10 @@ Global
 		{D200E0A7-971E-47AF-95BB-A6841B905505}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D200E0A7-971E-47AF-95BB-A6841B905505}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D200E0A7-971E-47AF-95BB-A6841B905505}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C3287F2-F56A-41D1-AE97-DFB9DFEE243B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C3287F2-F56A-41D1-AE97-DFB9DFEE243B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C3287F2-F56A-41D1-AE97-DFB9DFEE243B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C3287F2-F56A-41D1-AE97-DFB9DFEE243B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -91,5 +98,6 @@ Global
 		{9BEF39FC-EBA1-453B-BE35-0D1E540F3ED6} = {E455A551-F3E1-4E3E-9304-6AA75AB77AB7}
 		{7D3D8020-B758-4985-8169-1D92990E9849} = {7D19D227-4D2D-493F-8E49-3433F45BCB4B}
 		{D200E0A7-971E-47AF-95BB-A6841B905505} = {06B8C741-5183-4709-BE0A-EE7CF6399F7E}
+		{5C3287F2-F56A-41D1-AE97-DFB9DFEE243B} = {7D19D227-4D2D-493F-8E49-3433F45BCB4B}
 	EndGlobalSection
 EndGlobal

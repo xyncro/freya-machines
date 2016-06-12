@@ -1,6 +1,5 @@
 ﻿namespace Freya.Machines.Http.Cors.Machine.Specifications
 
-open Arachne.Http.Cors
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
@@ -36,19 +35,25 @@ module Simple =
             Common.Decisions.originAllowed (key k)
                 (s, simple k s)
 
-        // TODO: Set origin based on origins + credential support, plus matched origin
-        // TODO: Set credential support
-        // TODO: Set exposed headers
-        // TODO: Consider modularisation of this
-
         and simple k s =
             Decision.create (key k, "simple")
-                (function | TryGetOrElse Properties.Resource.supportsCredentials_ (Static true) sc ->
+                (function |   TryGetOrElse Properties.Resource.supportsCredentials_ (Static true) supportsCredentials
+                            & Get Properties.Resource.origins_ origins
+                            & Get Properties.Resource.exposedHeaders_ exposedHeaders ->
                                 Dynamic (
-                                        !. Request.Headers.origin_
-                                    >>= function | Some (Origin x) -> Operations.simple x
-                                                 | _ -> Freya.empty
-                                    >>= function | _ -> Freya.init true))
+                                        Freya.Optic.get Request.Headers.origin_
+                                    >>= fun origin ->
+                                        Freya.Value.lift supportsCredentials
+                                    >>= fun supportsCredentials ->
+                                        Freya.Value.liftOption origins
+                                    >>= fun origins ->
+                                        Operations.allowOriginAndSupportsCredentials origin (supportsCredentials, origins)
+                                    >>= fun _ ->
+                                        Freya.Value.liftOption exposedHeaders
+                                    >>= fun exposedHeaders ->
+                                        Operations.exposeHeaders exposedHeaders
+                                    >>= fun _ ->
+                                        Freya.init true))
                 (Specification.Terminal.empty, s)
 
     (* Specification *)
