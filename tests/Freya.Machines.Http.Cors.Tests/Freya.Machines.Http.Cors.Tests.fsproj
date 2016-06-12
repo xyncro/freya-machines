@@ -33,15 +33,6 @@
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\Freya.Machines.Http.Cors.Tests.XML</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -394,4 +385,33 @@
       </ItemGroup>
     </When>
   </Choose>
+  <ItemGroup>
+    <Compile Include="Prelude.fs" />
+    <Compile Include="Simple.fs" />
+    <Content Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <ProjectReference Include="..\..\src\Freya.Machines.Http.Cors\Freya.Machines.Http.Cors.fsproj">
+      <Name>Freya.Machines.Http.Cors</Name>
+      <Project>{d200e0a7-971e-47af-95bb-a6841b905505}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Freya.Machines.Http\Freya.Machines.Http.fsproj">
+      <Name>Freya.Machines.Http</Name>
+      <Project>{7aadeb04-3aa4-4019-b13e-0b75b473de6a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\Freya.Machines\Freya.Machines.fsproj">
+      <Name>Freya.Machines</Name>
+      <Project>{afc409af-b301-4ece-b776-aaa8aa9a2298}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

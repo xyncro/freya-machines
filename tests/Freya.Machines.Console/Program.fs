@@ -11,15 +11,13 @@ open Freya.Machines.Http
 open Freya.Machines.Http.Cors
 
 let ok =
-    freya {
-        return {
-            Data = "Hello World!"B
-            Description =
-                { Charset = Some Charset.Utf8
-                  Encodings = None
-                  MediaType = Some MediaType.Text
-                  Languages = Some [ LanguageTag.parse "en-gb"
-                                     LanguageTag.parse "en" ] } } }
+    { Data = "Hello World!"B
+      Description =
+        { Charset = Some Charset.Utf8
+          Encodings = None
+          MediaType = Some MediaType.Text
+          Languages = Some [ LanguageTag.parse "en-gb"
+                             LanguageTag.parse "en" ] } }
 
 let machine =
     freyaMachine {
