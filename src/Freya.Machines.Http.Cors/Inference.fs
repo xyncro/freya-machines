@@ -1,5 +1,6 @@
 ﻿namespace Freya.Machines.Http.Cors
 
+open System
 open Arachne.Http.Cors
 open Freya.Core
 open Freya.Core.Operators
@@ -43,7 +44,7 @@ module Inference =
             Inference.infer v
 
     [<RequireQualifiedAccess>]
-    module Integer =
+    module TimeSpan =
 
         (* Inference *)
 
@@ -53,14 +54,14 @@ module Inference =
             type Defaults =
                 | Defaults
 
-                static member Integer (x: Freya<int>) =
+                static member TimeSpan (x: Freya<TimeSpan>) =
                     Dynamic x
 
-                static member Integer (x: int) =
+                static member TimeSpan (x: TimeSpan) =
                     Static x
 
             let inline defaults (a: ^a, _: ^b) =
-                ((^a or ^b) : (static member Integer: ^a -> Value<int>) a)
+                ((^a or ^b) : (static member TimeSpan: ^a -> Value<TimeSpan>) a)
 
             let inline infer (x: 'a) =
                 defaults (x, Defaults)

@@ -3,9 +3,7 @@
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
-open Freya.Machines.Http.Cors
 open Freya.Machines.Http.Cors.Machine.Configuration
-open Freya.Optics.Http.Cors
 open Hephaestus
 
 (* Simple *)
@@ -23,9 +21,13 @@ module Simple =
     [<RequireQualifiedAccess>]
     module Decisions =
 
+        (* Enabled *)
+
         let rec enabled k s =
             Common.Decisions.enabled (key k)
                 (s, hasOrigin k s)
+
+        (* Origin *)
 
         and hasOrigin k s =
             Common.Decisions.hasOrigin (key k)
@@ -35,25 +37,17 @@ module Simple =
             Common.Decisions.originAllowed (key k)
                 (s, simple k s)
 
+        (* Simple *)
+
         and simple k s =
             Decision.create (key k, "simple")
                 (function |   TryGetOrElse Properties.Resource.supportsCredentials_ (Static true) supportsCredentials
                             & Get Properties.Resource.origins_ origins
                             & Get Properties.Resource.exposedHeaders_ exposedHeaders ->
                                 Dynamic (
-                                        Freya.Optic.get Request.Headers.origin_
-                                    >>= fun origin ->
-                                        Freya.Value.lift supportsCredentials
-                                    >>= fun supportsCredentials ->
-                                        Freya.Value.liftOption origins
-                                    >>= fun origins ->
-                                        Operations.allowOriginAndSupportsCredentials origin (supportsCredentials, origins)
-                                    >>= fun _ ->
-                                        Freya.Value.liftOption exposedHeaders
-                                    >>= fun exposedHeaders ->
-                                        Operations.exposeHeaders exposedHeaders
-                                    >>= fun _ ->
-                                        Freya.init true))
+                                    Common.allowOriginAndSupportsCredentials supportsCredentials origins
+                                 *> Common.exposeHeaders exposedHeaders
+                                 *> Freya.init true))
                 (Specification.Terminal.empty, s)
 
     (* Specification *)

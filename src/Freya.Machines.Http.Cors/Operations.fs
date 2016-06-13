@@ -1,5 +1,7 @@
 ﻿namespace Freya.Machines.Http.Cors
 
+#nowarn "46"
+
 open Arachne.Http.Cors
 open Freya.Core
 open Freya.Core.Operators
@@ -10,7 +12,15 @@ open Freya.Optics.Http.Cors
 [<RequireQualifiedAccess>]
 module Operations =
 
-    (* Setters *)
+    (* Setters
+
+       Common setter functions for basic headers, given pre-formed input data. *)
+
+    let private accessControlAllowHeaders =
+        function | x -> Response.Headers.accessControlAllowHeaders_ .= Some (AccessControlAllowHeaders x)
+
+    let private accessControlAllowMethods =
+        function | x -> Response.Headers.accessControlAllowMethods_ .= Some (AccessControlAllowMethods x)
 
     let private accessControlAllowOrigin =
         function | x -> Response.Headers.accessControlAllowOrigin_ .= Some (AccessControlAllowOrigin x)
@@ -18,22 +28,43 @@ module Operations =
     let private accessControlExposeHeaders =
         function | x -> Response.Headers.accessControlExposeHeaders_ .= Some (AccessControlExposeHeaders x)
 
+    let private accessControlMaxAge =
+        function | x -> Response.Headers.accessControlMaxAge_ .= Some (AccessControlMaxAge x)
+
     let private accessControlSupportsCredentials =
         function | _ -> Response.Headers.accessControlAllowCredentials_ .= Some (AccessControlAllowCredentials)
 
-    (* Helpers
+    (* Operations
 
-       Helper functions for setting dependent groups of headers based on logic
-       within the CORS specification. *)
+       Operations for setting CORS related response headers, including logic
+       to determine permutation when the input data is potentially of varying
+       shapes, and may have dependent logic. *)
 
-    (* Allow Origin and Supports Credentials
+    (* Allow Headers *)
 
-       Logic for correctly setting the origin and credential support response
-       headers, based on whether credentials are supported, and on whether the
-       list of origins has been defined ("any" is assumed where valid if not). *)
+    let rec allowHeaders headers =
+        allowHeadersPermutations headers
 
-    let rec allowOriginAndSupportsCredentials =
-        function | Some (Origin origin) -> allowOriginAndSupportsCredentialsHeaders origin
+    and private allowHeadersPermutations =
+        function | Some (AccessControlRequestHeaders x) -> accessControlAllowHeaders x
+                 | _ -> Freya.empty
+
+    (* Allow Methods *)
+
+    let rec allowMethods method =
+        allowMethodsPermutations method
+
+    and private allowMethodsPermutations =
+        function | Some (AccessControlRequestMethod x) -> accessControlAllowMethods [ x ]
+                 | _ -> Freya.empty
+
+    (* Allow Origin and Supports Credentials *)
+
+    let rec allowOriginAndSupportsCredentials origin supportsCredentials origins =
+        allowOriginAndSupportsCredentialsPermutations origin (supportsCredentials, origins)
+
+    and private allowOriginAndSupportsCredentialsPermutations =
+        function | Some (Origin x) -> allowOriginAndSupportsCredentialsHeaders x
                  | _ -> empty
 
     and private allowOriginAndSupportsCredentialsHeaders origin =
@@ -44,10 +75,20 @@ module Operations =
     and private empty =
         function | _ -> Freya.empty
 
-    (* Headers
+    (* Expose Headers *)
 
-       Logic for setting headers supported and exposed by a resource. *)
+    let rec exposeHeaders headers =
+        exposeHeadersPermutations headers
 
-    let exposeHeaders =
+    and private exposeHeadersPermutations =
         function | Some x when not (Set.isEmpty x) -> accessControlExposeHeaders (Set.toList x)
+                 | _ -> Freya.empty
+
+    (* Max Age *)
+
+    let rec maxAge age =
+        maxAgePermutations age
+
+    and private maxAgePermutations =
+        function | Some x -> accessControlMaxAge x
                  | _ -> Freya.empty

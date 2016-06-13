@@ -53,4 +53,4 @@ module Syntax =
 
         [<CustomOperation ("corsMaxAge", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.CorsMaxAge (m, a) =
-            HttpMachine.set (m, Properties.Resource.maxAge_, Integer.infer a)
+            HttpMachine.set (m, Properties.Resource.maxAge_, TimeSpan.infer a)

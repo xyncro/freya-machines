@@ -1,8 +1,10 @@
 ﻿namespace Freya.Machines.Http.Cors.Machine.Specifications
 
 open Arachne.Http.Cors
+open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
+open Freya.Machines.Http.Cors
 open Freya.Machines.Http.Cors.Machine.Configuration
 open Freya.Optics.Http.Cors
 
@@ -54,3 +56,30 @@ module Common =
         and private allow origins =
             function | Some (Origin (OriginListOrNull.Origins [ x ])) when Set.contains x origins -> true
                      | _ -> false
+
+    (* Support *)
+
+    let internal allowHeaders =
+            Freya.Optic.get Request.Headers.accessControlRequestHeaders_
+        >>= Operations.allowHeaders
+
+    let internal allowMethods =
+            Freya.Optic.get Request.Headers.accessControlRequestMethod_
+        >>= Operations.allowMethods
+
+    let internal allowOriginAndSupportsCredentials supportsCredentials origins =
+            Freya.Optic.get Request.Headers.origin_
+        >>= fun origin ->
+            Freya.Value.lift supportsCredentials
+        >>= fun supportsCredentials ->
+            Freya.Value.liftOption origins
+        >>= fun origins ->
+            Operations.allowOriginAndSupportsCredentials origin supportsCredentials origins
+
+    let internal exposeHeaders exposedHeaders =
+            Freya.Value.liftOption exposedHeaders
+        >>= Operations.exposeHeaders
+
+    let internal maxAge maxAge =
+            Freya.Value.liftOption maxAge
+        >>= Operations.maxAge

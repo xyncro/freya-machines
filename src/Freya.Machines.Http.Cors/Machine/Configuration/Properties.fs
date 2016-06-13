@@ -1,5 +1,6 @@
 ﻿namespace Freya.Machines.Http.Cors.Machine.Configuration
 
+open System
 open Aether.Operators
 open Arachne.Http
 open Arachne.Http.Cors
@@ -27,7 +28,7 @@ module Properties =
           Headers: Value<Set<string>> option
           ExposedHeaders: Value<Set<string>> option
           SupportsCredentials: Value<bool> option
-          MaxAge: Value<int> option }
+          MaxAge: Value<TimeSpan> option }
 
         static member origins_ =
             (fun x -> x.Origins), (fun o x -> { x with Origins = o })

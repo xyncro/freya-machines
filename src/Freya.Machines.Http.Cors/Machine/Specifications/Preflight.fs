@@ -2,10 +2,10 @@
 
 #nowarn "46"
 
+open Arachne.Http.Cors
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
-open Freya.Machines.Http.Cors
 open Freya.Machines.Http.Cors.Machine.Configuration
 open Freya.Machines.Http.Machine.Configuration
 open Freya.Machines.Http.Machine.Specifications
@@ -28,9 +28,13 @@ module Preflight =
     [<RequireQualifiedAccess>]
     module Decisions =
 
+        (* Enabled *)
+
         let rec enabled k s =
             Common.Decisions.enabled (key k)
                 (s, hasOrigin k s)
+
+        (* Origin *)
 
         and hasOrigin k s =
             Common.Decisions.hasOrigin (key k)
@@ -40,6 +44,8 @@ module Preflight =
             Common.Decisions.originAllowed (key k)
                 (s, hasRequestMethod k s)
 
+        (* Request Method *)
+
         and hasRequestMethod k s =
             Decision.create (key k, "has-request-method")
                 (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.accessControlRequestMethod_))
@@ -48,53 +54,57 @@ module Preflight =
         and requestMethodMatches k s =
             Decision.create (key k, "request-method-matches")
                 (function |   Get Properties.Resource.methods_ corsMethods
-                            & Get Properties.Request.methods_ methods ->
-                                Dynamic (
-                                        Freya.Optic.get Request.method_
-                                    >>= fun method ->
-                                        Freya.Value.liftOption corsMethods
-                                    >>= fun corsMethods ->
-                                        Freya.Value.liftOption methods
-                                    >>= fun methods ->
-                                        [ corsMethods; methods; Some Defaults.methods ]
-                                        |> List.pick id
-                                        |> Set.contains method
-                                        |> Freya.init))
+                            & Get Properties.Request.methods_ methods -> Dynamic (methodMatches corsMethods methods))
                 (s, hasRequestHeaders k s)
+
+        and private methodMatches corsMethods methods =
+                Freya.Optic.get Request.method_
+            >>= fun method ->
+                Freya.Value.liftOption corsMethods
+            >>= fun corsMethods ->
+                Freya.Value.liftOption methods
+            >>= fun methods ->
+                [ corsMethods; methods; Some Defaults.methods ]
+                |> List.pick id
+                |> Set.contains method
+                |> Freya.init
+
+        (* Request Headers *)
 
         and hasRequestHeaders k s =
             Decision.create (key k, "has-request-headers")
                 (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.accessControlRequestHeaders_))
                 (preflight k s, requestHeadersMatch k s)
 
-        // TODO: logic
-
         and requestHeadersMatch k s =
             Decision.create (key k, "request-headers-match")
-                (function | _ -> Static true)
+                (function | Get Properties.Resource.headers_ headers -> Dynamic (headersMatch headers))
                 (s, preflight k s)
 
-        // TODO: logic
+        and private headersMatch headers =
+                Freya.Optic.get Request.Headers.accessControlRequestHeaders_
+            >>= fun requestHeaders ->
+                Freya.Value.liftOption headers
+            >>= fun headers ->
+                (requestHeaders, headers)
+                |> function | Some (AccessControlRequestHeaders rhs), Some hs ->
+                                    Set.exists (String.equalsIgnoreCase >> flip List.exists rhs) hs
+                            | _ -> true
+                |> Freya.init
+
+        (* Preflight *)
 
         and preflight k s =
             Decision.create (key k, "preflight")
                 (function |   TryGetOrElse Properties.Resource.supportsCredentials_ (Static true) supportsCredentials
                             & Get Properties.Resource.origins_ origins
-                            & Get Properties.Resource.exposedHeaders_ exposedHeaders ->
+                            & Get Properties.Resource.maxAge_ maxAge ->
                                 Dynamic (
-                                        Freya.Optic.get Request.Headers.origin_
-                                    >>= fun origin ->
-                                        Freya.Value.lift supportsCredentials
-                                    >>= fun supportsCredentials ->
-                                        Freya.Value.liftOption origins
-                                    >>= fun origins ->
-                                        Operations.allowOriginAndSupportsCredentials origin (supportsCredentials, origins)
-                                    >>= fun _ ->
-                                        Freya.Value.liftOption exposedHeaders
-                                    >>= fun exposedHeaders ->
-                                        Operations.exposeHeaders exposedHeaders
-                                    >>= fun _ ->
-                                        Freya.init true))
+                                    Common.allowOriginAndSupportsCredentials supportsCredentials origins
+                                 *> Common.maxAge maxAge
+                                 *> Common.allowMethods
+                                 *> Common.allowHeaders
+                                 *> Freya.init true))
                 (Specification.Terminal.empty, s)
 
     (* Specification *)

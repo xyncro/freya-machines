@@ -9,6 +9,11 @@ open Freya.Testing
 open Freya.Testing.Operators
 open Xunit
 
+(* Defaults *)
+
+let defaultSetup =
+        (Request.Headers.origin_ .= Some (Origin (OriginListOrNull.Origins [ Xyncro.com ])))
+
 (* Simple
 
    Verification that CORS Simple requests are handled correctly given
@@ -21,10 +26,7 @@ let ``basic cors allows request correctly`` () =
         freyaHttpMachine {
             using cors }
 
-    let setup =
-        Request.Headers.origin_ .= Some (Origin (OriginListOrNull.Origins [ Xyncro.com ]))
-
-    verify setup machine [
+    verify defaultSetup machine [
         Response.Headers.accessControlAllowOrigin_ => Some (AccessControlAllowOrigin (Origins (OriginListOrNull.Origins [ Xyncro.com ])))
         Response.Headers.accessControlAllowCredentials_ => Some (AccessControlAllowCredentials) ]
 
@@ -36,18 +38,12 @@ let ``cors disabled ignores cors`` () =
             using cors
             corsEnabled false }
 
-    let setup =
-        Request.Headers.origin_ .= Some (Origin (OriginListOrNull.Origins [ Xyncro.com ]))
-
-    verify setup machine [
+    verify defaultSetup machine [
         Response.Headers.accessControlAllowOrigin_ => None
         Response.Headers.accessControlAllowCredentials_ => None ]
 
 [<Fact>]
 let ``credentials unsupported cors behaves correctly`` () =
-
-    let setup =
-        Request.Headers.origin_ .= Some (Origin (OriginListOrNull.Origins [ Xyncro.com ]))
 
     (* Credentials Unsupported, Origins Unspecified *)
 
@@ -56,7 +52,7 @@ let ``credentials unsupported cors behaves correctly`` () =
             using cors
             corsSupportsCredentials false }
 
-    verify setup machine [
+    verify defaultSetup machine [
         Response.Headers.accessControlAllowOrigin_ => Some (AccessControlAllowOrigin (Any))
         Response.Headers.accessControlAllowCredentials_ => None ]
 
@@ -68,7 +64,7 @@ let ``credentials unsupported cors behaves correctly`` () =
             corsOrigins []
             corsSupportsCredentials false }
 
-    verify setup machine [
+    verify defaultSetup machine [
         Response.Headers.accessControlAllowOrigin_ => None
         Response.Headers.accessControlAllowCredentials_ => None ]
 
@@ -80,15 +76,12 @@ let ``credentials unsupported cors behaves correctly`` () =
             corsOrigins [ Xyncro.com ]
             corsSupportsCredentials false }
 
-    verify setup machine [
+    verify defaultSetup machine [
         Response.Headers.accessControlAllowOrigin_ => Some (AccessControlAllowOrigin (Origins (OriginListOrNull.Origins [ Xyncro.com ])))
         Response.Headers.accessControlAllowCredentials_ => None ]
 
 [<Fact>]
 let ``headers exposed behaves correctly`` () =
-
-    let setup =
-        Request.Headers.origin_ .= Some (Origin (OriginListOrNull.Origins [ Xyncro.com ]))
 
     (* Exposed Headers Unspecified *)
 
@@ -96,7 +89,7 @@ let ``headers exposed behaves correctly`` () =
         freyaHttpMachine {
             using cors }
 
-    verify setup machine [
+    verify defaultSetup machine [
         Response.Headers.accessControlExposeHeaders_ => None ]
 
     (* Exposed Headers Empty *)
@@ -106,7 +99,7 @@ let ``headers exposed behaves correctly`` () =
             using cors
             corsExposedHeaders [] }
 
-    verify setup machine [
+    verify defaultSetup machine [
         Response.Headers.accessControlExposeHeaders_ => None ]
 
     (* Exposed Headers Non-Empty *)
@@ -116,5 +109,5 @@ let ``headers exposed behaves correctly`` () =
             using cors
             corsExposedHeaders [ "Server" ] }
 
-    verify setup machine [
+    verify defaultSetup machine [
         Response.Headers.accessControlExposeHeaders_ => Some (AccessControlExposeHeaders ([ "Server" ])) ]

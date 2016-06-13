@@ -1,5 +1,6 @@
 ﻿namespace Freya.Machines.Http.Cors.Machine.Specifications
 
+open System
 open Freya.Machines
 open Hephaestus
 
@@ -21,3 +22,9 @@ module internal Decision =
         Specification.Decision.create
             (Key.add [ suffix name ] key)
             (decision >> Decision.map)
+
+[<RequireQualifiedAccess>]
+module String =
+
+    let equalsIgnoreCase s2 (s1: string) =
+        s1.Equals (s2, StringComparison.OrdinalIgnoreCase)
