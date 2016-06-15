@@ -1,7 +1,5 @@
 ﻿module Freya.Machines.Http.Cors.Tests.Preflight
 
-open Arachne.Http
-open Arachne.Http.Cors
 open Freya.Core.Operators
 open Freya.Machines.Http
 open Freya.Machines.Http.Cors
@@ -9,6 +7,8 @@ open Freya.Optics.Http
 open Freya.Optics.Http.Cors
 open Freya.Testing
 open Freya.Testing.Operators
+open Freya.Types.Http
+open Freya.Types.Http.Cors
 open Xunit
 
 (* Defaults *)

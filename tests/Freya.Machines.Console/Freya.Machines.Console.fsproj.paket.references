@@ -1,7 +1,7 @@
 Aether
-Arachne.Http
-Arachne.Http.Cors
 Freya.Core
+Freya.Types.Http
+Freya.Types.Http.Cors
 Hephaestus
 
 group Test

@@ -2,8 +2,8 @@
 
 #nowarn "46"
 
-open Arachne.Http
 open Freya.Machines.Http.Machine.Specifications
+open Freya.Types.Http
 open Hephaestus
 
 (* Put *)

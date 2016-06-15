@@ -2,12 +2,12 @@
 
 open Aether
 open Aether.Operators
-open Arachne.Http
 open Freya.Core.Operators
 open Freya.Machines
 open Freya.Machines.Http
 open Freya.Machines.Http.Machine.Configuration
 open Freya.Optics.Http
+open Freya.Types.Http
 
 (* Preconditions
 
@@ -209,7 +209,7 @@ module Preconditions =
                     (Terminals.notModified k, s)
 
             and private matches entityTag =
-                    function | Some (IfNoneMatch (EntityTags x)) when not (exists entityTag x) -> true
+                    function | Some (IfNoneMatch (IfNoneMatchChoice.EntityTags x)) when not (exists entityTag x) -> true
                              | Some (IfNoneMatch (IfNoneMatchChoice.Any)) -> true
                              | _ -> false
                 <!> !. Request.Headers.ifNoneMatch_
@@ -271,7 +271,7 @@ module Preconditions =
                     (Shared.Terminals.preconditionFailed k, s)
 
             and private matches entityTag =
-                    function | Some (IfNoneMatch (EntityTags x)) when not (exists entityTag x) -> true
+                    function | Some (IfNoneMatch (IfNoneMatchChoice.EntityTags x)) when not (exists entityTag x) -> true
                              | Some (IfNoneMatch (IfNoneMatchChoice.Any)) -> true
                              | _ -> false
                 <!> !. Request.Headers.ifNoneMatch_

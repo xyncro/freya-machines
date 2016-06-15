@@ -2,14 +2,14 @@
 
 // Freya (with Arachne)
 
-open Arachne.Http
-open Arachne.Http.Cors
-open Arachne.Uri
-open Arachne.Language
+
 open Freya.Core
 open Freya.Machines.Http
 open Freya.Machines.Http.Cors
-
+open Freya.Types.Http
+open Freya.Types.Http.Cors
+open Freya.Types.Uri
+open Freya.Types.Language
 let ok =
     { Data = "Hello World!"B
       Description =

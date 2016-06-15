@@ -1,12 +1,12 @@
 ﻿namespace Freya.Machines.Http.Cors.Machine.Specifications
 
-open Arachne.Http.Cors
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
 open Freya.Machines.Http.Cors
 open Freya.Machines.Http.Cors.Machine.Configuration
 open Freya.Optics.Http.Cors
+open Freya.Types.Http.Cors
 
 (* Common *)
 

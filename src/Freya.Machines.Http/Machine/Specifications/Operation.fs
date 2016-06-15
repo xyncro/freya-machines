@@ -2,10 +2,10 @@
 
 open Aether
 open Aether.Operators
-open Arachne.Http
 open Freya.Core
 open Freya.Machines
 open Freya.Machines.Http
+open Freya.Types.Http
 
 (* Operation
 

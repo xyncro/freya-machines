@@ -1,10 +1,10 @@
 ﻿namespace Freya.Machines.Http.Cors
 
 open System
-open Arachne.Http.Cors
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
+open Freya.Types.Http.Cors
 
 (* Inference *)
 

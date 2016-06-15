@@ -2,11 +2,11 @@
 
 open Aether
 open Aether.Operators
-open Arachne.Http
-open Arachne.Language
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Optics.Http
+open Freya.Types.Http
+open Freya.Types.Language
 
 (* Negotiation
 

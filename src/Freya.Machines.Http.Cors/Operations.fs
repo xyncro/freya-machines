@@ -2,10 +2,10 @@
 
 #nowarn "46"
 
-open Arachne.Http.Cors
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Optics.Http.Cors
+open Freya.Types.Http.Cors
 
 (* Operations *)
 

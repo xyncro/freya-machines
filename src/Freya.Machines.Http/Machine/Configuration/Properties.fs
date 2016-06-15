@@ -2,9 +2,9 @@
 
 open System
 open Aether.Operators
-open Arachne.Http
-open Arachne.Language
 open Freya.Machines
+open Freya.Types.Http
+open Freya.Types.Language
 
 (* Properties
 

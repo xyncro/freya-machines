@@ -1,12 +1,12 @@
 ﻿module Freya.Machines.Http.Tests.Negotiations
 
-open Arachne.Http
-open Arachne.Language
 open Freya.Core.Operators
 open Freya.Machines.Http
 open Freya.Optics.Http
 open Freya.Testing
 open Freya.Testing.Operators
+open Freya.Types.Http
+open Freya.Types.Language
 open Xunit
 
 (* Negotiation

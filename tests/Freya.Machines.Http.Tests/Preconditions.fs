@@ -1,12 +1,12 @@
 ﻿module Freya.Machines.Http.Tests.Preconditions
 
 open System
-open Arachne.Http
 open Freya.Core.Operators
 open Freya.Machines.Http
 open Freya.Optics.Http
 open Freya.Testing
 open Freya.Testing.Operators
+open Freya.Types.Http
 open Xunit
 
 (* Preconditions
@@ -167,11 +167,11 @@ module Unsafe =
 
         let matchedSetup =
                 (Request.method_ .= POST)
-             *> (Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (EntityTags [ Weak "foo" ])))
+             *> (Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (IfNoneMatchChoice.EntityTags [ Weak "foo" ])))
 
         let unmatchedSetup =
                 (Request.method_ .= POST)
-             *> (Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (EntityTags [ Weak "bar" ])))
+             *> (Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (IfNoneMatchChoice.EntityTags [ Weak "bar" ])))
 
         let machine =
             freyaHttpMachine {

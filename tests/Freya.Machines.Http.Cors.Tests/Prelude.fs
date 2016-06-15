@@ -1,8 +1,8 @@
 ﻿[<AutoOpen>]
 module Freya.Machines.Http.Cors.Tests.Prelude
 
-open Arachne.Http.Cors
-open Arachne.Uri
+open Freya.Types.Http.Cors
+open Freya.Types.Uri
 
 (* Fixtures *)
 

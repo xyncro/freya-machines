@@ -2,7 +2,6 @@
 
 #nowarn "46"
 
-open Arachne.Http.Cors
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Machines
@@ -11,6 +10,7 @@ open Freya.Machines.Http.Machine.Configuration
 open Freya.Machines.Http.Machine.Specifications
 open Freya.Optics.Http
 open Freya.Optics.Http.Cors
+open Freya.Types.Http.Cors
 open Hephaestus
 
 (* Preflight *)

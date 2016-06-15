@@ -1,10 +1,10 @@
 ﻿namespace Freya.Machines.Http
 
 open System
-open Arachne.Http
 open Freya.Core
 open Freya.Core.Operators
 open Freya.Optics.Http
+open Freya.Types.Http
 
 (* Operation
 
