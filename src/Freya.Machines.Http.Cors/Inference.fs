@@ -60,6 +60,12 @@ module Inference =
                 static member TimeSpan (x: TimeSpan) =
                     Static x
 
+                static member TimeSpan (x: Freya<int>) =
+                    Dynamic ((float >> TimeSpan.FromSeconds) <!> x)
+
+                static member TimeSpan (x: int) =
+                    Static ((float >> TimeSpan.FromSeconds) x)
+
             let inline defaults (a: ^a, _: ^b) =
                 ((^a or ^b) : (static member TimeSpan: ^a -> Value<TimeSpan>) a)
 
