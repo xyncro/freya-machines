@@ -9,7 +9,7 @@ nuget Freya.Types.Http       ~> 4.0.0-b
 nuget Freya.Types.Http.Cors  ~> 4.0.0-b
 nuget Freya.Types.Language   ~> 4.0.0-b
 nuget Hekate                 ~> 3
-nuget Hephaestus             ~> 1.0.0-b
+nuget Hephaestus             ~> 1
 
 group Build
 
