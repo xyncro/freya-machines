@@ -61,7 +61,7 @@ let ``machine handles httpVersionSupported correctly`` () =
     let staticMachine =
         freyaHttpMachine {
             httpVersionSupported false
-            handleNotSupported ((defaultValue .= Some "HTTP Version Not Supported") *> defaultRepresentation) }
+            handleHttpVersionNotSupported ((defaultValue .= Some "HTTP Version Not Supported") *> defaultRepresentation) }
 
     verify defaultSetup staticMachine [
         Response.statusCode_ => Some 505

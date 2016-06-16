@@ -67,6 +67,7 @@
     <Compile Include="Machine\Components\Cors.fs" />
     <Compile Include="Inference.fs" />
     <Compile Include="Expression.fs" />
+    <Compile Include="Obsolete.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

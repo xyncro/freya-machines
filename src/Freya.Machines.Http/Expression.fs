@@ -54,21 +54,21 @@ module Syntax =
 
     type HttpMachineBuilder with
 
-        [<CustomOperation ("charsetsSupported", MaintainsVariableSpaceUsingBind = true)>]
-        member inline __.CharsetsSupported (m, a) =
-            HttpMachine.set (m, Properties.Representation.charsetsSupported_, Charsets.infer a)
+        [<CustomOperation ("charsets", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.Charsets (m, a) =
+            HttpMachine.set (m, Properties.Representation.charsets_, Charsets.infer a)
 
-        [<CustomOperation ("contentCodingsSupported", MaintainsVariableSpaceUsingBind = true)>]
-        member inline __.ContentCodingsSupported (m, a) =
-            HttpMachine.set (m, Properties.Representation.contentCodingsSupported_, ContentCodings.infer a)
+        [<CustomOperation ("contentCodings", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.ContentCodings (m, a) =
+            HttpMachine.set (m, Properties.Representation.contentCodings_, ContentCodings.infer a)
 
-        [<CustomOperation ("languagesSupported", MaintainsVariableSpaceUsingBind = true)>]
-        member inline __.LanguagesSupported (m, a) =
-            HttpMachine.set (m, Properties.Representation.languagesSupported_, LanguageTags.infer a)
+        [<CustomOperation ("languages", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.Languages (m, a) =
+            HttpMachine.set (m, Properties.Representation.languages_, LanguageTags.infer a)
 
-        [<CustomOperation ("mediaTypesSupported", MaintainsVariableSpaceUsingBind = true)>]
-        member inline __.MediaTypesSupported (m, a) =
-            HttpMachine.set (m, Properties.Representation.mediaTypesSupported_, MediaTypes.infer a)
+        [<CustomOperation ("mediaTypes", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.MediaTypes (m, a) =
+            HttpMachine.set (m, Properties.Representation.mediaTypes_, MediaTypes.infer a)
 
     (* Resource *)
 
@@ -99,7 +99,7 @@ module Syntax =
             HttpMachine.set (m, Assertions.Decisions.serviceAvailable_, Decision.infer decision)
 
         [<CustomOperation ("httpVersionSupported", MaintainsVariableSpaceUsingBind = true)>]
-        member inline __.HttpVersionSupported (m, decision) =
+        member inline __.HttpVersion (m, decision) =
             HttpMachine.set (m, Assertions.Decisions.httpVersionSupported_, Decision.infer decision)
 
         (* Terminals *)
@@ -112,8 +112,8 @@ module Syntax =
         member inline __.HandleNotImplemented (m, handler) =
             HttpMachine.set (m, Assertions.Terminals.notImplemented_, Handler.infer handler)
 
-        [<CustomOperation ("handleNotSupported", MaintainsVariableSpaceUsingBind = true)>]
-        member inline __.HandleNotSupported (m, handler) =
+        [<CustomOperation ("handleHttpVersionNotSupported", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleHttpVersionNotSupported (m, handler) =
             HttpMachine.set (m, Assertions.Terminals.httpVersionNotSupported_, Handler.infer handler)
 
     (* Conflict *)

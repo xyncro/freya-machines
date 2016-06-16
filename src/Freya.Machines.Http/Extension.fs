@@ -83,16 +83,8 @@ module HttpMachine =
         let configuration = snd (machine Configuration.empty)
         let extensions = Optic.get Extensions.Components.components_ configuration
         let model = Http.model extensions
-
-        // Begin Logging
-
-        let prototype, l1 = Prototype.createLogged model
-        let machine, l2 = Machine.createLogged prototype configuration
-
-        //printfn "Prototype:\n%s" (string (log (StringBuilder ()) l1))
-        //printfn "Machine:\n%s" (string (log (StringBuilder ()) l2))
-
-        // End Logging
+        let prototype = Prototype.create model
+        let machine = Machine.create prototype configuration
 
         Machine.execute machine *> Pipeline.next
 

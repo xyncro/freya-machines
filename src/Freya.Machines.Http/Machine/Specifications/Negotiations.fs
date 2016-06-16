@@ -84,16 +84,16 @@ module Negotiations =
     (* Optics *)
 
     let private charsets_ =
-        Properties.Representation.charsetsSupported_
+        Properties.Representation.charsets_
 
     let private contentCodings_ =
-        Properties.Representation.contentCodingsSupported_
+        Properties.Representation.contentCodings_
 
     let private languages_ =
-        Properties.Representation.languagesSupported_
+        Properties.Representation.languages_
 
     let private mediaTypes_ =
-        Properties.Representation.mediaTypesSupported_
+        Properties.Representation.mediaTypes_
 
     (* Terminals *)
 

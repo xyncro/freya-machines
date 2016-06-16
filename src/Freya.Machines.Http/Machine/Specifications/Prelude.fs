@@ -34,16 +34,16 @@ module Defaults =
 module internal Resource =
 
     let private charsets c =
-            Freya.Value.liftOption (c ^. Properties.Representation.charsetsSupported_)
+            Freya.Value.liftOption (c ^. Properties.Representation.charsets_)
 
     let private encodings c =
-            Freya.Value.liftOption (c ^. Properties.Representation.contentCodingsSupported_)
+            Freya.Value.liftOption (c ^. Properties.Representation.contentCodings_)
 
     let private mediaTypes c =
-            Freya.Value.liftOption (c ^. Properties.Representation.mediaTypesSupported_)
+            Freya.Value.liftOption (c ^. Properties.Representation.mediaTypes_)
 
     let private languages c =
-            Freya.Value.liftOption (c ^. Properties.Representation.languagesSupported_)
+            Freya.Value.liftOption (c ^. Properties.Representation.languages_)
 
     let available c : Freya<Available> =
             fun charsets encodings mediaTypes languages ->

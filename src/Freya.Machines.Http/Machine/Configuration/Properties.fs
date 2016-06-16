@@ -46,28 +46,28 @@ module Properties =
             { Methods = None }
 
      and private Representation =
-        { MediaTypesSupported: Value<MediaType list> option
-          LanguagesSupported: Value<LanguageTag list> option
-          CharsetsSupported: Value<Charset list> option
-          ContentCodingsSupported: Value<ContentCoding list> option }
+        { MediaTypes: Value<MediaType list> option
+          Languages: Value<LanguageTag list> option
+          Charsets: Value<Charset list> option
+          ContentCodings: Value<ContentCoding list> option }
 
-        static member mediaTypesSupported_ =
-            (fun x -> x.MediaTypesSupported), (fun m x -> { x with MediaTypesSupported = m })
+        static member mediaTypes_ =
+            (fun x -> x.MediaTypes), (fun m x -> { x with MediaTypes = m })
 
-        static member languagesSupported_ =
-            (fun x -> x.LanguagesSupported), (fun l x -> { x with LanguagesSupported = l })
+        static member languages_ =
+            (fun x -> x.Languages), (fun l x -> { x with Languages = l })
 
-        static member charsetsSupported_ =
-            (fun x -> x.CharsetsSupported), (fun c x -> { x with CharsetsSupported = c })
+        static member charsets_ =
+            (fun x -> x.Charsets), (fun c x -> { x with Charsets = c })
 
-        static member contentCodingsSupported_ =
-            (fun x -> x.ContentCodingsSupported), (fun c x -> { x with ContentCodingsSupported = c })
+        static member contentCodings_ =
+            (fun x -> x.ContentCodings), (fun c x -> { x with ContentCodings = c })
 
         static member empty =
-            { MediaTypesSupported = None
-              LanguagesSupported = None
-              CharsetsSupported = None
-              ContentCodingsSupported = None }
+            { MediaTypes = None
+              Languages = None
+              Charsets = None
+              ContentCodings = None }
 
      and private Resource =
         { EntityTag: Value<EntityTag> option
@@ -112,21 +112,21 @@ module Properties =
                 properties_
             >-> Properties.representation_
 
-        let charsetsSupported_ =
+        let charsets_ =
                 representation_
-            >-> Representation.charsetsSupported_
+            >-> Representation.charsets_
 
-        let contentCodingsSupported_ =
+        let contentCodings_ =
                 representation_
-            >-> Representation.contentCodingsSupported_
+            >-> Representation.contentCodings_
 
-        let languagesSupported_ =
+        let languages_ =
                 representation_
-            >-> Representation.languagesSupported_
+            >-> Representation.languages_
 
-        let mediaTypesSupported_ =
+        let mediaTypes_ =
                 representation_
-            >-> Representation.mediaTypesSupported_
+            >-> Representation.mediaTypes_
 
     (* Resource *)
 
