@@ -227,7 +227,7 @@ module Responses =
 
         (* Specification *)
 
-        let internal specification =
+        let specification =
             Decisions.created
 
     (* Missing *)

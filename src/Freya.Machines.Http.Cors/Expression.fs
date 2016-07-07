@@ -8,7 +8,7 @@ open Freya.Machines.Http.Cors.Machine.Components
 
 (* Use *)
 
-[<AutoOpen>]
+[<RequireQualifiedAccess>]
 module Use =
 
     let cors =
@@ -20,6 +20,12 @@ module Use =
 module Syntax =
 
     (* Extension *)
+
+    type HttpMachineBuilder with
+
+        [<CustomOperation ("cors", MaintainsVariableSpaceUsingBind = true)>]
+        member inline x.Cors (m) =
+            x.Using (m, Use.cors)
 
     type HttpMachineBuilder with
 

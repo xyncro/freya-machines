@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sln", "sln", "{5CCF2BB5-3FA2-433F-9718-AFC6F2CB9A91}"
 EndProject
@@ -25,6 +25,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "packages", "packages", "{BD
 		src\Freya.Machines\Freya.Machines.fsproj.paket.template = src\Freya.Machines\Freya.Machines.fsproj.paket.template
 		src\Freya.Machines.Http.Cors\Freya.Machines.Http.Cors.fsproj.paket.template = src\Freya.Machines.Http.Cors\Freya.Machines.Http.Cors.fsproj.paket.template
 		src\Freya.Machines.Http\Freya.Machines.Http.fsproj.paket.template = src\Freya.Machines.Http\Freya.Machines.Http.fsproj.paket.template
+		src\Freya.Machines.Http.Patch\Freya.Machines.Http.Patch.fsproj.paket.template = src\Freya.Machines.Http.Patch\Freya.Machines.Http.Patch.fsproj.paket.template
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Freya.Machines", "src\Freya.Machines\Freya.Machines.fsproj", "{AFC409AF-B301-4ECE-B776-AAA8AA9A2298}"
@@ -36,6 +37,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{066722EB-3C5
 		src\Freya.Machines\Freya.Machines.fsproj.paket.references = src\Freya.Machines\Freya.Machines.fsproj.paket.references
 		src\Freya.Machines.Http.Cors\Freya.Machines.Http.Cors.fsproj.paket.references = src\Freya.Machines.Http.Cors\Freya.Machines.Http.Cors.fsproj.paket.references
 		src\Freya.Machines.Http\Freya.Machines.Http.fsproj.paket.references = src\Freya.Machines.Http\Freya.Machines.Http.fsproj.paket.references
+		src\Freya.Machines.Http.Patch\Freya.Machines.Http.Patch.fsproj.paket.references = src\Freya.Machines.Http.Patch\Freya.Machines.Http.Patch.fsproj.paket.references
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Freya.Machines.Console", "tests\Freya.Machines.Console\Freya.Machines.Console.fsproj", "{560F8742-32AF-47AC-A976-CF671D445CCE}"
@@ -54,6 +56,8 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Freya.Machines.Http.Cors.Tests", "tests\Freya.Machines.Http.Cors.Tests\Freya.Machines.Http.Cors.Tests.fsproj", "{5C3287F2-F56A-41D1-AE97-DFB9DFEE243B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "http", "http", "{E527C810-8FAE-4C7C-B960-689CE8BC58AA}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Freya.Machines.Http.Patch", "src\Freya.Machines.Http.Patch\Freya.Machines.Http.Patch.fsproj", "{A7CA1FB7-6519-4F4F-A739-C1117DBE5DDC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -85,6 +89,10 @@ Global
 		{5C3287F2-F56A-41D1-AE97-DFB9DFEE243B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C3287F2-F56A-41D1-AE97-DFB9DFEE243B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C3287F2-F56A-41D1-AE97-DFB9DFEE243B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7CA1FB7-6519-4F4F-A739-C1117DBE5DDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7CA1FB7-6519-4F4F-A739-C1117DBE5DDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7CA1FB7-6519-4F4F-A739-C1117DBE5DDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7CA1FB7-6519-4F4F-A739-C1117DBE5DDC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -102,5 +110,6 @@ Global
 		{D200E0A7-971E-47AF-95BB-A6841B905505} = {E527C810-8FAE-4C7C-B960-689CE8BC58AA}
 		{5C3287F2-F56A-41D1-AE97-DFB9DFEE243B} = {7D19D227-4D2D-493F-8E49-3433F45BCB4B}
 		{E527C810-8FAE-4C7C-B960-689CE8BC58AA} = {06B8C741-5183-4709-BE0A-EE7CF6399F7E}
+		{A7CA1FB7-6519-4F4F-A739-C1117DBE5DDC} = {E527C810-8FAE-4C7C-B960-689CE8BC58AA}
 	EndGlobalSection
 EndGlobal

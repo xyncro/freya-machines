@@ -1,15 +1,17 @@
 ﻿open System
 
-// Freya (with Arachne)
-
+// Freya
 
 open Freya.Core
 open Freya.Machines.Http
 open Freya.Machines.Http.Cors
+open Freya.Machines.Http.Patch
 open Freya.Types.Http
 open Freya.Types.Http.Cors
+//open Freya.Types.Http.Patch
 open Freya.Types.Uri
 open Freya.Types.Language
+
 let ok =
     { Data = "Hello World!"B
       Description =
@@ -22,15 +24,14 @@ let ok =
 let machine =
     freyaMachine {
 
-        // HTTP
-
         handleOk ok
 
-        // HTTP CORS
-
-        using cors
+        cors
         corsEnabled true
-        corsOrigins (SerializedOrigin (Scheme "http", Name (RegName "xyncro.com"), None)) }
+        corsOrigins (SerializedOrigin (Scheme "http", Name (RegName "xyncro.com"), None))
+
+        patch
+        patchEnabled true }
 
 let app =
     OwinAppFunc.ofFreya machine

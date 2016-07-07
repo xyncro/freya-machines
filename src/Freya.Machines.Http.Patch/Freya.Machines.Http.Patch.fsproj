@@ -5,14 +5,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>560f8742-32af-47ac-a976-cf671d445cce</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Freya.Machines.Console</RootNamespace>
-    <AssemblyName>Freya.Machines.Console</AssemblyName>
+    <ProjectGuid>a7ca1fb7-6519-4f4f-a739-c1117dbe5ddc</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Freya.Machines.Http.Patch</RootNamespace>
+    <AssemblyName>Freya.Machines.Http.Patch</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
-    <Name>Freya.Machines.Console</Name>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Name>Freya.Machines.Http.Patch</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,9 +22,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\Debug\Freya.Machines.Console.XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
+    <DocumentationFile>bin\Debug\Freya.Machines.Http.Patch.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,45 +31,8 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\Release\Freya.Machines.Console.XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
+    <DocumentationFile>bin\Release\Freya.Machines.Http.Patch.XML</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Program.fs" />
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Freya.Machines.Http.Cors\Freya.Machines.Http.Cors.fsproj">
-      <Name>Freya.Machines.Http.Cors</Name>
-      <Project>{d200e0a7-971e-47af-95bb-a6841b905505}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\Freya.Machines.Http.Patch\Freya.Machines.Http.Patch.fsproj">
-      <Name>Freya.Machines.Http.Patch</Name>
-      <Project>{a7ca1fb7-6519-4f4f-a739-c1117dbe5ddc}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\Freya.Machines.Http\Freya.Machines.Http.fsproj">
-      <Name>Freya.Machines.Http</Name>
-      <Project>{7aadeb04-3aa4-4019-b13e-0b75b473de6a}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\src\Freya.Machines\Freya.Machines.fsproj">
-      <Name>Freya.Machines</Name>
-      <Project>{afc409af-b301-4ece-b776-aaa8aa9a2298}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -95,6 +56,33 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <Compile Include="Machine\Configuration\Extension.fs" />
+    <Compile Include="Machine\Specifications\Prelude.fs" />
+    <Compile Include="Machine\Specifications\Common.fs" />
+    <Compile Include="Machine\Specifications\Main.fs" />
+    <Compile Include="Machine\Components\Patch.fs" />
+    <Compile Include="Expression.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+    <ProjectReference Include="..\Freya.Machines.Http\Freya.Machines.Http.fsproj">
+      <Name>Freya.Machines.Http</Name>
+      <Project>{7aadeb04-3aa4-4019-b13e-0b75b473de6a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Freya.Machines\Freya.Machines.fsproj">
+      <Name>Freya.Machines</Name>
+      <Project>{afc409af-b301-4ece-b776-aaa8aa9a2298}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <Choose>
     <When Condition="($(TargetFrameworkIdentifier) == '.NETStandard' And ($(TargetFrameworkVersion) == 'v1.0' Or $(TargetFrameworkVersion) == 'v1.1' Or $(TargetFrameworkVersion) == 'v1.2' Or $(TargetFrameworkVersion) == 'v1.3' Or $(TargetFrameworkVersion) == 'v1.4' Or $(TargetFrameworkVersion) == 'v1.5')) Or ($(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v3.5' Or $(TargetFrameworkVersion) == 'v4.0' Or $(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2'))">
       <ItemGroup>
@@ -179,6 +167,39 @@
   <Choose>
     <When Condition="($(TargetFrameworkIdentifier) == '.NETStandard' And ($(TargetFrameworkVersion) == 'v1.2' Or $(TargetFrameworkVersion) == 'v1.3' Or $(TargetFrameworkVersion) == 'v1.4' Or $(TargetFrameworkVersion) == 'v1.5')) Or ($(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2'))">
       <ItemGroup>
+        <Reference Include="Freya.Optics">
+          <HintPath>..\..\packages\Freya.Optics\lib\net452\Freya.Optics.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="($(TargetFrameworkIdentifier) == '.NETStandard' And ($(TargetFrameworkVersion) == 'v1.2' Or $(TargetFrameworkVersion) == 'v1.3' Or $(TargetFrameworkVersion) == 'v1.4' Or $(TargetFrameworkVersion) == 'v1.5')) Or ($(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2'))">
+      <ItemGroup>
+        <Reference Include="Freya.Optics.Http">
+          <HintPath>..\..\packages\Freya.Optics.Http\lib\net452\Freya.Optics.Http.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="($(TargetFrameworkIdentifier) == '.NETStandard' And ($(TargetFrameworkVersion) == 'v1.2' Or $(TargetFrameworkVersion) == 'v1.3' Or $(TargetFrameworkVersion) == 'v1.4' Or $(TargetFrameworkVersion) == 'v1.5')) Or ($(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2'))">
+      <ItemGroup>
+        <Reference Include="Freya.Optics.Http.Patch">
+          <HintPath>..\..\packages\Freya.Optics.Http.Patch\lib\net452\Freya.Optics.Http.Patch.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="($(TargetFrameworkIdentifier) == '.NETStandard' And ($(TargetFrameworkVersion) == 'v1.2' Or $(TargetFrameworkVersion) == 'v1.3' Or $(TargetFrameworkVersion) == 'v1.4' Or $(TargetFrameworkVersion) == 'v1.5')) Or ($(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2'))">
+      <ItemGroup>
         <Reference Include="Freya.Types">
           <HintPath>..\..\packages\Freya.Types\lib\net452\Freya.Types.dll</HintPath>
           <Private>True</Private>
@@ -192,17 +213,6 @@
       <ItemGroup>
         <Reference Include="Freya.Types.Http">
           <HintPath>..\..\packages\Freya.Types.Http\lib\net452\Freya.Types.Http.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Choose>
-    <When Condition="($(TargetFrameworkIdentifier) == '.NETStandard' And ($(TargetFrameworkVersion) == 'v1.2' Or $(TargetFrameworkVersion) == 'v1.3' Or $(TargetFrameworkVersion) == 'v1.4' Or $(TargetFrameworkVersion) == 'v1.5')) Or ($(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2'))">
-      <ItemGroup>
-        <Reference Include="Freya.Types.Http.Cors">
-          <HintPath>..\..\packages\Freya.Types.Http.Cors\lib\net452\Freya.Types.Http.Cors.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -285,61 +295,6 @@
       <ItemGroup>
         <Reference Include="Hephaestus">
           <HintPath>..\..\packages\Hephaestus\lib\portable-net45+netcore45+wpa81+wp8+MonoAndroid1+MonoTouch1\Hephaestus.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2')">
-      <ItemGroup>
-        <Reference Include="Microsoft.Owin">
-          <HintPath>..\..\packages\test\Microsoft.Owin\lib\net45\Microsoft.Owin.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2')">
-      <ItemGroup>
-        <Reference Include="Microsoft.Owin.Diagnostics">
-          <HintPath>..\..\packages\test\Microsoft.Owin.Diagnostics\lib\net45\Microsoft.Owin.Diagnostics.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2')">
-      <ItemGroup>
-        <Reference Include="Microsoft.Owin.Host.HttpListener">
-          <HintPath>..\..\packages\test\Microsoft.Owin.Host.HttpListener\lib\net45\Microsoft.Owin.Host.HttpListener.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2')">
-      <ItemGroup>
-        <Reference Include="Microsoft.Owin.Hosting">
-          <HintPath>..\..\packages\test\Microsoft.Owin.Hosting\lib\net45\Microsoft.Owin.Hosting.dll</HintPath>
-          <Private>True</Private>
-          <Paket>True</Paket>
-        </Reference>
-      </ItemGroup>
-    </When>
-  </Choose>
-  <Choose>
-    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2')">
-      <ItemGroup>
-        <Reference Include="Owin">
-          <HintPath>..\..\packages\test\Owin\lib\net40\Owin.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>

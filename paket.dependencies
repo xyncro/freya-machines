@@ -1,15 +1,17 @@
 source http://nuget.org/api/v2
 source https://www.myget.org/F/freya/api/v2
 
-nuget Aether                 ~> 8.1
-nuget Freya.Core             ~> 3.0.0-b
-nuget Freya.Optics.Http      ~> 3.0.0-b
-nuget Freya.Optics.Http.Cors ~> 3.0.0-b
-nuget Freya.Types.Http       ~> 3.0.0-b
-nuget Freya.Types.Http.Cors  ~> 3.0.0-b
-nuget Freya.Types.Language   ~> 3.0.0-b
-nuget Hekate                 ~> 3
-nuget Hephaestus             ~> 1
+nuget Aether                  ~> 8.1
+nuget Freya.Core              ~> 3.0.0-b
+nuget Freya.Optics.Http       ~> 3.0.0-b
+nuget Freya.Optics.Http.Cors  ~> 3.0.0-b
+nuget Freya.Optics.Http.Patch ~> 3.0.0-b
+nuget Freya.Types.Http        ~> 3.0.0-b
+nuget Freya.Types.Http.Cors   ~> 3.0.0-b
+nuget Freya.Types.Http.Patch  ~> 3.0.0-b
+nuget Freya.Types.Language    ~> 3.0.0-b
+nuget Hekate                  ~> 3
+nuget Hephaestus              ~> 1
 
 group Build
 

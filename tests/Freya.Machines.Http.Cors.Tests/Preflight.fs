@@ -29,7 +29,7 @@ let ``basic cors allows request correctly`` () =
 
     let machine =
         freyaHttpMachine {
-            using cors }
+            cors }
 
     let setup =
             (defaultSetup)
@@ -47,7 +47,7 @@ let ``cors disabled ignores cors`` () =
 
     let machine =
         freyaHttpMachine {
-            using cors
+            cors
             corsEnabled false }
 
     verify defaultSetup machine [
@@ -61,7 +61,7 @@ let ``credentials unsupported cors behaves correctly`` () =
 
     let machine =
         freyaHttpMachine {
-            using cors
+            cors
             corsSupportsCredentials false }
 
     verify defaultSetup machine [
@@ -72,7 +72,7 @@ let ``credentials unsupported cors behaves correctly`` () =
 
     let machine =
         freyaHttpMachine {
-            using cors
+            cors
             corsOrigins []
             corsSupportsCredentials false }
 
@@ -84,7 +84,7 @@ let ``credentials unsupported cors behaves correctly`` () =
 
     let machine =
         freyaHttpMachine {
-            using cors
+            cors
             corsOrigins [ Xyncro.com ]
             corsSupportsCredentials false }
 
@@ -103,7 +103,7 @@ let ``headers behaves correctly`` () =
 
     let machine =
         freyaHttpMachine {
-            using cors }
+            cors }
 
     verify setup machine [
         Response.Headers.accessControlAllowHeaders_ => Some (AccessControlAllowHeaders ([ "Server" ])) ]
@@ -112,7 +112,7 @@ let ``headers behaves correctly`` () =
 
     let machine =
         freyaHttpMachine {
-            using cors
+            cors
             corsHeaders [] }
 
     verify setup machine [
@@ -122,7 +122,7 @@ let ``headers behaves correctly`` () =
 
     let machine =
         freyaHttpMachine {
-            using cors
+            cors
             corsHeaders [ "Server" ] }
 
     verify setup machine [
@@ -135,7 +135,7 @@ let ``max age behaves correctly`` () =
 
     let machine =
         freyaHttpMachine {
-            using cors }
+            cors }
 
     verify defaultSetup machine [
         Response.Headers.accessControlMaxAge_ => None ]
@@ -144,7 +144,7 @@ let ``max age behaves correctly`` () =
 
     let machine =
         freyaHttpMachine {
-            using cors
+            cors
             corsMaxAge 3600 }
 
     verify defaultSetup machine [
