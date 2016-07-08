@@ -10,7 +10,7 @@ module Main =
     (* Key *)
 
     let private key =
-        Key.root
+        Key.root >> Key.add [ "main" ]
 
     (* Decisions *)
 

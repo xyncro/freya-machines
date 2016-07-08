@@ -46,6 +46,10 @@ module Syntax =
 
     type HttpMachineBuilder with
 
+        [<CustomOperation ("acceptableMediaTypes", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.AcceptableMediaTypes (m, a) =
+            HttpMachine.set (m, Properties.Request.mediaTypes_, AcceptableMedia.infer a)
+
         [<CustomOperation ("methods", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.Methods (m, a) =
             HttpMachine.set (m, Properties.Request.methods_, Methods.infer a)
@@ -54,20 +58,20 @@ module Syntax =
 
     type HttpMachineBuilder with
 
-        [<CustomOperation ("charsets", MaintainsVariableSpaceUsingBind = true)>]
-        member inline __.Charsets (m, a) =
+        [<CustomOperation ("availableCharsets", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.AvailableCharsets (m, a) =
             HttpMachine.set (m, Properties.Representation.charsets_, Charsets.infer a)
 
-        [<CustomOperation ("contentCodings", MaintainsVariableSpaceUsingBind = true)>]
-        member inline __.ContentCodings (m, a) =
+        [<CustomOperation ("availableContentCodings", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.AvailableContentCodings (m, a) =
             HttpMachine.set (m, Properties.Representation.contentCodings_, ContentCodings.infer a)
 
-        [<CustomOperation ("languages", MaintainsVariableSpaceUsingBind = true)>]
-        member inline __.Languages (m, a) =
+        [<CustomOperation ("availableLanguages", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.AvailableLanguages (m, a) =
             HttpMachine.set (m, Properties.Representation.languages_, LanguageTags.infer a)
 
-        [<CustomOperation ("mediaTypes", MaintainsVariableSpaceUsingBind = true)>]
-        member inline __.MediaTypes (m, a) =
+        [<CustomOperation ("availableMediaTypes", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.AvailableMediaTypes (m, a) =
             HttpMachine.set (m, Properties.Representation.mediaTypes_, MediaTypes.infer a)
 
     (* Resource *)

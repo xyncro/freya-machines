@@ -37,13 +37,18 @@ module Properties =
               Resource = Resource.empty }
 
      and private Request =
-        { Methods: Value<Set<Method>> option }
+        { MediaTypes: Value<AcceptableMedia list> option
+          Methods: Value<Set<Method>> option }
+
+        static member mediaTypes_ =
+            (fun x -> x.MediaTypes), (fun m x -> { x with Request.MediaTypes = m })
 
         static member methods_ =
             (fun x -> x.Methods), (fun m x -> { x with Methods = m })
 
         static member empty =
-            { Methods = None }
+            { MediaTypes = None
+              Methods = None }
 
      and private Representation =
         { MediaTypes: Value<MediaType list> option
@@ -52,7 +57,7 @@ module Properties =
           ContentCodings: Value<ContentCoding list> option }
 
         static member mediaTypes_ =
-            (fun x -> x.MediaTypes), (fun m x -> { x with MediaTypes = m })
+            (fun x -> x.MediaTypes), (fun m x -> { x with Representation.MediaTypes = m })
 
         static member languages_ =
             (fun x -> x.Languages), (fun l x -> { x with Languages = l })
@@ -97,6 +102,10 @@ module Properties =
         let private request_ =
                 properties_
             >-> Properties.request_
+
+        let mediaTypes_ =
+                request_
+            >-> Request.mediaTypes_
 
         let methods_ =
                 request_

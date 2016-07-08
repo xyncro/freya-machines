@@ -35,6 +35,16 @@ module Syntax =
         member inline __.PatchEnabled (m, a) =
             HttpMachine.set (m, Extension.enabled_, Decision.infer a)
 
+    (* Properties *)
+
+    type HttpMachineBuilder with
+
+        (* Request *)
+
+        [<CustomOperation ("patchAcceptableMediaTypes", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.PatchAcceptableMediaTypes (m, a) =
+            HttpMachine.set (m, Properties.Request.mediaTypes_, AcceptableMedia.infer a)
+
     (* Operations *)
 
     type HttpMachineBuilder with

@@ -21,7 +21,7 @@ module Patch =
 
     (* Component *)
 
-    let rec private patch s =
+    let rec private main s =
         Main.specification Name (
             s, Method.specification Name (set [ PATCH ]) (
                 s, Existence.specification Name (
@@ -46,4 +46,4 @@ module Patch =
             { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ Core.Name; "fallback"; "fallback-decision" ], Right, patch) ] }
+            [ Splice (Key [ Core.Name; "fallback"; "fallback-decision" ], Right, main) ] }

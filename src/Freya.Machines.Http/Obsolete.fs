@@ -33,25 +33,25 @@ module Obsolete =
 
         type HttpMachineBuilder with
 
-            [<Obsolete ("Use charsets instead.")>]
+            [<Obsolete ("Use availableCharsets instead.")>]
             [<CustomOperation ("charsetsSupported", MaintainsVariableSpaceUsingBind = true)>]
             member inline x.CharsetsSupported (m, a) =
-                x.Charsets (m, a)
+                x.AvailableCharsets (m, a)
 
-            [<Obsolete ("Use contentCodings instead.")>]
+            [<Obsolete ("Use availableContentCodings instead.")>]
             [<CustomOperation ("contentCodingsSupported", MaintainsVariableSpaceUsingBind = true)>]
             member inline x.ContentCodingsSupported (m, a) =
-                x.ContentCodings (m, a)
+                x.AvailableContentCodings (m, a)
 
-            [<Obsolete ("Use languages instead.")>]
+            [<Obsolete ("Use availableLanguages instead.")>]
             [<CustomOperation ("languagesSupported", MaintainsVariableSpaceUsingBind = true)>]
             member inline x.LanguagesSupported (m, a) =
-                x.Languages (m, a)
+                x.AvailableLanguages (m, a)
 
-            [<Obsolete ("Use mediaTypes instead.")>]
+            [<Obsolete ("Use availableMediaTypes instead.")>]
             [<CustomOperation ("mediaTypesSupported", MaintainsVariableSpaceUsingBind = true)>]
             member inline x.MediaTypesSupported (m, a) =
-                x.MediaTypes (m, a)
+                x.AvailableMediaTypes (m, a)
 
         (* Operations *)
 

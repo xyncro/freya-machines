@@ -57,10 +57,13 @@
   </Target>
   -->
   <ItemGroup>
+    <Compile Include="Operations.fs" />
     <Compile Include="Machine\Configuration\Extension.fs" />
+    <Compile Include="Machine\Configuration\Properties.fs" />
     <Compile Include="Machine\Specifications\Prelude.fs" />
     <Compile Include="Machine\Specifications\Common.fs" />
     <Compile Include="Machine\Specifications\Main.fs" />
+    <Compile Include="Machine\Specifications\Headers.fs" />
     <Compile Include="Machine\Components\Patch.fs" />
     <Compile Include="Expression.fs" />
   </ItemGroup>

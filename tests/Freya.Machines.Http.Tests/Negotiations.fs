@@ -42,7 +42,7 @@ let ``machine handles accept negotiation correctly`` () =
 
     let matchedMachine =
         freyaHttpMachine {
-            mediaTypes (MediaType (Type "text", SubType "plain", Parameters Map.empty)) }
+            availableMediaTypes (MediaType (Type "text", SubType "plain", Parameters Map.empty)) }
 
     verify setup matchedMachine [
         Response.statusCode_ => Some 200
@@ -50,7 +50,7 @@ let ``machine handles accept negotiation correctly`` () =
 
     let unmatchedMachine =
         freyaHttpMachine {
-            mediaTypes (MediaType (Type "application", SubType "json", Parameters Map.empty)) }
+            availableMediaTypes (MediaType (Type "application", SubType "json", Parameters Map.empty)) }
 
     verify setup unmatchedMachine [
         Response.statusCode_ => Some 406
@@ -77,7 +77,7 @@ let ``machine handles accept-language negotiation correctly`` () =
 
     let matchedMachine =
         freyaHttpMachine {
-            languages (LanguageTag (Language ("en", None), None, None, Variant [])) }
+            availableLanguages (LanguageTag (Language ("en", None), None, None, Variant [])) }
 
     verify setup matchedMachine [
         Response.statusCode_ => Some 200
@@ -85,7 +85,7 @@ let ``machine handles accept-language negotiation correctly`` () =
 
     let unmatchedMachine =
         freyaHttpMachine {
-            languages (LanguageTag (Language ("de", None), None, None, Variant [])) }
+            availableLanguages (LanguageTag (Language ("de", None), None, None, Variant [])) }
 
     verify setup unmatchedMachine [
         Response.statusCode_ => Some 406
@@ -112,7 +112,7 @@ let ``machine handles accept-charset negotiation correctly`` () =
 
     let matchedMachine =
         freyaHttpMachine {
-            charsets (Charset "utf-8") }
+            availableCharsets (Charset "utf-8") }
 
     verify setup matchedMachine [
         Response.statusCode_ => Some 200
@@ -120,7 +120,7 @@ let ``machine handles accept-charset negotiation correctly`` () =
 
     let unmatchedMachine =
         freyaHttpMachine {
-            charsets (Charset "iso-8859-1") }
+            availableCharsets (Charset "iso-8859-1") }
 
     verify setup unmatchedMachine [
         Response.statusCode_ => Some 406
@@ -147,7 +147,7 @@ let ``machine handles accept-encoding negotiation correctly`` () =
 
     let matchedMachine =
         freyaHttpMachine {
-            contentCodings (ContentCoding "gzip") }
+            availableContentCodings (ContentCoding "gzip") }
 
     verify setup matchedMachine [
         Response.statusCode_ => Some 200
@@ -155,7 +155,7 @@ let ``machine handles accept-encoding negotiation correctly`` () =
 
     let unmatchedMachine =
         freyaHttpMachine {
-            contentCodings (ContentCoding "compress") }
+            availableContentCodings (ContentCoding "compress") }
 
     verify setup unmatchedMachine [
         Response.statusCode_ => Some 406
