@@ -16,35 +16,35 @@ open Hephaestus
 [<AutoOpen>]
 module Inference =
 
-    [<RequireQualifiedAccess>]
-    [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
-    module AcceptableMedia =
-
-        (* Inference *)
-
-        [<RequireQualifiedAccess>]
-        module Inference =
-
-            type Defaults =
-                | Defaults
-
-                static member AcceptableMedia (x: Freya<AcceptableMedia list>) =
-                    Dynamic x
-
-                static member AcceptableMedia (x: AcceptableMedia list) =
-                    Static x
-
-                static member AcceptableMedia (x: AcceptableMedia) =
-                    Static [ x ]
-
-            let inline defaults (a: ^a, _: ^b) =
-                ((^a or ^b) : (static member AcceptableMedia: ^a -> Value<AcceptableMedia list>) a)
-
-            let inline infer (x: 'a) =
-                defaults (x, Defaults)
-
-        let inline infer v =
-            Inference.infer v
+//    [<RequireQualifiedAccess>]
+//    [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
+//    module AcceptableMedia =
+//
+//        (* Inference *)
+//
+//        [<RequireQualifiedAccess>]
+//        module Inference =
+//
+//            type Defaults =
+//                | Defaults
+//
+//                static member AcceptableMedia (x: Freya<AcceptableMedia list>) =
+//                    Dynamic x
+//
+//                static member AcceptableMedia (x: AcceptableMedia list) =
+//                    Static x
+//
+//                static member AcceptableMedia (x: AcceptableMedia) =
+//                    Static [ x ]
+//
+//            let inline defaults (a: ^a, _: ^b) =
+//                ((^a or ^b) : (static member AcceptableMedia: ^a -> Value<AcceptableMedia list>) a)
+//
+//            let inline infer (x: 'a) =
+//                defaults (x, Defaults)
+//
+//        let inline infer v =
+//            Inference.infer v
 
     [<RequireQualifiedAccess>]
     [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]

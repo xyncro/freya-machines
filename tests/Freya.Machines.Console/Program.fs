@@ -9,7 +9,6 @@ open Freya.Machines.Http.Patch
 open Freya.Types.Http
 open Freya.Types.Http.Cors
 open Freya.Types.Http.Patch
-open Freya.Types.Uri
 open Freya.Types.Language
 
 let ok =
@@ -24,17 +23,20 @@ let ok =
 let machine =
     freyaHttpMachine {
 
-        handleOk ok
+        acceptableMediaTypes [ MediaType.parse "text/plain" ]
+        availableMediaTypes [ MediaType.parse "text/plain" ]
         methods [ DELETE; GET; OPTIONS; PATCH ]
+
+        handleOk ok
 
         cors
         corsEnabled true
         corsMaxAge 3600
-        corsOrigins [ SerializedOrigin (Scheme "http", Name (RegName "xyncro.com"), None) ]
+        corsOrigins [ SerializedOrigin.parse "http://xyncro.com" ]
 
         patch
         patchEnabled true
-        patchAcceptableMediaTypes [ AcceptableMedia (MediaRange.Partial (Type "text", Parameters Map.empty), None) ] }
+        patchAcceptableMediaTypes [ MediaType.parse "text/plain" ] }
 
 let app =
     OwinAppFunc.ofFreya machine

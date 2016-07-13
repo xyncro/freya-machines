@@ -48,7 +48,7 @@ module Syntax =
 
         [<CustomOperation ("acceptableMediaTypes", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.AcceptableMediaTypes (m, a) =
-            HttpMachine.set (m, Properties.Request.mediaTypes_, AcceptableMedia.infer a)
+            HttpMachine.set (m, Properties.Request.mediaTypes_, MediaTypes.infer a)
 
         [<CustomOperation ("methods", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.Methods (m, a) =

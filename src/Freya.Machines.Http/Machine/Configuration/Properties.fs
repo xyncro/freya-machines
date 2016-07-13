@@ -37,7 +37,7 @@ module Properties =
               Resource = Resource.empty }
 
      and private Request =
-        { MediaTypes: Value<AcceptableMedia list> option
+        { MediaTypes: Value<MediaType list> option
           Methods: Value<Set<Method>> option }
 
         static member mediaTypes_ =

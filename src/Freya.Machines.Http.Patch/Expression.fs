@@ -43,7 +43,7 @@ module Syntax =
 
         [<CustomOperation ("patchAcceptableMediaTypes", MaintainsVariableSpaceUsingBind = true)>]
         member inline __.PatchAcceptableMediaTypes (m, a) =
-            HttpMachine.set (m, Properties.Request.mediaTypes_, AcceptableMedia.infer a)
+            HttpMachine.set (m, Properties.Request.mediaTypes_, MediaTypes.infer a)
 
     (* Operations *)
 
