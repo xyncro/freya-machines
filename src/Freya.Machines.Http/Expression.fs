@@ -136,6 +136,20 @@ module Syntax =
         member inline __.HandleConflict (m, handler) =
             HttpMachine.set (m, Conflict.Terminals.conflict_, Handler.infer handler)
 
+    (* Content *)
+
+    type HttpMachineBuilder with
+
+        (* Terminals *)
+
+        [<CustomOperation ("handleLengthRequired", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleLengthRequired (m, handler) =
+            HttpMachine.set (m, Content.Terminals.lengthRequired_, Handler.infer handler)
+
+        [<CustomOperation ("handleUnsupportedMediaType", MaintainsVariableSpaceUsingBind = true)>]
+        member inline __.HandleUnsupportedMediaType (m, handler) =
+            HttpMachine.set (m, Content.Terminals.unsupportedMediaType_, Handler.infer handler)
+
     (* Existence *)
 
     type HttpMachineBuilder with

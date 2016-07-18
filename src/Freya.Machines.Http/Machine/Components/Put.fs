@@ -20,14 +20,15 @@ module Put =
     (* Component *)
 
     let rec private put s =
-        Method.specification Name (set [ PUT ]) (
-            s, Existence.specification Name (
-                Responses.Moved.specification Name (
-                    continuation),
-                Preconditions.Common.specification Name (
-                    Preconditions.Unsafe.specification Name (
-                        Conflict.specification Name (
-                            continuation)))))
+        Method.specification Name (set [ PUT ]) (s,
+            Content.specification Name (
+                Existence.specification Name (
+                    Responses.Moved.specification Name (
+                        continuation),
+                    Preconditions.Common.specification Name (
+                        Preconditions.Unsafe.specification Name (
+                            Conflict.specification Name (
+                                continuation))))))
 
     and private continuation =
         Operation.specification Name PUT (

@@ -22,21 +22,26 @@ let ok =
 
 let machine =
     freyaHttpMachine {
-
-        acceptableMediaTypes [ MediaType.parse "text/plain" ]
-        availableMediaTypes [ MediaType.parse "text/plain" ]
-        methods [ DELETE; GET; OPTIONS; PATCH ]
-
-        handleOk ok
-
-        cors
-        corsEnabled true
-        corsMaxAge 3600
-        corsOrigins [ SerializedOrigin.parse "http://xyncro.com" ]
+        methods PATCH
 
         patch
-        patchEnabled true
-        patchAcceptableMediaTypes [ MediaType.parse "text/plain" ] }
+        patchEnabled false }
+
+
+//        acceptableMediaTypes [ MediaType.parse "text/plain" ]
+//        availableMediaTypes [ MediaType.parse "text/plain" ]
+//        methods [ DELETE; GET; OPTIONS; PATCH ]
+//
+//        handleOk ok
+//
+//        cors
+//        corsEnabled true
+//        corsMaxAge 3600
+//        corsOrigins [ SerializedOrigin.parse "http://xyncro.com" ]
+//
+//        patch
+//        patchEnabled true
+//        patchAcceptableMediaTypes [ MediaType.parse "text/plain" ] }
 
 let app =
     OwinAppFunc.ofFreya machine

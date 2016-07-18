@@ -22,21 +22,25 @@ module Patch =
     (* Component *)
 
     let rec private main s =
-        Main.specification Name (
-            s, Method.specification Name (set [ PATCH ]) (
-                s, Existence.specification Name (
-                    Responses.Moved.specification Name (
-                        continuation),
-                    Preconditions.Common.specification Name (
-                        Preconditions.Unsafe.specification Name (
-                            Conflict.specification Name (
-                                continuation))))))
+        Main.specification Name (s,
+            Method.specification Name (set [ PATCH ]) (s,
+                Content.specification Name (
+                    Existence.specification Name (
+                        Responses.Moved.specification Name (
+                            continuation),
+                        Preconditions.Common.specification Name (
+                            Preconditions.Unsafe.specification Name (
+                                Conflict.specification Name (
+                                    continuation)))))))
 
     and private continuation =
         Operation.specification Name PATCH (
             Responses.Created.specification Name (
                 Responses.Other.specification Name (
                     Responses.Common.specification Name)))
+
+    let private headers =
+        Headers.specification Name
 
     let component =
         { Metadata =
@@ -46,4 +50,5 @@ module Patch =
             { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ Core.Name; "fallback"; "fallback-decision" ], Right, main) ] }
+            [ Splice (Key [ Core.Name; "fallback"; "fallback-decision" ], Right, main)
+              Splice (Key [ Options.Name; "method"; "method-matches-decision" ], Right, headers) ] }

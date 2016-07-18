@@ -5,7 +5,7 @@ NUGET
     FParsec (1.0.2)
     Hekate (3.2)
       Aether (>= 8.0.2 < 9.0)
-    Hephaestus (1.0.1)
+    Hephaestus (4.0)
       Aether (>= 8.1 < 9.0)
       Anat (>= 1.0 < 2.0)
       Hekate (>= 3.2 < 4.0)
@@ -61,7 +61,7 @@ NUGET
 GROUP Build
 NUGET
   remote: http://www.nuget.org/api/v2
-    FAKE (4.30.2)
+    FAKE (4.32)
 GITHUB
   remote: xyncro/build
     build.fsx (589ed49e68b51d7de9e9de9be1adc30e26ce534d)

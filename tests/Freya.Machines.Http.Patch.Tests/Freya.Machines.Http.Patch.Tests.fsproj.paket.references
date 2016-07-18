@@ -1,0 +1,11 @@
+Freya.Core
+Freya.Optics.Http
+Freya.Optics.Http.Patch
+Freya.Types.Http
+Freya.Types.Http.Patch
+Hephaestus
+
+group Test
+
+  Freya.Testing
+  xunit

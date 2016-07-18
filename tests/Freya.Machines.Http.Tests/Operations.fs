@@ -21,7 +21,8 @@ open Xunit
 let ``machine processes operation correctly`` () =
 
     let setup =
-        Request.method_ .= POST
+            (Request.method_ .= POST)
+         *> (Request.Headers.contentLength_ .= Some (ContentLength 0))
 
     (* Success *)
 
@@ -53,7 +54,8 @@ let ``machine processes operation correctly`` () =
 let ``machine handles completed correctly`` () =
 
     let setup =
-        Request.method_ .= POST
+            (Request.method_ .= POST)
+         *> (Request.Headers.contentLength_ .= Some (ContentLength 0))
 
     (* Completed *)
 

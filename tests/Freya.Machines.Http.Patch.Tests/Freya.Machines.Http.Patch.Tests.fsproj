@@ -5,14 +5,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>5c3287f2-f56a-41d1-ae97-dfb9dfee243b</ProjectGuid>
+    <ProjectGuid>4b9125d7-f651-44a3-b115-8f7fd6a150b3</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Freya.Machines.Http.Cors.Tests</RootNamespace>
-    <AssemblyName>Freya.Machines.Http.Cors.Tests</AssemblyName>
+    <RootNamespace>Freya.Machines.Http.Patch.Tests</RootNamespace>
+    <AssemblyName>Freya.Machines.Http.Patch.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Name>Freya.Machines.Http.Cors.Tests</Name>
+    <Name>Freya.Machines.Http.Patch.Tests</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,7 +22,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\Freya.Machines.Http.Cors.Tests.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\Freya.Machines.Http.Patch.Tests.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,7 +31,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\Freya.Machines.Http.Cors.Tests.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\Freya.Machines.Http.Patch.Tests.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -58,8 +58,7 @@
   -->
   <ItemGroup>
     <Compile Include="Prelude.fs" />
-    <Compile Include="Simple.fs" />
-    <Compile Include="Preflight.fs" />
+    <Compile Include="Patch.fs" />
     <Content Include="App.config" />
   </ItemGroup>
   <ItemGroup>
@@ -70,9 +69,9 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\..\src\Freya.Machines.Http.Cors\Freya.Machines.Http.Cors.fsproj">
-      <Name>Freya.Machines.Http.Cors</Name>
-      <Project>{d200e0a7-971e-47af-95bb-a6841b905505}</Project>
+    <ProjectReference Include="..\..\src\Freya.Machines.Http.Patch\Freya.Machines.Http.Patch.fsproj">
+      <Name>Freya.Machines.Http.Patch</Name>
+      <Project>{a7ca1fb7-6519-4f4f-a739-c1117dbe5ddc}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\src\Freya.Machines.Http\Freya.Machines.Http.fsproj">
@@ -192,8 +191,8 @@
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3')">
       <ItemGroup>
-        <Reference Include="Freya.Optics.Http.Cors">
-          <HintPath>..\..\packages\Freya.Optics.Http.Cors\lib\net452\Freya.Optics.Http.Cors.dll</HintPath>
+        <Reference Include="Freya.Optics.Http.Patch">
+          <HintPath>..\..\packages\Freya.Optics.Http.Patch\lib\net452\Freya.Optics.Http.Patch.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -225,8 +224,8 @@
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3')">
       <ItemGroup>
-        <Reference Include="Freya.Types.Http.Cors">
-          <HintPath>..\..\packages\Freya.Types.Http.Cors\lib\net452\Freya.Types.Http.Cors.dll</HintPath>
+        <Reference Include="Freya.Types.Http.Patch">
+          <HintPath>..\..\packages\Freya.Types.Http.Patch\lib\net452\Freya.Types.Http.Patch.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>

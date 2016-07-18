@@ -20,17 +20,18 @@ module Post =
     (* Component *)
 
     let private post s =
-        Method.specification Name (set [ POST ]) (
-            s, Existence.specification Name (
-                Responses.Moved.specification Name (
-                    Responses.Missing.specification Name),
-                Preconditions.Common.specification Name (
-                    Preconditions.Unsafe.specification Name (
-                        Conflict.specification Name (
-                            Operation.specification Name POST (
-                                Responses.Created.specification Name (
-                                    Responses.Other.specification Name (
-                                        Responses.Common.specification Name))))))))
+        Method.specification Name (set [ POST ]) (s,
+            Content.specification Name (
+                Existence.specification Name (
+                    Responses.Moved.specification Name (
+                        Responses.Missing.specification Name),
+                    Preconditions.Common.specification Name (
+                        Preconditions.Unsafe.specification Name (
+                            Conflict.specification Name (
+                                Operation.specification Name POST (
+                                    Responses.Created.specification Name (
+                                        Responses.Other.specification Name (
+                                            Responses.Common.specification Name)))))))))
 
     let component =
         { Metadata =

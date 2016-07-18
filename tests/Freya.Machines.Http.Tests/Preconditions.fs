@@ -163,14 +163,17 @@ module Unsafe =
 
         let anySetup =
                 (Request.method_ .= POST)
+             *> (Request.Headers.contentLength_ .= Some (ContentLength 0))
              *> (Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (IfNoneMatchChoice.Any)))
 
         let matchedSetup =
                 (Request.method_ .= POST)
+             *> (Request.Headers.contentLength_ .= Some (ContentLength 0))
              *> (Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (IfNoneMatchChoice.EntityTags [ Weak "foo" ])))
 
         let unmatchedSetup =
                 (Request.method_ .= POST)
+             *> (Request.Headers.contentLength_ .= Some (ContentLength 0))
              *> (Request.Headers.ifNoneMatch_ .= Some (IfNoneMatch (IfNoneMatchChoice.EntityTags [ Weak "bar" ])))
 
         let machine =

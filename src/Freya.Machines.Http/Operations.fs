@@ -146,6 +146,11 @@ module Operations =
          *> phrase "Gone"
          *> date ()
 
+    let lengthRequired =
+            status 411
+         *> phrase "Length Required"
+         *> date ()
+
     let preconditionFailed =
             status 412
          *> phrase "Precondition Failed"
@@ -154,6 +159,11 @@ module Operations =
     let uriTooLong =
             status 414
          *> phrase "URI Too Long"
+         *> date ()
+
+    let unsupportedMediaType =
+            status 415
+         *> phrase "Unsupported Media Type"
          *> date ()
 
     let expectationFailed =

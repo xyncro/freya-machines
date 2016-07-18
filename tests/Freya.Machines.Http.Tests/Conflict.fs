@@ -20,10 +20,12 @@ let ``machine handles conflict correctly`` () =
 
     let nonConflictSetup =
             (Request.method_ .= POST)
+         *> (Request.Headers.contentLength_ .= Some (ContentLength 0))
 
     let conflictSetup =
             (Request.path_ .= "/conflict")
          *> (Request.method_ .= POST)
+         *> (Request.Headers.contentLength_ .= Some (ContentLength 0))
 
     (* Static *)
 

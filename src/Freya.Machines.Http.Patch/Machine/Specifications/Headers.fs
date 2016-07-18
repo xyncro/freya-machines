@@ -27,7 +27,7 @@ module Headers =
 
         let rec enabled k s =
             Common.Decisions.enabled (key k)
-                (s, acceptPatch k s)
+                (s, allowPatch k s)
 
         (* Allow *)
 
