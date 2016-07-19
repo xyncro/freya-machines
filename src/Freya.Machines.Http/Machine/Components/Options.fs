@@ -20,7 +20,7 @@ module Options =
     (* Component *)
 
     let private options s =
-        Method.specification Name (set [ OPTIONS ]) (
+        Method.specification Name (Set.ofList [ OPTIONS ]) (
             s, Responses.Options.specification Name)
 
     let component =

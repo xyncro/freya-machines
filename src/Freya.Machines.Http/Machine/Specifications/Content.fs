@@ -7,6 +7,7 @@ open Freya.Machines
 open Freya.Machines.Http
 open Freya.Machines.Http.Machine.Configuration
 open Freya.Optics.Http
+open Freya.Types.Http
 
 (* Validation
 
@@ -94,14 +95,23 @@ module Content =
         let rec lengthDefined k s =
             Decision.create (key k, "length-defined")
                 (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.contentLength_))
-                (Terminals.lengthRequired k, mediaTypeSupported k s)
+                (Terminals.lengthRequired k, hasMediaType k s)
 
-        // TODO: Media Type Logic
+        and hasMediaType k s =
+            Decision.create (key k, "has-media-type")
+                (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.contentType_))
+                (s, mediaTypeSupported k s)
 
         and mediaTypeSupported k s =
             Decision.create (key k, "media-type-supported")
-                (function | _ -> Static true)
+                (function | TryGet Properties.Request.mediaTypes_ x -> Value.Freya.bind supported x
+                          | _ -> Static true)
                 (Terminals.unsupportedMediaType k, s)
+
+        and private supported mediaTypes =
+                function | Some (ContentType mediaType) -> Set.contains mediaType mediaTypes
+                         | _ -> true
+            <!> !. Request.Headers.contentType_
 
     (* Specification *)
 

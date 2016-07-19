@@ -22,5 +22,5 @@ module Operations =
         acceptPatchPermutations mediaTypes
 
     and private acceptPatchPermutations =
-        function | x when List.isEmpty x -> Freya.empty 
-                 | x -> Response.Headers.acceptPatch_ .= Some (AcceptPatch x)
+        function | x when Set.isEmpty x -> Freya.empty 
+                 | x -> Response.Headers.acceptPatch_ .= Some (AcceptPatch (Set.toList x))

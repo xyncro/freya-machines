@@ -20,7 +20,7 @@ module GetOrHead =
     (* Component *)
 
     let private getOrHead s =
-        Method.specification Name (set [ GET; HEAD ]) (
+        Method.specification Name (Set.ofList [ GET; HEAD ]) (
             s, Existence.specification Name (
                 Responses.Moved.specification Name (
                     Responses.Missing.specification Name),

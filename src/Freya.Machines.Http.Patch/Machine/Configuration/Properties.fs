@@ -21,7 +21,7 @@ module Properties =
             { Request = Request.empty }
 
      and private Request =
-        { MediaTypes: Value<MediaType list> option }
+        { MediaTypes: Value<Set<MediaType>> option }
 
         static member mediaTypes_ =
             (fun x -> x.MediaTypes), (fun m x -> { x with MediaTypes = m })

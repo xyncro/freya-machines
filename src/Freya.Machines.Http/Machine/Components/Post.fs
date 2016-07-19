@@ -20,7 +20,7 @@ module Post =
     (* Component *)
 
     let private post s =
-        Method.specification Name (set [ POST ]) (s,
+        Method.specification Name (Set.ofList [ POST ]) (s,
             Content.specification Name (
                 Existence.specification Name (
                     Responses.Moved.specification Name (

@@ -16,36 +16,6 @@ open Hephaestus
 [<AutoOpen>]
 module Inference =
 
-//    [<RequireQualifiedAccess>]
-//    [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
-//    module AcceptableMedia =
-//
-//        (* Inference *)
-//
-//        [<RequireQualifiedAccess>]
-//        module Inference =
-//
-//            type Defaults =
-//                | Defaults
-//
-//                static member AcceptableMedia (x: Freya<AcceptableMedia list>) =
-//                    Dynamic x
-//
-//                static member AcceptableMedia (x: AcceptableMedia list) =
-//                    Static x
-//
-//                static member AcceptableMedia (x: AcceptableMedia) =
-//                    Static [ x ]
-//
-//            let inline defaults (a: ^a, _: ^b) =
-//                ((^a or ^b) : (static member AcceptableMedia: ^a -> Value<AcceptableMedia list>) a)
-//
-//            let inline infer (x: 'a) =
-//                defaults (x, Defaults)
-//
-//        let inline infer v =
-//            Inference.infer v
-
     [<RequireQualifiedAccess>]
     [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
     module Charsets =
@@ -59,16 +29,16 @@ module Inference =
                 | Defaults
 
                 static member Charsets (x: Freya<Charset list>) =
-                    Dynamic x
+                    Dynamic (Set.ofList <!> x)
 
                 static member Charsets (x: Charset list) =
-                    Static x
+                    Static (Set.ofList x)
 
                 static member Charsets (x: Charset) =
-                    Static [ x ]
+                    Static (Set.singleton x)
 
             let inline defaults (a: ^a, _: ^b) =
-                ((^a or ^b) : (static member Charsets: ^a -> Value<Charset list>) a)
+                ((^a or ^b) : (static member Charsets: ^a -> Value<Set<Charset>>) a)
 
             let inline infer (x: 'a) =
                 defaults (x, Defaults)
@@ -116,16 +86,16 @@ module Inference =
                 | Defaults
 
                 static member ContentCodings (x: Freya<ContentCoding list>) =
-                    Dynamic x
+                    Dynamic (Set.ofList <!> x)
 
                 static member ContentCodings (x: ContentCoding list) =
-                    Static x
+                    Static (Set.ofList x)
 
                 static member ContentCodings (x: ContentCoding) =
-                    Static [ x ]
+                    Static (Set.singleton x)
 
             let inline defaults (a: ^a, _: ^b) =
-                ((^a or ^b) : (static member ContentCodings: ^a -> Value<ContentCoding list>) a)
+                ((^a or ^b) : (static member ContentCodings: ^a -> Value<Set<ContentCoding>>) a)
 
             let inline infer (x: 'a) =
                 defaults (x, Defaults)
@@ -257,16 +227,16 @@ module Inference =
                 | Defaults
 
                 static member LanguageTags (x: Freya<LanguageTag list>) =
-                    Dynamic x
+                    Dynamic (Set.ofList <!> x)
 
                 static member LanguageTags (x: LanguageTag list) =
-                    Static x
+                    Static (Set.ofList x)
 
                 static member LanguageTags (x: LanguageTag) =
-                    Static [ x ]
+                    Static (Set.singleton x)
 
             let inline defaults (a: ^a, _: ^b) =
-                ((^a or ^b) : (static member LanguageTags: ^a -> Value<LanguageTag list>) a)
+                ((^a or ^b) : (static member LanguageTags: ^a -> Value<Set<LanguageTag>>) a)
 
             let inline infer (x: 'a) =
                 defaults (x, Defaults)
@@ -287,16 +257,16 @@ module Inference =
                 | Defaults
 
                 static member MediaTypes (x: Freya<MediaType list>) =
-                    Dynamic x
+                    Dynamic (Set.ofList <!> x)
 
                 static member MediaTypes (x: MediaType list) =
-                    Static x
+                    Static (Set.ofList x)
 
                 static member MediaTypes (x: MediaType) =
-                    Static [ x ]
+                    Static (Set.singleton x)
 
             let inline defaults (a: ^a, _: ^b) =
-                ((^a or ^b) : (static member MediaTypes: ^a -> Value<MediaType list>) a)
+                ((^a or ^b) : (static member MediaTypes: ^a -> Value<Set<MediaType>>) a)
 
             let inline infer (x: 'a) =
                 defaults (x, Defaults)

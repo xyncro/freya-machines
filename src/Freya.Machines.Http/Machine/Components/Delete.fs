@@ -20,7 +20,7 @@ module Delete =
     (* Component *)
 
     let private delete s =
-        Method.specification Name (set [ DELETE ]) (
+        Method.specification Name (Set.ofList [ DELETE ]) (
             s, Existence.specification Name (
                 Responses.Moved.specification Name (
                     Responses.Missing.specification Name),

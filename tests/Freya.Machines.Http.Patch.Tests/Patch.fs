@@ -66,64 +66,20 @@ let ``accept-patch header set appropriately`` () =
             methods [ OPTIONS; PATCH ]
 
             patch }
-//            patchAcceptableMediaTypes MediaType.Json }
 
     verify setup machine [
         Response.statusCode_ => Some 200
         Response.Headers.acceptPatch_ => None ]
 
-//    (* Credentials Unsupported, Origins Empty *)
-//
-//    let machine =
-//        freyaHttpMachine {
-//            cors
-//            corsOrigins []
-//            corsSupportsCredentials false }
-//
-//    verify defaultSetup machine [
-//        Response.Headers.accessControlAllowOrigin_ => None
-//        Response.Headers.accessControlAllowCredentials_ => None ]
-//
-//    (* Credentials Unsupported, Origins Restricted *)
-//
-//    let machine =
-//        freyaHttpMachine {
-//            cors
-//            corsOrigins [ Xyncro.com ]
-//            corsSupportsCredentials false }
-//
-//    verify defaultSetup machine [
-//        Response.Headers.accessControlAllowOrigin_ => Some (AccessControlAllowOrigin (Origins (OriginListOrNull.Origins [ Xyncro.com ])))
-//        Response.Headers.accessControlAllowCredentials_ => None ]
-//
-//[<Fact>]
-//let ``headers exposed behaves correctly`` () =
-//
-//    (* Exposed Headers Unspecified *)
-//
-//    let machine =
-//        freyaHttpMachine {
-//            cors }
-//
-//    verify defaultSetup machine [
-//        Response.Headers.accessControlExposeHeaders_ => None ]
-//
-//    (* Exposed Headers Empty *)
-//
-//    let machine =
-//        freyaHttpMachine {
-//            cors
-//            corsExposedHeaders [] }
-//
-//    verify defaultSetup machine [
-//        Response.Headers.accessControlExposeHeaders_ => None ]
-//
-//    (* Exposed Headers Non-Empty *)
-//
-//    let machine =
-//        freyaHttpMachine {
-//            cors
-//            corsExposedHeaders [ "Server" ] }
-//
-//    verify defaultSetup machine [
-//        Response.Headers.accessControlExposeHeaders_ => Some (AccessControlExposeHeaders ([ "Server" ])) ]
+    (* Patch supported, Media Types specified. *)
+
+    let machine =
+        freyaHttpMachine {
+            methods [ OPTIONS; PATCH ]
+
+            patch
+            patchAcceptableMediaTypes MediaType.Json }
+
+    verify setup machine [
+        Response.statusCode_ => Some 200
+        Response.Headers.acceptPatch_ => Some (AcceptPatch [ MediaType.Json ]) ]

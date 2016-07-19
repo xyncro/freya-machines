@@ -46,7 +46,7 @@ module internal Negotiation =
     module Charset =
 
         let private negotiate supported =
-            function | Some (AcceptCharset x) -> negotiated (Charset.negotiate supported (Some x))
+            function | Some (AcceptCharset x) -> Acceptable (Charset.negotiate supported (Set.ofList x))
                      | _ -> Free
 
         let negotiator =
@@ -59,7 +59,7 @@ module internal Negotiation =
     module ContentCoding =
 
         let private negotiate supported =
-            function | Some (AcceptEncoding x) -> negotiated (ContentCoding.negotiate supported (Some x))
+            function | Some (AcceptEncoding x) -> Acceptable (ContentCoding.negotiate supported (Set.ofList x))
                      | _ -> Free
 
         let negotiator =
@@ -72,7 +72,7 @@ module internal Negotiation =
     module Language =
 
         let private negotiate supported =
-            function | Some (AcceptLanguage x) -> negotiated (Language.negotiate supported (Some x))
+            function | Some (AcceptLanguage x) -> Acceptable (Language.negotiate supported (Set.ofList x))
                      | _ -> Free
 
         let negotiator =
@@ -85,7 +85,7 @@ module internal Negotiation =
     module MediaType =
 
         let private negotiate supported =
-            function | Some (Accept x) -> negotiated (MediaType.negotiate supported (Some x))
+            function | Some (Accept x) -> Acceptable (MediaType.negotiate supported (Set.ofList x))
                      | _ -> Free
 
         let negotiator =
@@ -99,10 +99,10 @@ module internal Negotiation =
    likely a result of the negotiation data provided. *)
 
 type Available =
-    { Charsets: Charset list option
-      Encodings: ContentCoding list option
-      MediaTypes: MediaType list option
-      Languages: LanguageTag list option }
+    { Charsets: Set<Charset> option
+      Encodings: Set<ContentCoding> option
+      MediaTypes: Set<MediaType> option
+      Languages: Set<LanguageTag> option }
 
  and Acceptable =
     { Charsets: Acceptance<Charset>

@@ -23,7 +23,7 @@ type Handler =
 module Defaults =
 
     let methods =
-        set [
+        Set.ofList [
             GET
             HEAD
             OPTIONS ]
@@ -33,17 +33,20 @@ module Defaults =
 [<RequireQualifiedAccess>]
 module internal Resource =
 
+    let private liftOption =
+            Freya.Value.liftOption
+
     let private charsets c =
-            Freya.Value.liftOption (c ^. Properties.Representation.charsets_)
+            liftOption (c ^. Properties.Representation.charsets_)
 
     let private encodings c =
-            Freya.Value.liftOption (c ^. Properties.Representation.contentCodings_)
+            liftOption (c ^. Properties.Representation.contentCodings_)
 
     let private mediaTypes c =
-            Freya.Value.liftOption (c ^. Properties.Representation.mediaTypes_)
+            liftOption (c ^. Properties.Representation.mediaTypes_)
 
     let private languages c =
-            Freya.Value.liftOption (c ^. Properties.Representation.languages_)
+            liftOption (c ^. Properties.Representation.languages_)
 
     let available c : Freya<Available> =
             fun charsets encodings mediaTypes languages ->

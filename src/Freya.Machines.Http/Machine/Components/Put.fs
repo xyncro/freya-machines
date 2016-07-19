@@ -20,7 +20,7 @@ module Put =
     (* Component *)
 
     let rec private put s =
-        Method.specification Name (set [ PUT ]) (s,
+        Method.specification Name (Set.ofList [ PUT ]) (s,
             Content.specification Name (
                 Existence.specification Name (
                     Responses.Moved.specification Name (
