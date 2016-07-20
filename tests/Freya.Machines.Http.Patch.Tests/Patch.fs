@@ -1,4 +1,4 @@
-﻿module Freya.Machines.Http.Cors.Tests.Simple
+﻿module Freya.Machines.Http.Patch.Tests.Patch
 
 open Freya.Core.Operators
 open Freya.Machines.Http
@@ -83,3 +83,26 @@ let ``accept-patch header set appropriately`` () =
     verify setup machine [
         Response.statusCode_ => Some 200
         Response.Headers.acceptPatch_ => Some (AcceptPatch [ MediaType.Json ]) ]
+
+(* Operation *)
+
+[<Fact>]
+let ``machine processes operation correctly`` () =
+
+    let setup =
+            (Request.method_ .= PATCH)
+         *> (Request.Headers.contentLength_ .= Some (ContentLength 0))
+
+    (* Success *)
+
+    let successMachine =
+        freyaHttpMachine {
+            methods PATCH
+
+            patch
+            patchDoPatch (defaultValue .= Some "Success") }
+
+    verify setup successMachine [
+        Response.statusCode_ => Some 200
+        Response.reasonPhrase_ => Some "OK"
+        defaultValue => Some "Success" ]

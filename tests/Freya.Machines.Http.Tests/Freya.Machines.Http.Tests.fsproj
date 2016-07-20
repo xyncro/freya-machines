@@ -61,6 +61,7 @@
     <Compile Include="Defaults.fs" />
     <Compile Include="Assertions.fs" />
     <Compile Include="Conflict.fs" />
+    <Compile Include="Content.fs" />
     <Compile Include="Existence.fs" />
     <Compile Include="Fallback.fs" />
     <Compile Include="Negotiations.fs" />
