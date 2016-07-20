@@ -23,7 +23,7 @@ module Patch =
 
     let rec private main s =
         Main.specification Name (s,
-            Method.specification Name (set [ PATCH ]) (s,
+            Method.specification Name (Set.ofList [ PATCH ]) (s,
                 Content.specification Name (
                     Existence.specification Name (
                         Responses.Moved.specification Name (

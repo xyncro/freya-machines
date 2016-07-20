@@ -21,11 +21,11 @@ module Cors =
 
     (* Component *)
 
-    let private simple s =
-        Simple.specification Name s
+    let private simple =
+        Simple.specification Name
 
-    let private preflight s =
-        Preflight.specification Name s
+    let private preflight =
+        Preflight.specification Name
 
     let component : Component<Configuration,unit,State> =
         { Metadata = 
