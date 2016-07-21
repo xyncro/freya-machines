@@ -1,12 +1,12 @@
 ﻿type project
 id
-    Freya.Machines.Http.Patch
+    Freya.Machines.Http.Patch.Hopac
 title
-    Freya.Machines.Http.Patch
+    Freya.Machines.Http.Patch.Hopac
 description
-    An extension to the Freya HTTP Machine adding Patch support
+    An extension to the Freya HTTP Machine adding Patch support (Hopac implementation)
 tags
-    functional, web, f#, freya, machines, http, patch
+    functional, web, f#, freya, machines, http, patch, hopac
 version
     3.0.0-rc01
 owners
