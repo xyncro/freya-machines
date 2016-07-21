@@ -1,14 +1,14 @@
 ﻿type project
 id
-    Freya.Machines
+    Freya.Machines.Http.Hopac
 title
-    Freya.Machines
+    Freya.Machines.Http.Hopac
 description
-    Core utilities and tools for building Freya machines
+    A Freya machine expressing the core HTTP semantics and logic (Hopac implementation)
 tags
-    functional, web, f#, freya, machines
+    functional, web, f#, freya, machines, http, hopac
 version
-    3.0.0-b302
+    3.0.0-rc01
 owners
     Andrew Cherry, Ryan Riley
 authors

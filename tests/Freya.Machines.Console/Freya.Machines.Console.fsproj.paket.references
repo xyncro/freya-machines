@@ -1,9 +1,0 @@
-Freya.Core
-Freya.Types.Http
-Freya.Types.Http.Cors
-Freya.Types.Http.Patch
-Hephaestus
-
-group Test
-
-  Microsoft.Owin.SelfHost

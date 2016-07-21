@@ -1,0 +1,15 @@
+group Common
+
+  Freya.Types.Http
+  Freya.Types.Language
+
+group Hopac
+
+  Freya.Core.Hopac
+  Freya.Optics.Http.Hopac
+  Hephaestus.Hopac
+
+group Test
+
+  Freya.Testing.Hopac
+  xunit

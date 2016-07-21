@@ -1,0 +1,23 @@
+﻿type project
+id
+    Freya.Machines.Hopac
+title
+    Freya.Machines.Hopac
+description
+    Core utilities and tools for building Freya machines (Hopac implementation)
+tags
+    functional, web, f#, freya, machines, hopac
+version
+    3.0.0-rc01
+owners
+    Andrew Cherry, Ryan Riley
+authors
+    Andrew Cherry, Ryan Riley
+copyright
+    Copyright Xyncro Ltd 2016
+projectUrl
+    https://xyncro.tech/freya
+licenseUrl
+    https://github.com/xyncro/freya-machines/blob/master/LICENSE.md
+requireLicenseAcceptance
+    false

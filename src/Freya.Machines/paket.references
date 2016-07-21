@@ -1,0 +1,8 @@
+﻿group Common
+
+  Aether
+
+group Async
+
+  Freya.Core
+  Hephaestus

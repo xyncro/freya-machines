@@ -1,0 +1,16 @@
+group Common
+
+  Freya.Types.Http
+  Freya.Types.Http.Patch
+
+group Async
+
+  Freya.Core
+  Freya.Optics.Http
+  Freya.Optics.Http.Patch
+  Hephaestus
+
+group Test
+
+  Freya.Testing
+  xunit

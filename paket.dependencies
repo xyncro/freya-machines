@@ -1,24 +1,50 @@
-source http://nuget.org/api/v2
-source https://www.myget.org/F/freya/api/v2
+// Code
 
-nuget Aether                  ~> 8.1
-nuget Freya.Core              ~> 3.0.0-b
-nuget Freya.Optics.Http       ~> 3.0.0-b
-nuget Freya.Optics.Http.Cors  ~> 3.0.0-b
-nuget Freya.Optics.Http.Patch ~> 3.0.0-b
-nuget Freya.Types.Http        ~> 3.0.0-b
-nuget Freya.Types.Http.Cors   ~> 3.0.0-b
-nuget Freya.Types.Http.Patch  ~> 3.0.0-b
-nuget Freya.Types.Language    ~> 3.0.0-b
-nuget Hekate                  ~> 3
-nuget Hephaestus              ~> 4
+group Common
+
+  source http://nuget.org/api/v2
+  source https://www.myget.org/F/freya/api/v2
+
+  nuget Aether                 ~> 8.1
+  nuget Freya.Types.Http       ~> 3.0.0-rc
+  nuget Freya.Types.Http.Cors  ~> 3.0.0-rc
+  nuget Freya.Types.Http.Patch ~> 3.0.0-rc
+  nuget Freya.Types.Language   ~> 3.0.0-rc
+  nuget Hekate                 ~> 3
+
+group Async
+
+  source http://nuget.org/api/v2
+  source https://www.myget.org/F/freya/api/v2
+
+  nuget Freya.Core              ~> 3.0.0-rc
+  nuget Freya.Optics.Http       ~> 3.0.0-rc
+  nuget Freya.Optics.Http.Cors  ~> 3.0.0-rc
+  nuget Freya.Optics.Http.Patch ~> 3.0.0-rc
+  nuget Hephaestus              ~> 4
+
+group Hopac
+
+  source http://nuget.org/api/v2
+  source https://www.myget.org/F/freya/api/v2
+
+  nuget Freya.Core.Hopac              ~> 3.0.0-rc
+  nuget Freya.Optics.Http.Hopac       ~> 3.0.0-rc
+  nuget Freya.Optics.Http.Cors.Hopac  ~> 3.0.0-rc
+  nuget Freya.Optics.Http.Patch.Hopac ~> 3.0.0-rc
+  nuget Hephaestus.Hopac              ~> 4
+
+// Build
 
 group Build
 
+  framework: >= net45
   source http://nuget.org/api/v2
 
   nuget Fake
   github xyncro/build build.fsx
+
+// Test
 
 group Test
 
@@ -26,7 +52,8 @@ group Test
   source http://nuget.org/api/v2
   source https://www.myget.org/F/freya/api/v2
 
-  nuget Freya.Testing           ~> 3.0.0-b
+  nuget Freya.Testing           ~> 3.0.0-rc
+  nuget Freya.Testing.Hopac     ~> 3.0.0-rc
   nuget Microsoft.Owin.SelfHost
   nuget Unquote
   nuget xunit

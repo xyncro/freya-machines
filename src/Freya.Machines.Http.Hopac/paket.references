@@ -1,0 +1,11 @@
+﻿group Common
+
+  Aether
+  Freya.Types.Http
+  Freya.Types.Language
+
+group Hopac
+
+  Freya.Core.Hopac
+  Freya.Optics.Http.Hopac
+  Hephaestus.Hopac

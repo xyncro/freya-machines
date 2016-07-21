@@ -1,0 +1,11 @@
+﻿group Common
+
+  Aether
+  Freya.Types.Http
+  Freya.Types.Language
+
+group Async
+
+  Freya.Core
+  Freya.Optics.Http
+  Hephaestus
