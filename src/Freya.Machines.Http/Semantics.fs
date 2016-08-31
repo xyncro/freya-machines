@@ -1,5 +1,6 @@
 ﻿namespace Freya.Machines.Http
 
+open System.Text
 open Aether
 open Aether.Operators
 open Freya.Core
@@ -195,3 +196,19 @@ module internal Representation =
         >>= negotiate
         >>= handler
         >>= write
+
+(* Represent
+
+   Helper functions for default simple representations of basic data types, in
+   the default case, a simple text response. *)
+
+[<RequireQualifiedAccess>]
+module Represent =
+
+    let text (text: string) =
+        { Description =
+            { Charset = Some Charset.Utf8
+              Encodings = None
+              MediaType = Some MediaType.Text
+              Languages = None }
+          Data = Encoding.UTF8.GetBytes text }
