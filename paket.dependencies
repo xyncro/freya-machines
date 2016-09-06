@@ -3,7 +3,6 @@
 group Common
 
   source http://nuget.org/api/v2
-  source https://www.myget.org/F/freya/api/v2
 
   nuget Aether                 ~> 8.1
   nuget Freya.Types.Http       ~> 3.0.0-rc
@@ -15,7 +14,6 @@ group Common
 group Async
 
   source http://nuget.org/api/v2
-  source https://www.myget.org/F/freya/api/v2
 
   nuget Freya.Core              ~> 3.0.0-rc
   nuget Freya.Optics.Http       ~> 3.0.0-rc
@@ -26,7 +24,6 @@ group Async
 group Hopac
 
   source http://nuget.org/api/v2
-  source https://www.myget.org/F/freya/api/v2
 
   nuget Freya.Core.Hopac              ~> 3.0.0-rc
   nuget Freya.Optics.Http.Hopac       ~> 3.0.0-rc
@@ -50,7 +47,6 @@ group Test
 
   framework: >= net45
   source http://nuget.org/api/v2
-  source https://www.myget.org/F/freya/api/v2
 
   nuget Freya.Testing           ~> 3.0.0-rc
   nuget Freya.Testing.Hopac     ~> 3.0.0-rc

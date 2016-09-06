@@ -6,14 +6,7 @@ NUGET
     Aether (8.1.2)
     Anat (1.0)
     FParsec (1.0.2)
-    Hekate (3.2)
-      Aether (>= 8.0.2 < 9.0)
-    Hephaestus (4.0)
-      Aether (>= 8.1 < 9.0)
-      Anat (>= 1.0 < 2.0)
-      Hekate (>= 3.2 < 4.0)
-  remote: https://www.myget.org/F/freya/api/v2
-    Freya.Core (3.0.0-rc03)
+    Freya.Core (3.0.0-rc04)
       Aether (>= 8.1 < 9.0)
     Freya.Optics (3.0.0-rc01)
       Aether (>= 8.1 < 9.0)
@@ -60,12 +53,18 @@ NUGET
     Freya.Types.Uri (3.0.0-rc01)
       FParsec (>= 1.0 < 2.0)
       Freya.Types (>= 3.0.0-rc01)
+    Hekate (3.2)
+      Aether (>= 8.0.2 < 9.0)
+    Hephaestus (4.0)
+      Aether (>= 8.1 < 9.0)
+      Anat (>= 1.0 < 2.0)
+      Hekate (>= 3.2 < 4.0)
 
 GROUP Build
 FRAMEWORK: >= NET45
 NUGET
   remote: http://www.nuget.org/api/v2
-    FAKE (4.39)
+    FAKE (4.39.1)
 GITHUB
   remote: xyncro/build
     build.fsx (11ad497d50e7b5071bea53cde53b3cfe4b113793)
@@ -74,9 +73,6 @@ NUGET
   remote: http://www.nuget.org/api/v2
     Aether (8.1.2)
     FParsec (1.0.2)
-    Hekate (3.2)
-      Aether (>= 8.0.2 < 9.0)
-  remote: https://www.myget.org/F/freya/api/v2
     Freya.Types (3.0.0-rc01)
       FParsec (>= 1.0 < 2.0)
     Freya.Types.Http (3.0.0-rc01)
@@ -102,6 +98,8 @@ NUGET
     Freya.Types.Uri (3.0.0-rc01)
       FParsec (>= 1.0 < 2.0)
       Freya.Types (>= 3.0.0-rc01)
+    Hekate (3.2)
+      Aether (>= 8.0.2 < 9.0)
 
 GROUP Hopac
 NUGET
@@ -109,18 +107,7 @@ NUGET
     Aether (8.1.2)
     Anat (1.0)
     FParsec (1.0.2)
-    FSharp.Core (4.0.0.1)
-    Hekate (3.2)
-      Aether (>= 8.0.2 < 9.0)
-    Hephaestus.Hopac (4.0)
-      Aether (>= 8.1 < 9.0)
-      Anat (>= 1.0 < 2.0)
-      Hekate (>= 3.2 < 4.0)
-      Hopac (>= 0.0 < 1.0)
-    Hopac (0.3.13)
-      FSharp.Core (>= 3.1.2.5)
-  remote: https://www.myget.org/F/freya/api/v2
-    Freya.Core.Hopac (3.0.0-rc03)
+    Freya.Core.Hopac (3.0.0-rc04)
       Aether (>= 8.1 < 9.0)
       Hopac (>= 0.0 < 1.0)
     Freya.Optics (3.0.0-rc01)
@@ -168,12 +155,35 @@ NUGET
     Freya.Types.Uri (3.0.0-rc01)
       FParsec (>= 1.0 < 2.0)
       Freya.Types (>= 3.0.0-rc01)
+    FSharp.Core (4.0.0.1)
+    Hekate (3.2)
+      Aether (>= 8.0.2 < 9.0)
+    Hephaestus.Hopac (4.0)
+      Aether (>= 8.1 < 9.0)
+      Anat (>= 1.0 < 2.0)
+      Hekate (>= 3.2 < 4.0)
+      Hopac (>= 0.0 < 1.0)
+    Hopac (0.3.13)
+      FSharp.Core (>= 3.1.2.5)
 
 GROUP Test
 FRAMEWORK: >= NET45
 NUGET
   remote: http://www.nuget.org/api/v2
     Aether (8.1.2)
+    Freya.Core (3.0.0-rc04)
+      Aether (>= 8.1 < 9.0)
+    Freya.Core.Hopac (3.0.0-rc04)
+      Aether (>= 8.1 < 9.0)
+      Hopac (>= 0.0 < 1.0)
+    Freya.Testing (3.0.0-rc02)
+      Aether (>= 8.1 < 9.0)
+      Freya.Core (>= 3.0.0-rc < 3.1.0-rc)
+      Unquote
+    Freya.Testing.Hopac (3.0.0-rc02)
+      Aether (>= 8.1 < 9.0)
+      Freya.Core.Hopac (>= 3.0.0-rc < 3.1.0-rc)
+      Unquote
     FSharp.Core (4.0.0.1)
     Hopac (0.3.13)
       FSharp.Core (>= 3.1.2.5)
@@ -207,17 +217,3 @@ NUGET
     xunit.extensibility.execution (2.1)
       xunit.extensibility.core (2.1)
     xunit.runner.console (2.1)
-  remote: https://www.myget.org/F/freya/api/v2
-    Freya.Core (3.0.0-rc03)
-      Aether (>= 8.1 < 9.0)
-    Freya.Core.Hopac (3.0.0-rc03)
-      Aether (>= 8.1 < 9.0)
-      Hopac (>= 0.0 < 1.0)
-    Freya.Testing (3.0.0-rc02)
-      Aether (>= 8.1 < 9.0)
-      Freya.Core (>= 3.0.0-rc < 3.1.0-rc)
-      Unquote
-    Freya.Testing.Hopac (3.0.0-rc02)
-      Aether (>= 8.1 < 9.0)
-      Freya.Core.Hopac (>= 3.0.0-rc < 3.1.0-rc)
-      Unquote
