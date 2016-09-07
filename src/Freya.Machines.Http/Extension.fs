@@ -65,7 +65,7 @@ module HttpMachine =
         let prototype = Prototype.create model
         let machine = Machine.create prototype configuration
 
-        Machine.execute machine *> Pipeline.next
+        Machine.execute machine *> Pipeline.halt
 
 (* Extensions *)
 
