@@ -163,10 +163,16 @@ module internal Representation =
 
     (* Representation *)
 
-    let private body =
+    let rec private body =
             function | data -> !. Request.method_
                               >>= function | HEAD -> Freya.empty
-                                           | _ -> Response.body_ %= (fun x -> x.Write (data, 0, data.Length); x)
+                                           | _ -> length data *> content data
+
+    and private length =
+            function | (data: _ []) -> Response.Headers.contentLength_ .= Some (ContentLength (data.Length))
+
+    and private content =
+            function | data -> Response.body_ %= (fun x -> x.Write (data, 0, data.Length); x)
 
     let private charset =
             function | Some (Charset charset) -> charset_ .= Some charset
