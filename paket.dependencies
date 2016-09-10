@@ -19,7 +19,7 @@ group Async
   nuget Freya.Optics.Http       ~> 3.0.0-rc
   nuget Freya.Optics.Http.Cors  ~> 3.0.0-rc
   nuget Freya.Optics.Http.Patch ~> 3.0.0-rc
-  nuget Hephaestus              ~> 4
+  nuget Hephaestus              ~> 5
 
 group Hopac
 
@@ -29,7 +29,7 @@ group Hopac
   nuget Freya.Optics.Http.Hopac       ~> 3.0.0-rc
   nuget Freya.Optics.Http.Cors.Hopac  ~> 3.0.0-rc
   nuget Freya.Optics.Http.Patch.Hopac ~> 3.0.0-rc
-  nuget Hephaestus.Hopac              ~> 4
+  nuget Hephaestus.Hopac              ~> 5
 
 // Build
 
