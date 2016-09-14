@@ -62,7 +62,7 @@ module Fallback =
             >-> Terminals.fallback_
 
         let fallback k =
-            Terminal.create (key k, "fallback")
+            Terminal.create (key k, "handleFallback")
                 (function | _ -> Operations.ok None None)
                 (function | Get fallback_ x -> x)
 

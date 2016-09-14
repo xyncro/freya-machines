@@ -77,12 +77,12 @@ module Content =
             >-> Terminals.unsupportedMediaType_
 
         let lengthRequired k =
-            Terminal.create (key k, "length-required")
+            Terminal.create (key k, "handleLengthRequired")
                 (function | _ -> Operations.lengthRequired)
                 (function | Get lengthRequired_ x -> x)
 
         let unsupportedMediaType k =
-            Terminal.create (key k, "unsupported-media-type")
+            Terminal.create (key k, "handleUnsupportedMediaType")
                 (function | _ -> Operations.unsupportedMediaType)
                 (function | Get unsupportedMediaType_ x -> x)
 
@@ -93,17 +93,17 @@ module Content =
     module Decisions =
 
         let rec lengthDefined k s =
-            Decision.create (key k, "length-defined")
+            Decision.create (key k, "lengthDefined")
                 (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.contentLength_))
                 (Terminals.lengthRequired k, hasMediaType k s)
 
         and hasMediaType k s =
-            Decision.create (key k, "has-media-type")
+            Decision.create (key k, "hasMediaType")
                 (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.contentType_))
                 (s, mediaTypeSupported k s)
 
         and mediaTypeSupported k s =
-            Decision.create (key k, "media-type-supported")
+            Decision.create (key k, "mediaTypeSupported")
                 (function | TryGet Properties.Request.mediaTypes_ x -> Value.Freya.bind supported x
                           | _ -> Static true)
                 (Terminals.unsupportedMediaType k, s)

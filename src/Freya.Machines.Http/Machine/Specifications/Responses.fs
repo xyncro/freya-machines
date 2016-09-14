@@ -96,7 +96,7 @@ module Responses =
                 >-> Terminals.ok_
 
             let noContent k =
-                Terminal.create (key k, "no-content")
+                Terminal.create (key k, "handleNoContent")
                     (function | _ -> Operations.noContent)
                     (function | Get noContent_ x -> x)
 
@@ -126,7 +126,7 @@ module Responses =
                 >-> Decisions.noContent_
 
             let noContent k =
-                Decision.create (key k, "no-content")
+                Decision.create (key k, "noContent")
                     (function | TryGetOrElse noContent_ (Static false) x -> x)
                     (Terminals.ok k, Terminals.noContent k)
 
@@ -202,7 +202,7 @@ module Responses =
                 >-> Terminals.created_
 
             let created k =
-                Terminal.create (key k, "created")
+                Terminal.create (key k, "handleCreated")
                     (function | _ -> Operations.created)
                     (function | Get created_ x -> x)
 
@@ -280,7 +280,7 @@ module Responses =
                 >-> Terminals.notFound_
 
             let notFound k =
-                Terminal.create (key k, "not-found")
+                Terminal.create (key k, "handleNotFound")
                     (function | _ -> Operations.notFound)
                     (function | Get notFound_ x -> x)
 
@@ -381,17 +381,17 @@ module Responses =
                 >-> Terminals.movedPermanently_
 
             let gone k =
-                Terminal.create (key k, "gone")
+                Terminal.create (key k, "handleGone")
                     (function | _ -> Operations.gone)
                     (function | Get gone_ x -> x)
 
             let temporaryRedirect k =
-                Terminal.create (key k, "temporary-redirect")
+                Terminal.create (key k, "handleTemporaryRedirect")
                     (function | _ -> Operations.temporaryRedirect)
                     (function | Get temporaryRedirect_ x -> x) 
 
             let movedPermanently k =
-                Terminal.create (key k, "moved-permanently")
+                Terminal.create (key k, "handleMovedPermanently")
                     (function | _ -> Operations.movedPermanently)
                     (function | Get movedPermanently_ x -> x)
 
@@ -418,17 +418,17 @@ module Responses =
                 >-> Decisions.movedPermanently_
 
             let rec gone k s =
-                Decision.create (key k, "see-other")
+                Decision.create (key k, "gone")
                     (function | TryGetOrElse gone_ (Static false) x -> x)
                     (movedTemporarily k s, Terminals.gone k)
 
             and movedTemporarily k s =
-                Decision.create (key k, "found")
+                Decision.create (key k, "movedTemporarily")
                     (function | TryGetOrElse movedTemporarily_ (Static false) x -> x)
                     (movedPermanently k s, Terminals.temporaryRedirect k)
 
             and movedPermanently k s =
-                Decision.create (key k, "see-other")
+                Decision.create (key k, "movedPermanently")
                     (function | TryGetOrElse movedPermanently_ (Static false) x -> x)
                     (s, Terminals.movedPermanently k)
 
@@ -487,7 +487,7 @@ module Responses =
                 >-> Terminals.options_
 
             let options k =
-                Terminal.create (key k, "options")
+                Terminal.create (key k, "handleOptions")
                     (function | _ -> Operations.options)
                     (function | Get options_ x -> x)
 
@@ -588,17 +588,17 @@ module Responses =
                 >-> Terminals.multipleChoices_
 
             let seeOther k =
-                Terminal.create (key k, "see-other")
+                Terminal.create (key k, "handleSeeOther")
                     (function | _ -> Operations.seeOther)
                     (function | Get seeOther_ x -> x) 
 
             let found k =
-                Terminal.create (key k, "found")
+                Terminal.create (key k, "handleFound")
                     (function | _ -> Operations.found)
                     (function | Get found_ x -> x)
 
             let multipleChoices k =
-                Terminal.create (key k, "multiple-choices")
+                Terminal.create (key k, "handleMultipleChoices")
                     (function | _ -> Operations.multipleChoices)
                     (function | Get multipleChoices_ x -> x)
 
@@ -625,7 +625,7 @@ module Responses =
                 >-> Decisions.multipleChoices_
 
             let rec seeOther k s =
-                Decision.create (key k, "see-other")
+                Decision.create (key k, "seeOther")
                     (function | TryGetOrElse seeOther_ (Static false) x -> x)
                     (found k s, Terminals.seeOther k)
 
@@ -635,7 +635,7 @@ module Responses =
                     (multipleChoices k s, Terminals.found k)
 
             and multipleChoices k s =
-                Decision.create (key k, "see-other")
+                Decision.create (key k, "multipleChoices")
                     (function | TryGetOrElse multipleChoices_ (Static false) x -> x)
                     (s, Terminals.multipleChoices k)
 

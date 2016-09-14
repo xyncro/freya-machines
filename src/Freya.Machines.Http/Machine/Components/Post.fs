@@ -15,7 +15,7 @@ module Post =
 
     [<Literal>]
     let Name =
-        "http-post"
+        "httpPost"
 
     (* Component *)
 

@@ -15,7 +15,7 @@ module Delete =
 
     [<Literal>]
     let Name =
-        "http-delete"
+        "httpDelete"
 
     (* Component *)
 

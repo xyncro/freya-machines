@@ -110,7 +110,7 @@ module Negotiations =
             >-> Terminals.notAcceptable_
 
         let notAcceptable k =
-            Terminal.create (key k, "not-acceptable")
+            Terminal.create (key k, "handleNotAcceptable")
                 (function | _ -> Operations.notAcceptable)
                 (function | Get notAcceptable_ x -> x)
 
@@ -121,45 +121,45 @@ module Negotiations =
     module Decisions =
 
         let rec hasAccept k s =
-            Decision.create (key k, "has-accept")
+            Decision.create (key k, "hasAccept")
                 (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.accept_))
                 (hasAcceptLanguage k s, acceptMatches k s)
 
         and acceptMatches k s =
-            Decision.create (key k, "accept-matches")
+            Decision.create (key k, "acceptMatches")
                 (function | TryGet mediaTypes_ x -> map negotiable (bind (Some >> mediaType) x)
                           | _ -> Static true)
                 (Terminals.notAcceptable k, hasAcceptLanguage k s)
 
         and hasAcceptLanguage k s =
-            Decision.create (key k, "has-accept-language")
+            Decision.create (key k, "hasAcceptLanguage")
                 (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.acceptLanguage_))
                 (hasAcceptCharset k s, acceptLanguageMatches k s)
 
         and acceptLanguageMatches k s =
-            Decision.create (key k, "accept-language-matches")
+            Decision.create (key k, "acceptLanguageMatches")
                 (function | TryGet languages_ x -> map negotiable (bind (Some >> language) x)
                           | _ -> Static true)
                 (Terminals.notAcceptable k, hasAcceptCharset k s)
 
         and hasAcceptCharset k s =
-            Decision.create (key k, "has-accept-charset")
+            Decision.create (key k, "hasAcceptCharset")
                 (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.acceptCharset_))
                 (hasAcceptEncoding k s, acceptCharsetMatches k s)
 
         and acceptCharsetMatches k s =
-            Decision.create (key k, "accept-charset-matches")
+            Decision.create (key k, "acceptCharsetMatches")
                 (function | TryGet charsets_ x -> map negotiable (bind (Some >> charset) x)
                           | _ -> Static true)
                 (Terminals.notAcceptable k, hasAcceptEncoding k s)
 
         and hasAcceptEncoding k s =
-            Decision.create (key k, "has-accept-encoding")
+            Decision.create (key k, "hasAcceptEncoding")
                 (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.acceptEncoding_))
                 (s, acceptEncodingMatches k s)
 
         and acceptEncodingMatches k s =
-            Decision.create (key k, "accept-encoding-matches")
+            Decision.create (key k, "acceptEncodingMatches")
                 (function | TryGet contentCodings_ x -> map negotiable (bind (Some >> contentCoding) x)
                           | _ -> Static true)
                 (Terminals.notAcceptable k, s)

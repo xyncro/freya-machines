@@ -75,7 +75,7 @@ module Conflict =
             >-> Terminals.conflict_
 
         let conflict k =
-            Terminal.create (key k, "conflict")
+            Terminal.create (key k, "handleConflict")
                 (function | _ -> Operations.conflict)
                 (function | Get conflict_ x -> x)
 

@@ -50,7 +50,6 @@ module Operations =
          *> lastModified modified
          *> date ()
 
-
     let options =
             status 200
          *> phrase "Options"

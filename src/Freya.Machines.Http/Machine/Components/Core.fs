@@ -14,7 +14,7 @@ module Core =
 
     [<Literal>]
     let Name =
-        "http-core"
+        "httpCore"
 
     (* Component *)
 

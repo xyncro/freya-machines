@@ -17,7 +17,7 @@ module Cors =
 
     [<Literal>]
     let Name =
-        "http-cors"
+        "httpCors"
 
     (* Component *)
 
@@ -32,8 +32,8 @@ module Cors =
             { Name = Name
               Description = None }
           Requirements =
-            { Required = set [ "http-options" ]
+            { Required = set [ "httpOptions" ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ Options.Name; "method"; "method-matches-decision" ], Left, simple)
-              Splice (Key [ Options.Name; "method"; "method-matches-decision" ], Right, preflight) ] }
+            [ Splice (Key [ Options.Name; "method"; "methodMatches-decision" ], Left, simple)
+              Splice (Key [ Options.Name; "method"; "methodMatches-decision" ], Right, preflight) ] }

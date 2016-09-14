@@ -89,12 +89,12 @@ module Permissions =
             >-> Terminals.forbidden_
 
         let unauthorized k =
-            Terminal.create (key k, "unauthorized")
+            Terminal.create (key k, "handleUnauthorized")
                 (function | _ -> Operations.unauthorized)
                 (function | Get unauthorized_ x -> x)
 
         let forbidden k =
-            Terminal.create (key k, "forbidden")
+            Terminal.create (key k, "handleForbidden")
                 (function | _ -> Operations.forbidden)
                 (function | Get forbidden_ x -> x)
 

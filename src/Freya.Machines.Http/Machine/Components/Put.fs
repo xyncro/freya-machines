@@ -15,7 +15,7 @@ module Put =
 
     [<Literal>]
     let Name =
-        "http-put"
+        "httpPut"
 
     (* Component *)
 

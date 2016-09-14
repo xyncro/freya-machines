@@ -71,7 +71,7 @@ module Preconditions =
                 >-> Terminals.preconditionFailed_
 
             let preconditionFailed k =
-                Terminal.create (key k, "precondition-failed")
+                Terminal.create (key k, "handlePreconditionFailed")
                     (function | _ -> Operations.preconditionFailed)
                     (function | Get preconditionFailed_ x -> x)
 
@@ -92,12 +92,12 @@ module Preconditions =
         module Decisions =
 
             let rec hasIfMatch k s =
-                Decision.create (key k, "has-if-match")
+                Decision.create (key k, "hasIfMatch")
                     (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifMatch_))
                     (hasIfUnmodifiedSince k s, ifMatchMatches k s)
 
             and ifMatchMatches k s =
-                Decision.create (key k, "if-match-matches")
+                Decision.create (key k, "ifMatchMatches")
                     (function | TryGet Properties.Resource.entityTag_ x -> Value.Freya.bind matches x
                               | _ -> Static true)
                     (Shared.Terminals.preconditionFailed k, s)
@@ -117,12 +117,12 @@ module Preconditions =
                              | _ -> false
 
             and hasIfUnmodifiedSince k s =
-                Decision.create (key k, "has-if-unmodified-since")
+                Decision.create (key k, "hasIfUnmodifiedSince")
                     (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifUnmodifiedSince_))
                     (s, ifUnmodifiedSinceMatches k s)
 
             and ifUnmodifiedSinceMatches k s =
-                Decision.create (key k, "if-unmodified-since-matches")
+                Decision.create (key k, "ifUnmodifiedSinceMatches")
                     (function | TryGet Properties.Resource.lastModified_ x -> Value.Freya.bind earlier x
                               | _ -> Static true)
                     (Shared.Terminals.preconditionFailed k, s)
@@ -187,7 +187,7 @@ module Preconditions =
                 >-> Terminals.notModified_
 
             let notModified k =
-                Terminal.create (key k, "not-modified")
+                Terminal.create (key k, "handleNotMdified")
                     (function | _ -> Operations.notModified)
                     (function | Get notModified_ x -> x)
 
@@ -198,12 +198,12 @@ module Preconditions =
         module Decisions =
 
             let rec hasIfNoneMatch k s =
-                Decision.create (key k, "has-if-none-match")
+                Decision.create (key k, "hasIfNoneMatch")
                     (fun _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifNoneMatch_))
                     (hasIfModifiedSince k s, ifNoneMatchMatches k s)
 
             and ifNoneMatchMatches k s =
-                Decision.create (key k, "if-none-match-matches")
+                Decision.create (key k, "ifNoneMatchMatches")
                     (function | TryGet Properties.Resource.entityTag_ x -> Value.Freya.bind matches x
                               | _ -> Static true)
                     (Terminals.notModified k, s)
@@ -223,12 +223,12 @@ module Preconditions =
                              | Weak y -> x = y 
 
             and hasIfModifiedSince k s =
-                Decision.create (key k, "has-if-modified-since")
+                Decision.create (key k, "hasIfModifiedSince")
                     (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifModifiedSince_))
                     (s, ifModifiedSinceMatches k s)
 
             and ifModifiedSinceMatches k s =
-                Decision.create (key k, "if-modified-since-matches")
+                Decision.create (key k, "ifModifiedSinceMatches")
                     (function | TryGet Properties.Resource.lastModified_ x -> Value.Freya.bind later x
                               | _ -> Static true)
                     (Terminals.notModified k, s)
@@ -260,12 +260,12 @@ module Preconditions =
         module Decisions =
 
             let rec hasIfNoneMatch k s =
-                Decision.create (key k, "has-if-none-match")
+                Decision.create (key k, "hasIfNoneMatch")
                     (function | _ -> Dynamic (Option.isSome <!> !. Request.Headers.ifNoneMatch_))
                     (s, ifNoneMatchMatches k s)
 
             and ifNoneMatchMatches k s =
-                Decision.create (key k, "if-none-match-matches")
+                Decision.create (key k, "ifNoneMatchMatches")
                     (function | TryGet Properties.Resource.entityTag_ x -> Value.Freya.bind matches x
                               | _ -> Static true)
                     (Shared.Terminals.preconditionFailed k, s)

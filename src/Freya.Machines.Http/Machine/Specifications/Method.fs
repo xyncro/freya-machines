@@ -35,7 +35,7 @@ module Method =
     module Decisions =
 
         let rec methodMatches k methods =
-            Decision.create (key k, "method-matches")
+            Decision.create (key k, "methodMatches")
                 (function | TryGet Properties.Request.methods_ (Static x) when disjoint methods x -> Static false
                           | TryGet Properties.Request.methods_ _ -> Dynamic (matches methods)
                           | _ when disjoint methods Defaults.methods -> Static false

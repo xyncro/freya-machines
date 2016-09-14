@@ -102,17 +102,17 @@ module Assertions =
             >-> Terminals.notImplemented_
 
         let serviceUnavailable k =
-            Terminal.create (key k, "service-unavailable")
+            Terminal.create (key k, "handleServiceUnavailable")
                 (function | _ -> Operations.serviceUnavailable)
                 (function | Get serviceUnavailable_ x -> x) 
 
         let httpVersionNotSupported k =
-            Terminal.create (key k, "http-version-not-supported")
+            Terminal.create (key k, "handleHttpVersionNotSupported")
                 (function | _ -> Operations.httpVersionNotSupported)
                 (function | Get httpVersionNotSupported_ x -> x)
 
         let notImplemented k =
-            Terminal.create (key k, "not-implemented")
+            Terminal.create (key k, "handleNotImplemented")
                 (function | _ -> Operations.notImplemented)
                 (function | Get notImplemented_ x -> x)
 
@@ -135,12 +135,12 @@ module Assertions =
             >-> Decisions.httpVersionSupported_
 
         let rec serviceAvailable k s =
-            Decision.create (key k, "service-available")
+            Decision.create (key k, "serviceAvailable")
                 (function | TryGetOrElse serviceAvailable_ (Static true) x -> x)
                 (Terminals.serviceUnavailable k, httpVersionSupported k s)
 
         and httpVersionSupported k s =
-            Decision.create (key k, "http-version-supported")
+            Decision.create (key k, "httpVersionSupported")
                 (function | TryGet httpVersionSupported_ x -> x
                           | _ -> Dynamic supported)
                 (Terminals.httpVersionNotSupported k, methodImplemented k s)
@@ -151,7 +151,7 @@ module Assertions =
             <!> !. Request.httpVersion_
 
         and methodImplemented k s =
-            Decision.create (key k, "method-implemented")
+            Decision.create (key k, "methodImplemented")
                 (function | TryGet Properties.Request.methods_ x -> Value.Freya.bind knownCustom x
                           | _ -> Dynamic nonCustom)
                 (Terminals.notImplemented k, s)

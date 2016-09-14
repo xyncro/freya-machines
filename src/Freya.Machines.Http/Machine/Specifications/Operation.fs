@@ -90,12 +90,12 @@ module Operation =
             >-> Terminals.accepted_
 
         let internalServerError k =
-            Terminal.create (key k, "internal-server-error")
+            Terminal.create (key k, "handleInternalServerError")
                 (function | _ -> Operations.internalServerError)
                 (function | Get internalServerError_ x -> x)
 
         let accepted k =
-            Terminal.create (key k, "accepted")
+            Terminal.create (key k, "handleAccepted")
                 (function | _ -> Operations.accepted)
                 (function | Get accepted_ x -> x)
 

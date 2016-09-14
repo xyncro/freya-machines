@@ -15,7 +15,7 @@ module GetOrHead =
 
     [<Literal>]
     let Name =
-        "http-get-or-head"
+        "httpGetOrHead"
 
     (* Component *)
 
@@ -31,7 +31,7 @@ module GetOrHead =
 
     let component =
         { Metadata =
-            { Name = "http.get"
+            { Name = Name
               Description = None }
           Requirements =
             { Required = set [ Core.Name ]

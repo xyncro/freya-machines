@@ -9,95 +9,14 @@ open Freya.Optics.Http
 open Freya.Types.Http
 open Freya.Types.Language
 
-(* Negotiation
+// Negotiation
 
-   Available and Acceptable types, representing the available charsets,
-   encodings etc. defined for a resource (where defined) and the acceptable
-   values from the available set (where defined) given a request. When the
-   request does not specify criteria, or where no values are offered as part of
-   the availablity data, the negotiation is defined to be Free, and at the
-   discretion of the implementation. *)
-
-type Acceptance<'a> =
-    | Acceptable of 'a list
-    | Free
-
-(* Negotiation
-
-   Functions for determining the negotiable values of a representation given
-   defined available values. Each negotiator function returns a function which
-   will negotiate the relevant aspect of the request. *)
-
-[<RequireQualifiedAccess>]
-module internal Negotiation =
-
-    (* Negotiation *)
-
-    let private negotiated =
-        function | Some x -> Acceptable x
-                 | _ -> Free
-
-    let negotiable =
-        function | Acceptable (_ :: _) | Free -> true
-                 | _ -> false
-
-    (* Charset *)
-
-    [<RequireQualifiedAccess>]
-    module Charset =
-
-        let private negotiate supported =
-            function | Some (AcceptCharset x) -> Acceptable (Charset.negotiate supported (Set.ofList x))
-                     | _ -> Free
-
-        let negotiator =
-            function | Some x -> negotiate x <!> !. Request.Headers.acceptCharset_
-                     | _ -> Freya.init Free
-
-    (* ContentCoding *)
-
-    [<RequireQualifiedAccess>]
-    module ContentCoding =
-
-        let private negotiate supported =
-            function | Some (AcceptEncoding x) -> Acceptable (ContentCoding.negotiate supported (Set.ofList x))
-                     | _ -> Free
-
-        let negotiator =
-            function | Some x -> negotiate x <!> !. Request.Headers.acceptEncoding_
-                     | _ -> Freya.init Free
-
-    (* Language *)
-
-    [<RequireQualifiedAccess>]
-    module Language =
-
-        let private negotiate supported =
-            function | Some (AcceptLanguage x) -> Acceptable (Language.negotiate supported (Set.ofList x))
-                     | _ -> Free
-
-        let negotiator =
-            function | Some x -> negotiate x <!> !. Request.Headers.acceptLanguage_
-                     | _ -> Freya.init Free
-
-    (* MediaType *)
-
-    [<RequireQualifiedAccess>]
-    module MediaType =
-
-        let private negotiate supported =
-            function | Some (Accept x) -> Acceptable (MediaType.negotiate supported (Set.ofList x))
-                     | _ -> Free
-
-        let negotiator =
-            function | Some x -> negotiate x <!> !. Request.Headers.accept_
-                     | _ -> Freya.init Free
-
-(* Representation
-
-   Types defining the data and representation of a response to be returned to
-   the client, where the representation (defined by the Description) type is
-   likely a result of the negotiation data provided. *)
+// Available and Acceptable types, representing the available charsets,
+// encodings etc. defined for a resource (where defined) and the acceptable
+// values from the available set (where defined) given a request. When the
+// request does not specify criteria, or where no values are offered as part of
+// the availablity data, the negotiation is defined to be Free, and at the
+// discretion of the implementation.
 
 type Available =
     { Charsets: Set<Charset> option
@@ -110,6 +29,85 @@ type Available =
       Encodings: Acceptance<ContentCoding>
       MediaTypes: Acceptance<MediaType>
       Languages: Acceptance<LanguageTag> }
+
+ and Acceptance<'a> =
+    | Acceptable of 'a list
+    | Free
+
+// Functions for determining the negotiable values of a representation given
+// defined available values. Each negotiator function returns a function which
+// will negotiate the relevant aspect of the request.
+
+[<RequireQualifiedAccess>]
+module internal Negotiation =
+
+    // Negotiation
+
+    let private negotiated =
+        function | Some x -> Acceptable x
+                 | _ -> Free
+
+    let negotiable =
+        function | Acceptable (_ :: _) | Free -> true
+                 | _ -> false
+
+    // Charset
+
+    [<RequireQualifiedAccess>]
+    module Charset =
+
+        let private negotiate supported =
+            function | Some (AcceptCharset x) -> Acceptable (Charset.negotiate supported (Set.ofList x))
+                     | _ -> Free
+
+        let negotiator =
+            function | Some x -> negotiate x <!> !. Request.Headers.acceptCharset_
+                     | _ -> Freya.init Free
+
+    // ContentCoding
+
+    [<RequireQualifiedAccess>]
+    module ContentCoding =
+
+        let private negotiate supported =
+            function | Some (AcceptEncoding x) -> Acceptable (ContentCoding.negotiate supported (Set.ofList x))
+                     | _ -> Free
+
+        let negotiator =
+            function | Some x -> negotiate x <!> !. Request.Headers.acceptEncoding_
+                     | _ -> Freya.init Free
+
+    // Language
+
+    [<RequireQualifiedAccess>]
+    module Language =
+
+        let private negotiate supported =
+            function | Some (AcceptLanguage x) -> Acceptable (Language.negotiate supported (Set.ofList x))
+                     | _ -> Free
+
+        let negotiator =
+            function | Some x -> negotiate x <!> !. Request.Headers.acceptLanguage_
+                     | _ -> Freya.init Free
+
+    // MediaType
+
+    [<RequireQualifiedAccess>]
+    module MediaType =
+
+        let private negotiate supported =
+            function | Some (Accept x) -> Acceptable (MediaType.negotiate supported (Set.ofList x))
+                     | _ -> Free
+
+        let negotiator =
+            function | Some x -> negotiate x <!> !. Request.Headers.accept_
+                     | _ -> Freya.init Free
+
+// Representation
+
+// Types defining the data and representation of a response to be returned to
+// the client, where the representation (defined by the Description) type is
+// likely a result of the negotiation data provided.
 
 type Representation =
     { Data: byte []
@@ -129,17 +127,17 @@ type Representation =
       MediaType: MediaType option
       Languages: LanguageTag list option }
 
-(* Representation
+// Representation
 
-   Representation logic for determining the appropriate specification of a
-   resource given the negotiation available, and writing a representation
-   to the response given the data and a description of that data. *)
+// Representation logic for determining the appropriate specification of a
+// resource given the negotiation available, and writing a representation
+// to the response given the data and a description of that data.
 
 [<RequireQualifiedAccess>]
 [<CompilationRepresentation (CompilationRepresentationFlags.ModuleSuffix)>]
 module internal Representation =
 
-    (* Optics *)
+    // Optics
 
     let private charset_ =
             Response.Headers.contentType_
@@ -148,7 +146,7 @@ module internal Representation =
         >?> Parameters.parameters_
         >?> Map.value_ "charset"
 
-    (* Negotiation *)
+    // Negotiation
 
     let private negotiate (available: Available) : Freya<Acceptable> =
             fun charsets encodings mediaTypes languages ->
@@ -161,7 +159,7 @@ module internal Representation =
         <*> Negotiation.MediaType.negotiator available.MediaTypes
         <*> Negotiation.Language.negotiator available.Languages
 
-    (* Representation *)
+    // Representation
 
     let rec private body =
             function | data -> !. Request.method_
@@ -203,10 +201,10 @@ module internal Representation =
         >>= handler
         >>= write
 
-(* Represent
+// Represent
 
-   Helper functions for default simple representations of basic data types, in
-   the default case, a simple text response. *)
+// Helper functions for default simple representations of basic data types, in
+// the default case, a simple text response.
 
 [<RequireQualifiedAccess>]
 module Represent =

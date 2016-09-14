@@ -15,7 +15,7 @@ module Options =
 
     [<Literal>]
     let Name =
-        "http-options"
+        "httpOptions"
 
     (* Component *)
 
@@ -31,4 +31,4 @@ module Options =
             { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ Core.Name; "validations"; "bad-request-decision" ], Left, options) ] }
+            [ Splice (Key [ Core.Name; "validations"; "badRequest-decision" ], Left, options) ] }

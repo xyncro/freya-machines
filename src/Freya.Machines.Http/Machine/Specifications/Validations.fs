@@ -118,23 +118,23 @@ module Validations =
             >-> Terminals.badRequest_
 
         let expectationFailed k =
-            Terminal.create (key k, "expectation-failed")
+            Terminal.create (key k, "handleExpectationFailed")
                 (function | _ -> Operations.expectationFailed)
                 (function | Get expectationFailed_ x -> x)
 
         let methodNotAllowed k =
-            Terminal.create (key k, "method-not-allowed")
+            Terminal.create (key k, "handleMethodNotAllowed")
                 (function | TryGet Properties.Request.methods_ x -> Freya.Value.apply Operations.methodNotAllowed x
                           | _ -> Operations.methodNotAllowed Defaults.methods)
                 (function | Get methodNotAllowed_ x -> x)
 
         let uriTooLong k =
-            Terminal.create (key k, "uri-too-long")
+            Terminal.create (key k, "handleUriTooLong")
                 (function | _ -> Operations.uriTooLong)
                 (function | Get uriTooLong_ x -> x)
 
         let badRequest k =
-            Terminal.create (key k, "bad-request")
+            Terminal.create (key k, "handleBadRequest")
                 (function | _ -> Operations.badRequest)
                 (function | Get badRequest_ x -> x)
 
@@ -161,12 +161,12 @@ module Validations =
             >-> Decisions.badRequest_
 
         let rec expectationMet k s =
-            Decision.create (key k, "expectation-met")
+            Decision.create (key k, "expectationMet")
                 (function | TryGetOrElse expectationMet_ (Static true) x -> x)
                 (Terminals.expectationFailed k, methodAllowed k s)
 
         and methodAllowed k s =
-            Decision.create (key k, "method-allowed")
+            Decision.create (key k, "methodAllowed")
                 (function | TryGet Properties.Request.methods_ x -> Value.Freya.bind allowed x
                           | _ -> Dynamic (allowed Defaults.methods))
                 (Terminals.methodNotAllowed k, uriTooLong k s)
@@ -177,12 +177,12 @@ module Validations =
             <!> !. Request.method_
 
         and uriTooLong k s =
-            Decision.create (key k, "uri-too-long")
+            Decision.create (key k, "uriTooLong")
                 (function | TryGetOrElse uriTooLong_ (Static false) x -> x)
                 (badRequest k s, Terminals.uriTooLong k)
 
         and badRequest k s =
-            Decision.create (key k, "bad-request")
+            Decision.create (key k, "badRequest")
                 (function | TryGetOrElse badRequest_ (Static false) x -> x)
                 (s, Terminals.badRequest k)
 
