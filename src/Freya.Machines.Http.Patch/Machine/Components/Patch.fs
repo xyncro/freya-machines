@@ -50,5 +50,5 @@ module Patch =
             { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ Core.Name; "fallback"; "fallback-decision" ], Right, main)
-              Splice (Key [ Options.Name; "method"; "methodMatches-decision" ], Right, headers) ] }
+            [ Splice (Key [ Core.Name; "fallback"; "fallback" ], Right, main)
+              Splice (Key [ Options.Name; "method"; "methodMatches" ], Right, headers) ] }

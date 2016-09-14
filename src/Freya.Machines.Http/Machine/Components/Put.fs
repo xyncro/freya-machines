@@ -44,4 +44,4 @@ module Put =
             { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ Core.Name; "fallback"; "fallback-decision" ], Right, put) ] }
+            [ Splice (Key [ Core.Name; "fallback"; "fallback" ], Right, put) ] }

@@ -35,5 +35,5 @@ module Cors =
             { Required = set [ "httpOptions" ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ Options.Name; "method"; "methodMatches-decision" ], Left, simple)
-              Splice (Key [ Options.Name; "method"; "methodMatches-decision" ], Right, preflight) ] }
+            [ Splice (Key [ Options.Name; "method"; "methodMatches" ], Left, simple)
+              Splice (Key [ Options.Name; "method"; "methodMatches" ], Right, preflight) ] }

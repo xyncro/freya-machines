@@ -37,4 +37,4 @@ module Delete =
             { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ Core.Name; "fallback"; "fallback-decision" ], Right, delete) ] }
+            [ Splice (Key [ Core.Name; "fallback"; "fallback" ], Right, delete) ] }

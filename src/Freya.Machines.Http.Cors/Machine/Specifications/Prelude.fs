@@ -15,12 +15,9 @@ open Hephaestus
 [<RequireQualifiedAccess>]
 module internal Decision =
 
-    let private suffix =
-        sprintf "%s-decision"
-
     let create (key, name) decision =
         Specification.Decision.create
-            (Key.add [ suffix name ] key)
+            (Key.add [ name ] key)
             (decision >> Decision.map)
 
 [<RequireQualifiedAccess>]

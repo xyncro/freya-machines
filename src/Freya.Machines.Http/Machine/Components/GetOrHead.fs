@@ -37,4 +37,4 @@ module GetOrHead =
             { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ Core.Name; "fallback"; "fallback-decision" ], Right, getOrHead) ] }
+            [ Splice (Key [ Core.Name; "fallback"; "fallback" ], Right, getOrHead) ] }

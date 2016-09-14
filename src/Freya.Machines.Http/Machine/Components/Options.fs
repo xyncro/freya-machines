@@ -31,4 +31,4 @@ module Options =
             { Required = set [ Core.Name ]
               Preconditions = List.empty }
           Operations =
-            [ Splice (Key [ Core.Name; "validations"; "badRequest-decision" ], Left, options) ] }
+            [ Splice (Key [ Core.Name; "validations"; "badRequest" ], Left, options) ] }

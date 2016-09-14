@@ -70,9 +70,6 @@ module internal Resource =
 [<RequireQualifiedAccess>]
 module internal Decision =
 
-    let private suffix =
-        sprintf "%s-decision"
-
     let create (key, name) decision =
         Specification.Decision.create
             (Key.add [ name ] key)
@@ -88,12 +85,9 @@ module internal Decision =
 [<RequireQualifiedAccess>]
 module internal Terminal =
 
-    let private suffix =
-        sprintf "%s-terminal"
-
     let create (key, name) operation handler =
         Specification.Terminal.create
-            (Key.add [ suffix name ] key)
+            (Key.add [ name ] key)
             (fun configuration ->
 
                 let operation =
