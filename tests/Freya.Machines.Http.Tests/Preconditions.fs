@@ -29,12 +29,22 @@ module Common =
         let matchedSetup =
             Request.Headers.ifMatch_ .= Some (IfMatch (IfMatchChoice.EntityTags [ Strong "foo" ]))
 
+        let matchedSetupWeak = 
+            Request.Headers.ifMatch_ .= Some (IfMatch (IfMatchChoice.EntityTags [ Weak "foo"]))
+
         let unmatchedSetup =
             Request.Headers.ifMatch_ .= Some (IfMatch (IfMatchChoice.EntityTags [ Strong "bar" ]))
+
+        let unmatchedSetupWeak = 
+            Request.Headers.ifMatch_ .= Some (IfMatch (IfMatchChoice.EntityTags [ Weak "bar"]))
 
         let machine =
             freyaHttpMachine {
                 entityTag (Strong "foo") }
+
+        let weakmachine = 
+            freyaHttpMachine {
+                entityTag (Weak "foo") }
 
         verify anySetup defaultMachine [
             Response.statusCode_ => Some 200
@@ -51,10 +61,22 @@ module Common =
             Response.reasonPhrase_ => Some "OK"
             Response.Headers.eTag_ => Some (ETag (Strong "foo")) ]
 
+        verify matchedSetupWeak weakmachine [
+            Response.statusCode_ => Some 200
+            Response.reasonPhrase_ => Some "OK"
+            Response.Headers.eTag_ => Some (ETag (Weak "foo")) ]
+
         verify unmatchedSetup machine [
             Response.statusCode_ => Some 412
             Response.reasonPhrase_ => Some "Precondition Failed"
             Response.Headers.eTag_ => None ]
+
+        verify unmatchedSetupWeak weakmachine [
+            Response.statusCode_ => Some 412
+            Response.reasonPhrase_ => Some "Precondition Failed"
+            Response.Headers.eTag_ => None ]
+
+
 
     (* If-Unmodified-Since *)
 

@@ -110,10 +110,13 @@ module Preconditions =
 
             and private exists =
                     function | Strong x -> List.exists (strong x)
-                             | _ -> fun _ -> false
+                             | Weak x -> List.exists (weak x)
 
             and private strong x =
                     function | Strong y when x = y -> true
+                             | _ -> false
+            and private weak x = 
+                    function | Weak y when x = y -> true
                              | _ -> false
 
             and hasIfUnmodifiedSince k s =
