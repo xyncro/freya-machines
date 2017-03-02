@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DefineConstants Condition="'$(Hopac)' == 'true'">$(DefineConstants);HOPAC</DefineConstants>
   </PropertyGroup>
 
   <Import Project="..\nuget.props" />
