@@ -313,6 +313,8 @@ module Inference =
         [<RequireQualifiedAccess>]
         module Inference =
 
+            let private alwaysTrue : (unit -> bool) = (do ()); fun () -> true
+
             type Defaults =
                 | Defaults
 
@@ -320,7 +322,7 @@ module Inference =
                     x
 
                 static member Operation (x: Freya<unit>) =
-                    Freya.map (x, fun _ -> true)
+                    x |> Freya.map alwaysTrue
 
             let inline defaults (a: ^a, _: ^b) =
                 ((^a or ^b) : (static member Operation: ^a -> Freya<bool>) a)

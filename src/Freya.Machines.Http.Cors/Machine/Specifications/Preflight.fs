@@ -4,6 +4,7 @@
 
 open Freya.Core
 open Freya.Core.Operators
+open Freya.Core.Optics
 open Freya.Machines
 open Freya.Machines.Http.Cors.Machine.Configuration
 open Freya.Machines.Http.Machine.Configuration
