@@ -1,12 +1,10 @@
 <Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>An extension to the Freya HTTP Machine adding Patch support</Description>
+    <PackageTags>$(PackageTags);http;patch</PackageTags>
     <Hopac>true</Hopac>
   </PropertyGroup>
   <Import Project="..\Freya.Machines.Common.targets" />
-  <PropertyGroup>
-    <Tags>$(Tags);http;patch</Tags>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Freya.Machines.Http.Patch\Operations.fs" />
     <Compile Include="..\Freya.Machines.Http.Patch\Machine\Configuration\Extension.fs" />

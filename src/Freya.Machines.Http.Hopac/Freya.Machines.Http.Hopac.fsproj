@@ -1,12 +1,10 @@
 <Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>A Freya machine expressing the core HTTP semantics and logic</Description>
+    <PackageTags>$(PackageTags);http</PackageTags>
     <Hopac>true</Hopac>
   </PropertyGroup>
   <Import Project="..\Freya.Machines.Common.targets" />
-  <PropertyGroup>
-    <Tags>$(Tags);http</Tags>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Freya.Machines.Http\Semantics.fs" />
     <Compile Include="..\Freya.Machines.Http\Operations.fs" />

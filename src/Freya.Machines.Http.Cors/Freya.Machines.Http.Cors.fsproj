@@ -1,11 +1,9 @@
 <Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>An extension to the Freya HTTP Machine adding CORS support</Description>
+    <PackageTags>$(PackageTags);http;cors</PackageTags>
   </PropertyGroup>
   <Import Project="..\Freya.Machines.Common.targets" />
-  <PropertyGroup>
-    <Tags>$(Tags);http;cors</Tags>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Operations.fs" />
     <Compile Include="Machine\Configuration\Extension.fs" />
