@@ -7,7 +7,6 @@ build_script:
   - ps: dotnet --info
   - ps: dotnet restore
   - ps: dotnet build -c Release --version-suffix "aci-${env:APPVEYOR_BUILD_NUMBER}"
-  - ps: dotnet test -c Release tests\Freya.Machines.Tests\Freya.Machines.Tests.fsproj
   - ps: dotnet test -c Release tests\Freya.Machines.Http.Tests\Freya.Machines.Http.Tests.fsproj
   - ps: dotnet test -c Release tests\Freya.Machines.Http.Cors.Tests\Freya.Machines.Http.Cors.Tests.fsproj
   - ps: dotnet test -c Release tests\Freya.Machines.Http.Patch.Tests\Freya.Machines.Http.Patch.Tests.fsproj
