@@ -18,20 +18,35 @@ open Freya.Types.Language
 // the availablity data, the negotiation is defined to be Free, and at the
 // discretion of the implementation.
 
+/// The set charsets, encodings, media types, and languages that are available
+/// from a particular resource.
 type Available =
     { Charsets: Set<Charset> option
       Encodings: Set<ContentCoding> option
       MediaTypes: Set<MediaType> option
       Languages: Set<LanguageTag> option }
 
- and Acceptable =
+/// The charsets, encodings, media types, and languages that are acceptable to
+/// the consumer. Generally used to indicate the subset of available
+/// representations that are acceptable to the consumer as a result of
+/// negitiation.
+and Acceptable =
     { Charsets: Acceptance<Charset>
       Encodings: Acceptance<ContentCoding>
       MediaTypes: Acceptance<MediaType>
       Languages: Acceptance<LanguageTag> }
 
- and Acceptance<'a> =
+/// The list of values that are acceptable to the consumer. Where no criteria
+/// are specified, the acceptance is set to `Free`.
+and Acceptance<'a> =
+    /// The list of values that are acceptable to the consumer as a result of
+    /// negotiation. The server should represent the response in one of the
+    /// acceptable formats.
     | Acceptable of 'a list
+
+    /// The consumer did not specify any criteria for an acceptable
+    /// representation. The server is free to represent the response in any
+    /// available format.
     | Free
 
 // Functions for determining the negotiable values of a representation given
@@ -109,10 +124,13 @@ module internal Negotiation =
 // the client, where the representation (defined by the Description) type is
 // likely a result of the negotiation data provided.
 
+/// A binding of data to be sent to the client with a description of how then
+/// data has been represented.
 type Representation =
     { Data: byte []
       Description: Description }
 
+    /// An empty representation, with no data and no description.
     static member empty =
         { Data = [||]
           Description =
@@ -121,7 +139,9 @@ type Representation =
               MediaType = None
               Languages = None } }
 
- and Description =
+/// A description of how the data is represented. Often this information is
+/// relayed to the client through headers attached to the response.
+and Description =
     { Charset: Charset option
       Encodings: ContentCoding list option
       MediaType: MediaType option
@@ -201,14 +221,12 @@ module internal Representation =
         >>= handler
         >>= write
 
-// Represent
-
-// Helper functions for default simple representations of basic data types, in
-// the default case, a simple text response.
-
+/// Helper functions for creating representations of basic data types.
 [<RequireQualifiedAccess>]
 module Represent =
 
+    /// Builds a representation from a string with media type `text/plain` and
+    /// character set UTF-8.
     let text (text: string) =
         { Description =
             { Charset = Some Charset.Utf8
