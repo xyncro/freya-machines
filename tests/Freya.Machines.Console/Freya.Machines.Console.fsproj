@@ -13,12 +13,12 @@
   <ItemGroup>
     <PackageReference Include="FSharp.NET.Sdk" Version="1.*" PrivateAssets="All" />
     <PackageReference Include="FSharp.Core" Version="4.*" />
-    <PackageReference Include="Aether" Version="8.2.0-alpha-*" />
-    <PackageReference Include="Freya.Types.Http" Version="4.0.0-alpha-*" />
-    <PackageReference Include="Freya.Types.Http.Cors" Version="4.0.0-alpha-*" />
-    <PackageReference Include="Freya.Types.Http.Patch" Version="4.0.0-alpha-*" />
-    <PackageReference Include="Freya.Core.Hopac" Version="4.0.0-alpha-*" />
-    <PackageReference Include="Hephaestus.Hopac" Version="5.0.1-alpha-*" />
+    <PackageReference Include="Aether" Version="[8.2.0,9)" />
+    <PackageReference Include="Freya.Types.Http" Version="[4.0.0-alpha-*,5)" />
+    <PackageReference Include="Freya.Types.Http.Cors" Version="[4.0.0-alpha-*,5)" />
+    <PackageReference Include="Freya.Types.Http.Patch" Version="[4.0.0-alpha-*,5)" />
+    <PackageReference Include="Freya.Core.Hopac" Version="[4.0.0-alpha-*,5)" />
+    <PackageReference Include="Hephaestus.Hopac" Version="[5.0.1,6)" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.*" />
     <PackageReference Include="Microsoft.AspNetCore.Owin" Version="1.*" />
   </ItemGroup>

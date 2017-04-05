@@ -19,9 +19,9 @@
     <Compile Include="..\Freya.Machines.Http.Tests\Validations.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Freya.Types.Http" Version="4.0.0-alpha-*" />
-    <PackageReference Include="Freya.Types.Language" Version="4.0.0-alpha-*" />
-    <PackageReference Include="Freya.Optics.Http.Hopac" Version="4.0.0-alpha-*" />
+    <PackageReference Include="Freya.Types.Http" Version="[4.0.0-alpha-*,5)" />
+    <PackageReference Include="Freya.Types.Language" Version="[4.0.0-alpha-*,5)" />
+    <PackageReference Include="Freya.Optics.Http.Hopac" Version="[4.0.0-alpha-*,5)" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Freya.Machines.Http.Hopac\Freya.Machines.Http.Hopac.fsproj" />
