@@ -1,2 +1,3 @@
-module DummyMain = let main _ = 0
-#nowarn "988"
+module DummyMain
+
+let [<EntryPoint>] main _ = 0
