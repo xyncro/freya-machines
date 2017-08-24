@@ -1,0 +1,19 @@
+version: 4.0.0-aci-{build}
+
+build_script:
+  - ps: dotnet --info
+  - ps: dotnet restore
+  - ps: dotnet build -c Release --version-suffix "aci-${env:APPVEYOR_BUILD_NUMBER}"
+  - ps: dotnet test -c Release tests\Freya.Machines.Http.Tests\Freya.Machines.Http.Tests.fsproj
+  - ps: dotnet test -c Release tests\Freya.Machines.Http.Cors.Tests\Freya.Machines.Http.Cors.Tests.fsproj
+  - ps: dotnet test -c Release tests\Freya.Machines.Http.Patch.Tests\Freya.Machines.Http.Patch.Tests.fsproj
+  - ps: dotnet test -c Release tests\Freya.Machines.Http.Hopac.Tests\Freya.Machines.Http.Hopac.Tests.fsproj
+  - ps: dotnet test -c Release tests\Freya.Machines.Http.Cors.Hopac.Tests\Freya.Machines.Http.Cors.Hopac.Tests.fsproj
+  - ps: dotnet test -c Release tests\Freya.Machines.Http.Patch.Hopac.Tests\Freya.Machines.Http.Patch.Hopac.Tests.fsproj
+  - ps: dotnet pack -c Release --include-symbols --version-suffix "aci-${env:APPVEYOR_BUILD_NUMBER}"
+
+test: off
+
+artifacts:
+  - path: '**\*.nupkg'
+  - path: '**\BenchmarkDotNet.Artifacts\**\*.*'

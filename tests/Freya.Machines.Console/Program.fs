@@ -1,4 +1,6 @@
-﻿open System
+﻿module Freya.Machines.Console
+
+open System
 
 // Freya
 
@@ -22,47 +24,58 @@ let ok =
 
 let machine =
     freyaHttpMachine {
-        methods PATCH
+        // methods PATCH
 
-        patch
-        patchEnabled false }
+        // patch
+        // patchEnabled false }
 
 
-//        acceptableMediaTypes [ MediaType.parse "text/plain" ]
-//        availableMediaTypes [ MediaType.parse "text/plain" ]
-//        methods [ DELETE; GET; OPTIONS; PATCH ]
-//
-//        handleOk ok
-//
-//        cors
-//        corsEnabled true
-//        corsMaxAge 3600
-//        corsOrigins [ SerializedOrigin.parse "http://xyncro.com" ]
-//
-//        patch
-//        patchEnabled true
-//        patchAcceptableMediaTypes [ MediaType.parse "text/plain" ] }
+       acceptableMediaTypes [ MediaType.parse "text/plain" ]
+       availableMediaTypes [ MediaType.parse "text/plain" ]
+       methods [ DELETE; GET; OPTIONS; PATCH ]
 
-let app =
-    OwinAppFunc.ofFreya machine
+       handleOk ok
 
-// Katana
+       cors
+       corsEnabled true
+       corsMaxAge 3600
+       corsOrigins [ SerializedOrigin.parse "http://xyncro.com" ]
 
-open Microsoft.Owin.Hosting
+       patch
+       patchEnabled true
+       patchAcceptableMediaTypes [ MediaType.parse "text/plain" ] }
 
-type App () =
-    member __.Configuration () =
-        app
+let freyaApp =
+    OwinMidFunc.ofFreya machine
+
+// Kestrel
+
+open Microsoft.AspNetCore.Builder
+open Microsoft.AspNetCore.Http
+open Microsoft.AspNetCore.Hosting
+
+type Startup () =
+    member __.Configure (app: IApplicationBuilder) : unit =
+        app.UseOwin (fun p -> p.Invoke(freyaApp)) |> ignore
+        ()
 
 let server () =
-    WebApp.Start<App> "http://localhost:7000"
+    try
+        WebHostBuilder()
+            .UseKestrel()
+            .UseUrls([| "http://localhost:7000" |])
+            //.UseContentRoot(Directory.GetCurrentDirectory())
+            //.UseDefaultHostingConfiguration(args)
+            .UseStartup<Startup>()
+            .Build()
+            .Run()
+    with
+        | ex ->
+            printfn "%A" ex
 
 // Main
 
 [<EntryPoint>]
 let main _ =
-
     let _ = server ()
-    let _ = Console.ReadLine ()
-
     0

@@ -1,0 +1,25 @@
+<Project>
+  <PropertyGroup>
+    <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DefineConstants Condition="'$(Hopac)' == 'true'">$(DefineConstants);HOPAC</DefineConstants>
+  </PropertyGroup>
+
+  <Import Project="..\nuget.props" />
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.NET.Sdk" Version="1.*" PrivateAssets="All" />
+    <PackageReference Include="FSharp.Core" Version="4.1.0" />
+    <PackageReference Include="Aether" Version="[8.2.0,9)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Hopac)' != 'true'">
+    <PackageReference Include="Freya.Core" Version="[4.0.0-alpha-*,5)" />
+    <PackageReference Include="Hephaestus" Version="[5.0.1,6)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Hopac)' == 'true'">
+    <PackageReference Include="Freya.Core.Hopac" Version="[4.0.0-alpha-*,5)" />
+    <PackageReference Include="Hephaestus.Hopac" Version="[5.0.1,6)" />
+  </ItemGroup>
+</Project>
