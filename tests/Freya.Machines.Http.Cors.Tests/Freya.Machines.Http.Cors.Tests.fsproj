@@ -1,4 +1,4 @@
-<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\Freya.Machines.Tests.Common.targets" />
   <ItemGroup>
     <Compile Include="Prelude.fs" />

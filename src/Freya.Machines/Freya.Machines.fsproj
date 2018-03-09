@@ -1,4 +1,4 @@
-<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>Core utilities and tools for building Freya machines</Description>
   </PropertyGroup>
