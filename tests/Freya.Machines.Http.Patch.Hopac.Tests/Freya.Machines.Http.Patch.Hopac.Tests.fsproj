@@ -1,4 +1,4 @@
-<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Hopac>true</Hopac>
   </PropertyGroup>
@@ -6,7 +6,6 @@
   <ItemGroup>
     <Compile Include="..\Freya.Machines.Http.Patch.Tests\Prelude.fs" />
     <Compile Include="..\Freya.Machines.Http.Patch.Tests\Patch.fs" />
-    <Compile Include="..\Freya.Machines.Http.Patch.Tests\Program.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Freya.Types.Http" Version="[4.0.0-alpha-*,5)" />

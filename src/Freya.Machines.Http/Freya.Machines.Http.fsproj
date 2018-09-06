@@ -1,4 +1,4 @@
-<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>A Freya machine expressing the core HTTP semantics and logic</Description>
     <PackageTags>$(PackageTags);http</PackageTags>

@@ -1,4 +1,4 @@
-<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Hopac>true</Hopac>
   </PropertyGroup>
@@ -7,7 +7,6 @@
     <Compile Include="..\Freya.Machines.Http.Cors.Tests\Prelude.fs" />
     <Compile Include="..\Freya.Machines.Http.Cors.Tests\Simple.fs" />
     <Compile Include="..\Freya.Machines.Http.Cors.Tests\Preflight.fs" />
-    <Compile Include="..\Freya.Machines.Http.Cors.Tests\Program.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Freya.Types.Http" Version="[4.0.0-alpha-*,5)" />

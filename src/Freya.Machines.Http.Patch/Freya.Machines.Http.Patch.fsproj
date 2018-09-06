@@ -1,4 +1,4 @@
-<Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>An extension to the Freya HTTP Machine adding Patch support</Description>
     <PackageTags>$(PackageTags);http;patch</PackageTags>
