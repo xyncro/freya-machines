@@ -3,7 +3,6 @@
   <ItemGroup>
     <Compile Include="Prelude.fs" />
     <Compile Include="Patch.fs" />
-    <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Freya.Types.Http" Version="[4.0.0-alpha-*,5)" />
