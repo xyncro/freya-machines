@@ -1,28 +1,28 @@
 <Project>
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <IsPackable>false</IsPackable>
     <DefineConstants Condition="'$(Hopac)' == 'true'">$(DefineConstants);HOPAC</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.*" />
-    <PackageReference Include="xunit" Version="2.3.*" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.*" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.*" />
+    <PackageReference Include="xunit" Version="2.4.*" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.*" />
     <PackageReference Include="Unquote" Version="4.*" />
     <PackageReference Include="FsCheck.Xunit" Version="3.0.0-*" />
     <PackageReference Include="FsCheck" Version="3.0.0-*" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Hopac)' != 'true'">
-    <PackageReference Include="Freya.Core" Version="[4.0.0-alpha-*,5)" />
-    <PackageReference Include="Freya.Testing" Version="[4.0.0-alpha-*,5)" />
-    <PackageReference Include="Hephaestus" Version="[5.0.1,6)" />
+    <PackageReference Include="Freya.Core" Version="[4.0.*,5)" />
+    <PackageReference Include="Freya.Testing" Version="[4.0.*,5)" />
+    <PackageReference Include="Hephaestus" Version="[5.1.1,6)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Hopac)' == 'true'">
-    <PackageReference Include="Freya.Core.Hopac" Version="[4.0.0-alpha-*,5)" />
-    <PackageReference Include="Freya.Testing.Hopac" Version="[4.0.0-alpha-*,5)" />
-    <PackageReference Include="Hephaestus.Hopac" Version="[5.0.1,6)" />
+    <PackageReference Include="Freya.Core.Hopac" Version="[4.0.*,5)" />
+    <PackageReference Include="Freya.Testing.Hopac" Version="[4.0.*,5)" />
+    <PackageReference Include="Hephaestus.Hopac" Version="[5.1.1,6)" />
   </ItemGroup>
 </Project>

@@ -16,9 +16,9 @@
     <Compile Include="Validations.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Freya.Types.Http" Version="[4.0.0-alpha-*,5)" />
-    <PackageReference Include="Freya.Types.Language" Version="[4.0.0-alpha-*,5)" />
-    <PackageReference Include="Freya.Optics.Http" Version="[4.0.0-alpha-*,5)" />
+    <PackageReference Include="Freya.Types.Http" Version="[4.0.*,5)" />
+    <PackageReference Include="Freya.Types.Language" Version="[4.0.*,5)" />
+    <PackageReference Include="Freya.Optics.Http" Version="[4.0.*,5)" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Freya.Machines.Http\Freya.Machines.Http.fsproj" />
