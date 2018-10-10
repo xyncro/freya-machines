@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <IsPackable>false</IsPackable>
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
@@ -12,13 +12,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Aether" Version="[8.2.0,9)" />
-    <PackageReference Include="Freya.Types.Http" Version="[4.0.0-alpha-*,5)" />
-    <PackageReference Include="Freya.Types.Http.Cors" Version="[4.0.0-alpha-*,5)" />
-    <PackageReference Include="Freya.Types.Http.Patch" Version="[4.0.0-alpha-*,5)" />
-    <PackageReference Include="Freya.Core.Hopac" Version="[4.0.0-alpha-*,5)" />
-    <PackageReference Include="Hephaestus.Hopac" Version="[5.0.1,6)" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.*" />
-    <PackageReference Include="Microsoft.AspNetCore.Owin" Version="1.*" />
+    <PackageReference Include="Freya.Types.Http" Version="[4.0.*,5)" />
+    <PackageReference Include="Freya.Types.Http.Cors" Version="[4.0.*,5)" />
+    <PackageReference Include="Freya.Types.Http.Patch" Version="[4.0.*,5)" />
+    <PackageReference Include="Freya.Core.Hopac" Version="[4.0.*,5)" />
+    <PackageReference Include="Hephaestus.Hopac" Version="[5.1.1,6)" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Owin" Version="2.*" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Freya.Machines.Hopac\Freya.Machines.Hopac.fsproj" />

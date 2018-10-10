@@ -1,7 +1,9 @@
 language: csharp
 
-mono: 5.2.0
-dotnet: 2.0.0
+dotnet: 2.1.402
+
+mono:
+  - 5.2.0
 
 install:
   - mozroots --import --sync
@@ -13,10 +15,10 @@ matrix:
     - os: linux # Ubuntu 14.04
       dist: trusty
       sudo: required
-      dotnet: 2.0.0
+      dotnet: 2.1.402
     - os: osx # OSX 10.12
       osx_image: xcode9.1
-      dotnet: 2.0.0
+      dotnet: 2.1.402
       dist: trusty
       sudo: required
 
@@ -25,10 +27,10 @@ script:
   - dotnet restore
   - dotnet build -c Release
   - dotnet test -c Release tests/Freya.Machines.Http.Tests/Freya.Machines.Http.Tests.fsproj
-  - dotnet test -c Release tests/Freya.Machines.Http.Cors.Tests/Freya.Machines.Http.Cors.Tests.fsproj
-  - dotnet test -c Release tests/Freya.Machines.Http.Patch.Tests/Freya.Machines.Http.Patch.Tests.fsproj
   - dotnet test -c Release tests/Freya.Machines.Http.Hopac.Tests/Freya.Machines.Http.Hopac.Tests.fsproj
+  - dotnet test -c Release tests/Freya.Machines.Http.Cors.Tests/Freya.Machines.Http.Cors.Tests.fsproj
   - dotnet test -c Release tests/Freya.Machines.Http.Cors.Hopac.Tests/Freya.Machines.Http.Cors.Hopac.Tests.fsproj
+  - dotnet test -c Release tests/Freya.Machines.Http.Patch.Tests/Freya.Machines.Http.Patch.Tests.fsproj
   - dotnet test -c Release tests/Freya.Machines.Http.Patch.Hopac.Tests/Freya.Machines.Http.Patch.Hopac.Tests.fsproj
   - dotnet pack -c Release --include-symbols
 
